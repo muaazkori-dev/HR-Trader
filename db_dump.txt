@@ -1,0 +1,1 @@
+ID: 12 | Barcode: #12345678 | Name: Shirt | Cat: ice_cream | Image: assets/images/products/prod_6a213deb58ba61.15387823.jpeg
