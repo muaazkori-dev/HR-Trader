@@ -1,11 +1,14 @@
 <?php
 // HR Traders Customer Checkout Page
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $cart_items = [];
 $subtotal = 0;
 $checkout_error = "";
+
+$min_order_value = (float)get_setting('min_order_value', '0.00');
+$shipping_fee = (float)get_setting('shipping_fee', '0.00');
 
 // Initialize cart if empty
 if (empty($_SESSION['cart'])) {
@@ -50,7 +53,12 @@ try {
 
 // 2. Handle COD checkout form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
-    $customer_name = trim($_POST['customer_name'] ?? '');
+    if (get_setting('shop_status', 'open') === 'closed') {
+        $checkout_error = htmlspecialchars(STORE_NAME) . " is temporarily CLOSED. We cannot accept orders at this time.";
+    } elseif ($subtotal < $min_order_value) {
+        $checkout_error = "Order subtotal is below the minimum required order value of " . format_price($min_order_value) . ".";
+    } else {
+        $customer_name = trim($_POST['customer_name'] ?? '');
     $customer_phone = trim($_POST['customer_phone'] ?? '');
     $customer_address = trim($_POST['customer_address'] ?? '');
 
@@ -71,8 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                 }
             }
 
-            // Insert into orders table
+            // Insert into orders table (including shipping fee in total amount)
             $user_id = $_SESSION['user_id'] ?? null;
+            $order_total = $subtotal + $shipping_fee;
             $stmt_order = $pdo->prepare("INSERT INTO orders (user_id, customer_name, customer_phone, customer_address, total_amount, payment_method, status) 
                                          VALUES (:user_id, :name, :phone, :address, :total_amount, 'COD', 'pending')");
             $stmt_order->execute([
@@ -80,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                 'name' => $customer_name,
                 'phone' => $customer_phone,
                 'address' => $customer_address,
-                'total_amount' => $subtotal
+                'total_amount' => $order_total
             ]);
             $order_id = $pdo->lastInsertId();
 
@@ -114,7 +123,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
             $checkout_error = "Order processing failed: " . $e->getMessage();
         }
     }
+    }
 }
+require_once __DIR__ . '/includes/header.php';
 ?>
 
 <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -127,6 +138,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
         <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm flex items-center gap-3">
             <i class="fas fa-times-circle"></i>
             <span><?php echo $checkout_error; ?></span>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($subtotal < $min_order_value): ?>
+        <div class="mb-6 p-4 bg-amber-50 border border-amber-250 text-amber-800 rounded-2xl text-xs flex items-center gap-3">
+            <i class="fas fa-circle-exclamation text-base"></i>
+            <span>
+                Minimum order limit is <strong><?php echo format_price($min_order_value); ?></strong>. Your current cart total is <strong><?php echo format_price($subtotal); ?></strong>. Please add more items from the <a href="shop.php" class="underline font-bold">shop catalog</a>.
+            </span>
         </div>
     <?php endif; ?>
 
@@ -146,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm"><?php echo sanitize($item['name']); ?></h4>
                                 <p class="text-xs text-slate-500 mt-0.5">
-                                    <?php echo sanitize($item['weight']); ?> | <?php echo format_price($item['price']); ?>
+                                    <?php echo !empty($item['weight']) ? sanitize($item['weight']) . ' | ' : ''; ?><?php echo format_price($item['price']); ?>
                                 </p>
                                 <?php if ($is_frozen): ?>
                                     <span class="text-[9px] font-bold text-rose-600 border border-rose-200 bg-rose-50 px-2 py-0.5 rounded-lg mt-1 inline-block">
@@ -167,9 +187,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                     <?php endforeach; ?>
                 </div>
 
-                <div class="border-t border-slate-200 mt-6 pt-6 flex items-center justify-between font-bold text-slate-700 text-base">
-                    <span>Subtotal Invoice</span>
-                    <span class="text-xl text-emerald-600"><?php echo format_price($subtotal); ?></span>
+                <div class="border-t border-slate-200 mt-6 pt-6 space-y-2 text-sm text-slate-700">
+                    <div class="flex items-center justify-between">
+                        <span>Subtotal</span>
+                        <span class="font-bold text-slate-800"><?php echo format_price($subtotal); ?></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Delivery Charges</span>
+                        <span class="font-bold <?php echo $shipping_fee > 0 ? 'text-slate-850' : 'text-emerald-600'; ?>">
+                            <?php echo $shipping_fee > 0 ? format_price($shipping_fee) : 'FREE'; ?>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between font-bold text-base pt-3 border-t border-slate-200 text-slate-900">
+                        <span>Total Invoice Amount</span>
+                        <span class="text-xl text-emerald-600"><?php echo format_price($subtotal + $shipping_fee); ?></span>
+                    </div>
                 </div>
             </div>
 
@@ -218,9 +250,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/10 uppercase tracking-widest mt-4">
-                        Confirm COD Order &rarr;
-                    </button>
+                    <?php if (get_setting('shop_status', 'open') === 'closed'): ?>
+                        <button type="button" disabled class="w-full py-3 bg-slate-200 text-slate-400 font-bold border border-slate-300 rounded-xl text-sm uppercase tracking-widest mt-4 cursor-not-allowed flex items-center justify-center gap-1.5">
+                            <i class="fas fa-lock"></i> Store Closed Today
+                        </button>
+                    <?php elseif ($subtotal < $min_order_value): ?>
+                        <button type="button" disabled class="w-full py-3 bg-slate-105 text-slate-400 font-bold border border-slate-200 rounded-xl text-sm uppercase tracking-widest mt-4 cursor-not-allowed flex items-center justify-center gap-1.5">
+                            <i class="fas fa-ban"></i> Below Min. Order (<?php echo format_price($min_order_value); ?>)
+                        </button>
+                    <?php else: ?>
+                        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/10 uppercase tracking-widest mt-4">
+                            Confirm COD Order &rarr;
+                        </button>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>

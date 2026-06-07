@@ -2,6 +2,25 @@
 // HR Traders Storefront Home Page
 require_once __DIR__ . '/includes/header.php';
 
+$announcement = get_setting('homepage_announcement', '');
+$shop_status = get_setting('shop_status', 'open');
+?>
+
+<?php if ($shop_status === 'closed'): ?>
+<!-- STORE CLOSED EMERGENCY BANNER -->
+<div class="bg-rose-600 text-white py-3 px-4 text-center text-xs sm:text-sm font-bold tracking-wide relative overflow-hidden print-hidden z-20 flex items-center justify-center gap-2 shadow-lg">
+    <i class="fas fa-circle-exclamation text-base animate-pulse"></i>
+    <span>Notice: <?php echo htmlspecialchars(STORE_NAME); ?> is temporarily CLOSED. You can browse items, but checkout operations are disabled.</span>
+</div>
+<?php elseif (!empty($announcement)): ?>
+<!-- TOP ANNOUNCEMENT BANNER -->
+<div class="bg-emerald-600 text-white py-2.5 px-4 text-center text-xs font-semibold tracking-wider relative overflow-hidden print-hidden flex items-center justify-center gap-2 shadow-sm">
+    <i class="fas fa-bullhorn text-xs animate-bounce"></i>
+    <span><?php echo htmlspecialchars($announcement); ?></span>
+</div>
+<?php endif; ?>
+
+<?php
 // Fetch 6 featured products from the database
 try {
     $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC LIMIT 6");
@@ -70,7 +89,7 @@ try {
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <!-- Category 1: Anaj -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=anaj" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+        <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
                 <img src="<?php echo BASE_URL; ?>assets/images/categories/anaj.png" alt="Anaj" class="w-full h-full object-cover">
             </div>
@@ -81,18 +100,18 @@ try {
         </a>
 
         <!-- Category 2: Ice Cream -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+        <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
                 <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.jpg" alt="Ice Cream" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Ice Cream</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">آئس کریم</p>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">آئس کریم</p>
             </div>
         </a>
 
         <!-- Category 3: Cold Drinks -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=cold_drinks" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+        <a href="<?php echo BASE_URL; ?>shop.php?category=cold_drinks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-blue-200">
                 <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png" alt="Cold Drinks" class="w-full h-full object-cover">
             </div>
@@ -103,7 +122,7 @@ try {
         </a>
 
         <!-- Category 4: Water -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=water" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+        <a href="<?php echo BASE_URL; ?>shop.php?category=water#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-sky-200">
                 <img src="<?php echo BASE_URL; ?>assets/images/categories/water.png" alt="Water" class="w-full h-full object-cover">
             </div>
@@ -114,7 +133,7 @@ try {
         </a>
 
         <!-- Category 5: Milk -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=milk" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+        <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
                 <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.jpg" alt="Milk" class="w-full h-full object-cover">
             </div>
@@ -125,7 +144,7 @@ try {
         </a>
 
         <!-- Category 6: Cosmetics -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+        <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
                 <img src="<?php echo BASE_URL; ?>assets/images/categories/cosmetics.png" alt="Cosmetics" class="w-full h-full object-cover">
             </div>
@@ -168,7 +187,7 @@ try {
                         <?php 
                         $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
                         ?>
-                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform hover:scale-105 duration-300">
+                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform hover:scale-105 duration-300" loading="lazy">
                         
                         <!-- Floating Category Label -->
                         <span class="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-650 shadow-sm">
@@ -222,9 +241,14 @@ try {
                                     Out of Stock
                                 </button>
                             <?php else: ?>
-                                <button onclick="addToCart(<?php echo $product['id']; ?>)" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1.5">
-                                    <i class="fas fa-plus"></i> Add
-                                </button>
+                                <div class="flex items-center gap-1.5 flex-nowrap">
+                                    <button onclick="addToCart(<?php echo $product['id']; ?>)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1">
+                                        <i class="fas fa-plus"></i> Add
+                                    </button>
+                                    <button onclick="buyNow(<?php echo $product['id']; ?>)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1">
+                                        Buy Now
+                                    </button>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>

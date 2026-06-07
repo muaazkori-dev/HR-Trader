@@ -40,7 +40,7 @@ try {
 }
 ?>
 
-<div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+<div id="shop-container" class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
     
     <!-- Title & Category Selector Tabs -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -114,7 +114,7 @@ try {
                         <?php 
                         $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
                         ?>
-                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform hover:scale-105 duration-300">
+                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform hover:scale-105 duration-300" loading="lazy">
 
                         <!-- Floating Category Label -->
                         <span class="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-600 shadow-sm">
@@ -168,9 +168,14 @@ try {
                                     Out of Stock
                                 </button>
                             <?php else: ?>
-                                <button onclick="addToCart(<?php echo $product['id']; ?>)" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1.5">
-                                    <i class="fas fa-plus"></i> Add
-                                </button>
+                                <div class="flex items-center gap-1.5 flex-nowrap">
+                                    <button onclick="addToCart(<?php echo $product['id']; ?>)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1">
+                                        <i class="fas fa-plus"></i> Add
+                                    </button>
+                                    <button onclick="buyNow(<?php echo $product['id']; ?>)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1">
+                                        Buy Now
+                                    </button>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>

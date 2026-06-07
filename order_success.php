@@ -49,7 +49,8 @@ $whatsapp_text .= "📍 *Address:* " . $order['customer_address'] . "\n\n";
 $whatsapp_text .= "*ORDERED ITEMS:*\n";
 $idx = 1;
 foreach ($order_items as $item) {
-    $whatsapp_text .= $idx . ". " . $item['prod_name'] . " (" . $item['prod_weight'] . ") x " . $item['quantity'] . " - " . CURRENCY . " " . number_format($item['price'] * $item['quantity'], 2) . "\n";
+    $weight_str = !empty($item['prod_weight']) ? " (" . $item['prod_weight'] . ")" : "";
+    $whatsapp_text .= $idx . ". " . $item['prod_name'] . $weight_str . " x " . $item['quantity'] . " - " . CURRENCY . " " . number_format($item['price'] * $item['quantity'], 2) . "\n";
     $idx++;
 }
 $whatsapp_text .= "--------------------------------------\n";
@@ -102,7 +103,7 @@ $whatsapp_url = "https://api.whatsapp.com/send?phone=" . WHATSAPP_NUMBER . "&tex
                     <div class="py-3 flex items-center justify-between gap-4 first:pt-0 last:pb-0 text-sm">
                         <div class="min-w-0">
                             <span class="font-bold text-slate-800 block truncate"><?php echo sanitize($item['prod_name']); ?></span>
-                            <span class="text-xs text-slate-500"><?php echo sanitize($item['prod_weight']); ?> | <?php echo format_price($item['price']); ?></span>
+                            <span class="text-xs text-slate-500"><?php echo !empty($item['prod_weight']) ? sanitize($item['prod_weight']) . ' | ' : ''; ?><?php echo format_price($item['price']); ?></span>
                         </div>
                         <div class="text-right flex items-center gap-6">
                             <span class="text-slate-500 text-xs font-medium">x <?php echo $item['quantity']; ?></span>
