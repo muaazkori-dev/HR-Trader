@@ -54,7 +54,7 @@ $seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics s
         }
     </script>
     <!-- Favicon link -->
-    <link rel="icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png">
+    <link rel="icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png?v=2.1">
     <!-- Google Fonts (Preconnected & Loaded in Parallel) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,7 +87,7 @@ $seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics s
             <!-- Brand Logo -->
             <a href="<?php echo BASE_URL; ?>" class="flex-shrink-0 flex items-center gap-2.5">
                 <div class="h-11 w-11 rounded-full overflow-hidden border border-slate-200 bg-white shadow-sm flex-shrink-0 flex items-center justify-center p-1">
-                    <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="HR Traders Logo" class="w-full h-full object-contain">
+                    <img src="<?php echo BASE_URL; ?>assets/images/logo.png?v=2.1" alt="HR Traders Logo" class="w-full h-full object-contain">
                 </div>
                 <div class="flex flex-col">
                     <span class="text-xl font-black tracking-tight leading-none text-slate-900 flex items-center gap-1.5">

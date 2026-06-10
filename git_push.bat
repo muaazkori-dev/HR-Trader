@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-update: Redesigned logos, added high-resolution favicon links to all admin panel pages"
+git commit -m "Auto-update: Applied cache-busting version parameters to all redesigned images"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )

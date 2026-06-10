@@ -91,7 +91,7 @@ try {
         <!-- Category 1: Anaj -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/anaj.png" alt="Anaj" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/anaj.png?v=2.1" alt="Anaj" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Anaj</h4>
@@ -102,7 +102,7 @@ try {
         <!-- Category 2: Ice Cream -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.png" alt="Ice Cream" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.png?v=2.1" alt="Ice Cream" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Ice Cream</h4>
@@ -113,7 +113,7 @@ try {
         <!-- Category 3: Beverages -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png" alt="Beverages" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png?v=2.1" alt="Beverages" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Beverages</h4>
@@ -124,7 +124,7 @@ try {
         <!-- Category 5: Milk -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.png" alt="Milk" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.png?v=2.1" alt="Milk" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Milk</h4>
@@ -135,7 +135,7 @@ try {
         <!-- Category 6: Cosmetics -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cosmetics.png" alt="Cosmetics" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/cosmetics.png?v=2.1" alt="Cosmetics" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Cosmetics</h4>
