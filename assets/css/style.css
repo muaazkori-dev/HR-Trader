@@ -1,0 +1,356 @@
+/* HR Traders Custom Stylesheet */
+/* Styles for layout widgets, keyframe animations, and custom scrollbars */
+
+
+:root {
+    --font-outfit: 'Outfit', sans-serif;
+    --font-urdu: 'Noto Nastaliq Urdu', serif;
+    --theme-primary: #10b981;
+    --theme-primary-hover: #059669;
+}
+
+body {
+    font-family: var(--font-outfit);
+}
+
+/* ==========================================================================
+   HR TRADERS 10-THEME SYSTEM (Light & Dark Variations)
+   ========================================================================== */
+
+/* 1. Emerald Green (Default Light) */
+.theme-emerald_green {
+    --theme-primary: #10b981;
+    --theme-primary-hover: #059669;
+}
+
+/* 2. Midnight Indigo (Dark Mode) */
+.theme-midnight_indigo {
+    --theme-primary: #6366f1;
+    --theme-primary-hover: #4f46e5;
+    --theme-emerald-50: #1e1b4b;
+    --theme-emerald-100: #312e81;
+    --theme-emerald-200: #4338ca;
+    background-color: #030712 !important;
+    color: #e5e7eb !important;
+}
+.theme-midnight_indigo .glass-panel,
+.theme-midnight_indigo .glass-card,
+.theme-midnight_indigo header,
+.theme-midnight_indigo .bg-white,
+.theme-midnight_indigo .glass-card-bg {
+    background-color: #0f172a !important;
+    border-color: #1e293b !important;
+    color: #f3f4f6 !important;
+}
+.theme-midnight_indigo select,
+.theme-midnight_indigo input,
+.theme-midnight_indigo textarea {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #ffffff !important;
+}
+.theme-midnight_indigo text-slate-800,
+.theme-midnight_indigo .text-slate-900,
+.theme-midnight_indigo .text-slate-805,
+.theme-midnight_indigo .text-slate-700,
+.theme-midnight_indigo .text-slate-650 {
+    color: #f3f4f6 !important;
+}
+.theme-midnight_indigo .text-slate-500,
+.theme-midnight_indigo .text-slate-400 {
+    color: #94a3b8 !important;
+}
+.theme-midnight_indigo .bg-slate-50,
+.theme-midnight_indigo .bg-slate-100 {
+    background-color: #1e293b !important;
+    color: #e5e7eb !important;
+}
+
+/* 3. Rose Gold (Light Elegant) */
+.theme-rose_gold {
+    --theme-primary: #db2777;
+    --theme-primary-hover: #be185d;
+    background-color: #fffbfd !important;
+}
+.theme-rose_gold .glass-panel,
+.theme-rose_gold .glass-card,
+.theme-rose_gold header {
+    background-color: #ffffff !important;
+    border-color: #fbcfe8 !important;
+}
+
+/* 4. Cyberpunk Neon (Dark Mode Neon) */
+.theme-cyberpunk_neon {
+    --theme-primary: #06b6d4;
+    --theme-primary-hover: #0891b2;
+    --theme-emerald-50: #083344;
+    --theme-emerald-100: #155e75;
+    --theme-emerald-200: #0891b2;
+    background-color: #050508 !important;
+    color: #00ffcc !important;
+}
+.theme-cyberpunk_neon .glass-panel,
+.theme-cyberpunk_neon .glass-card,
+.theme-cyberpunk_neon header,
+.theme-cyberpunk_neon .bg-white,
+.theme-cyberpunk_neon .bg-slate-50,
+.theme-cyberpunk_neon .bg-slate-100 {
+    background-color: #0a0a14 !important;
+    border-color: #ff007f !important;
+    color: #e2e8f0 !important;
+}
+.theme-cyberpunk_neon select,
+.theme-cyberpunk_neon input,
+.theme-cyberpunk_neon textarea {
+    background-color: #08080f !important;
+    border-color: #00ffcc !important;
+    color: #00ffcc !important;
+}
+.theme-cyberpunk_neon text-slate-800,
+.theme-cyberpunk_neon .text-slate-900,
+.theme-cyberpunk_neon .text-slate-805,
+.theme-cyberpunk_neon .text-slate-700,
+.theme-cyberpunk_neon .text-slate-650 {
+    color: #e2e8f0 !important;
+}
+.theme-cyberpunk_neon .text-slate-500,
+.theme-cyberpunk_neon .text-slate-400 {
+    color: #a78bfa !important;
+}
+
+/* 5. Slate Blue (Light Soft) */
+.theme-slate_blue {
+    --theme-primary: #2563eb;
+    --theme-primary-hover: #1d4ed8;
+    background-color: #f8fafc !important;
+}
+.theme-slate_blue .glass-panel,
+.theme-slate_blue .glass-card,
+.theme-slate_blue header {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* 6. Amber Honey (Light Sunny) */
+.theme-amber_honey {
+    --theme-primary: #d97706;
+    --theme-primary-hover: #b45309;
+    background-color: #fffdf5 !important;
+}
+.theme-amber_honey .glass-panel,
+.theme-amber_honey .glass-card,
+.theme-amber_honey header {
+    background-color: #ffffff !important;
+    border-color: #fde68a !important;
+}
+
+/* 7. Deep Purple (Dark Mode Royal) */
+.theme-deep_purple {
+    --theme-primary: #a855f7;
+    --theme-primary-hover: #9333ea;
+    --theme-emerald-50: #2e1065;
+    --theme-emerald-100: #3b0764;
+    --theme-emerald-200: #581c87;
+    background-color: #0b0716 !important;
+    color: #f3e8ff !important;
+}
+.theme-deep_purple .glass-panel,
+.theme-deep_purple .glass-card,
+.theme-deep_purple header,
+.theme-deep_purple .bg-white,
+.theme-deep_purple .bg-slate-50,
+.theme-deep_purple .bg-slate-100 {
+    background-color: #120c24 !important;
+    border-color: #4a148c !important;
+    color: #f3e8ff !important;
+}
+.theme-deep_purple select,
+.theme-deep_purple input,
+.theme-deep_purple textarea {
+    background-color: #181030 !important;
+    border-color: #a855f7 !important;
+    color: #ffffff !important;
+}
+.theme-deep_purple text-slate-800,
+.theme-deep_purple .text-slate-900,
+.theme-deep_purple .text-slate-805,
+.theme-deep_purple .text-slate-700,
+.theme-deep_purple .text-slate-650 {
+    color: #f3e8ff !important;
+}
+
+/* 8. Forest Green (Light Organic) */
+.theme-forest_green {
+    --theme-primary: #15803d;
+    --theme-primary-hover: #166534;
+    background-color: #f4fdf7 !important;
+}
+.theme-forest_green .glass-panel,
+.theme-forest_green .glass-card,
+.theme-forest_green header {
+    background-color: #ffffff !important;
+    border-color: #bbf7d0 !important;
+}
+
+/* 9. Crimson Rose (Light Ruby) */
+.theme-crimson_rose {
+    --theme-primary: #e11d48;
+    --theme-primary-hover: #be123c;
+    background-color: #fffafb !important;
+}
+.theme-crimson_rose .glass-panel,
+.theme-crimson_rose .glass-card,
+.theme-crimson_rose header {
+    background-color: #ffffff !important;
+    border-color: #fecdd3 !important;
+}
+
+/* 10. Classic Light (High Contrast Monochrome) */
+.theme-classic_light {
+    --theme-primary: #000000;
+    --theme-primary-hover: #27272a;
+    background-color: #ffffff !important;
+}
+.theme-classic_light .glass-panel,
+.theme-classic_light .glass-card,
+.theme-classic_light header {
+    background-color: #ffffff !important;
+    border-color: #000000 !important;
+    border-width: 2px !important;
+    border-radius: 8px !important;
+}
+.theme-classic_light .rounded-3xl,
+.theme-classic_light .rounded-2xl,
+.theme-classic_light .rounded-xl {
+    border-radius: 8px !important;
+}
+
+
+
+/* Glassmorphism theme panels */
+.glass-panel {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+.glass-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glass-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.1);
+}
+
+/* WhatsApp Floating Button */
+.whatsapp-float {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #25d366;
+    color: white;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.whatsapp-float:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+}
+
+/* Slide Banner Animations */
+.slider-container {
+    overflow: hidden;
+    position: relative;
+}
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: 1;
+}
+.slide.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Frozen warnings Urdu typography */
+.urdu-text {
+    font-family: var(--font-urdu);
+    line-height: 2.2;
+}
+
+.frozen-alert-border {
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+}
+
+/* Notification micro-animations */
+@keyframes slideInUp {
+    from {
+        transform: translate(-50%, 100px);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+.toast-msg {
+    animation: slideInUp 0.3s forwards;
+}
+
+/* POS specific overrides for Thermal Printing */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #thermal-receipt, #thermal-receipt *,
+    #printable-stock-sheet, #printable-stock-sheet * {
+        visibility: visible;
+    }
+    #thermal-receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: monospace;
+        font-size: 12px;
+        color: #000;
+        background: #fff;
+    }
+    #printable-stock-sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        color: #000;
+        background: #fff;
+    }
+    .print-only {
+        display: block !important;
+    }
+    /* Hide scrollbars and styling elements during print */
+    ::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+

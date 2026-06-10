@@ -1,0 +1,41 @@
+@echo off
+title HR Traders - GitHub Auto Push Helper
+echo ===================================================
+echo     HR TRADERS GITHUB AUTO-PUSH UTILITY
+echo ===================================================
+echo.
+
+echo Step 1: Configuring local git author details...
+git config user.email "muaazkori-dev@users.noreply.github.com"
+git config user.name "muaazkori-dev"
+
+echo.
+echo Step 2: Adding all updated files to Git...
+git add .
+if %errorlevel% neq 0 (
+    echo [ERROR] Git add failed. Please make sure Git is installed and configured.
+    goto end
+)
+
+echo.
+echo Step 3: Committing changes...
+git commit -m "Auto-update: Mobile layout fixes, responsive wrapped header, mobile card view for recent orders, real-time AJAX order alerts with Web Audio sound"
+if %errorlevel% neq 0 (
+    echo [INFO] No new changes to commit or commit failed.
+)
+
+echo.
+echo Step 4: Pushing changes to GitHub (origin/main)...
+git push origin main
+if %errorlevel% neq 0 (
+    echo [ERROR] Git push failed. Please check your internet connection or GitHub authentication.
+    goto end
+)
+
+echo.
+echo ===================================================
+echo [SUCCESS] All changes pushed to GitHub successfully!
+echo ===================================================
+:end
+echo.
+pause

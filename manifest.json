@@ -1,0 +1,16 @@
+{
+  "name": "HR Traders",
+  "short_name": "HR Traders",
+  "description": "Premium Online Grocery & Grain Store",
+  "start_url": "./index.php",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "assets/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
