@@ -305,6 +305,13 @@ try {
             }
         }
     }
+
+    // Automatic products category migration (combine cold_drinks and water into beverages)
+    try {
+        $pdo->exec("UPDATE products SET category = 'beverages' WHERE category IN ('cold_drinks', 'water')");
+    } catch (PDOException $e) {
+        // Ignore
+    }
 } catch (PDOException $e) {
     // If the database does not exist yet, we will output a link to install.php
     die("Database Connection Failed: " . $e->getMessage() . "<br><br><strong>Tip:</strong> If you are setting up the system for the first time, run the <a href='" . BASE_URL . "install.php' style='color:blue;text-decoration:underline;'>System Installer (install.php)</a> to automatically create the database and tables.");
@@ -321,13 +328,9 @@ $CATEGORIES = [
         'urdu' => 'آئس کریم',
         'alert' => 'Available for nearby locations only'
     ],
-    'cold_drinks' => [
-        'name' => 'Cold Drinks',
-        'urdu' => 'کولڈ ڈرنکس'
-    ],
-    'water' => [
-        'name' => 'Water',
-        'urdu' => 'پانی'
+    'beverages' => [
+        'name' => 'Beverages',
+        'urdu' => 'مشروبات'
     ],
     'milk' => [
         'name' => 'Milk',

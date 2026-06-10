@@ -127,13 +127,9 @@ $CATEGORIES = [
         'urdu' => 'آئس کریم',
         'alert' => 'Available for nearby locations only'
     ],
-    'cold_drinks' => [
-        'name' => 'Cold Drinks',
-        'urdu' => 'کولڈ ڈرنکس'
-    ],
-    'water' => [
-        'name' => 'Water',
-        'urdu' => 'پانی'
+    'beverages' => [
+        'name' => 'Beverages',
+        'urdu' => 'مشروبات'
     ],
     'milk' => [
         'name' => 'Milk',

@@ -124,8 +124,7 @@ $seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics s
                     <a href="<?php echo BASE_URL; ?>shop.php" class="hover:text-emerald-600 transition-colors">All Products</a>
                     <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="hover:text-emerald-600 transition-colors">Anaj</a>
                     <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="hover:text-emerald-600 transition-colors">Ice Cream</a>
-                    <a href="<?php echo BASE_URL; ?>shop.php?category=cold_drinks#shop-container" class="hover:text-emerald-600 transition-colors">Cold Drinks</a>
-                    <a href="<?php echo BASE_URL; ?>shop.php?category=water#shop-container" class="hover:text-emerald-600 transition-colors">Water</a>
+                    <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="hover:text-emerald-600 transition-colors">Beverages</a>
                     <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="hover:text-emerald-600 transition-colors">Milk</a>
                     <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="hover:text-emerald-600 transition-colors">Cosmetics</a>
                 </nav>

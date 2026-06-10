@@ -110,25 +110,14 @@ try {
             </div>
         </a>
 
-        <!-- Category 3: Cold Drinks -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=cold_drinks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-blue-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png" alt="Cold Drinks" class="w-full h-full object-cover">
+        <!-- Category 3: Beverages -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png" alt="Beverages" class="w-full h-full object-cover">
             </div>
             <div>
-                <h4 class="font-bold text-slate-800">Cold Drinks</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">کولڈ ڈرنکس</p>
-            </div>
-        </a>
-
-        <!-- Category 4: Water -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=water#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-sky-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/water.png" alt="Water" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Water</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">پانی</p>
+                <h4 class="font-bold text-slate-800">Beverages</h4>
+                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">مشروبات</p>
             </div>
         </a>
 

@@ -18,15 +18,14 @@ if (isset($_POST['seed_products'])) {
         // 2. Clean up previously seeded empty-category dummy products
         $pdo->exec("DELETE FROM products WHERE name LIKE '%(Item %'");
         
-        // 3. Fix existing 7UP category to correct 'cold_drinks' category
-        $pdo->exec("UPDATE products SET category = 'cold_drinks' WHERE id = 1 OR name LIKE '%7UP%'");
+        // 3. Fix existing 7UP category to correct 'beverages' category
+        $pdo->exec("UPDATE products SET category = 'beverages' WHERE id = 1 OR name LIKE '%7UP%'");
 
         // Sample product blueprints across categories to match the styles of your images
         $blueprints = [
             ['category' => 'anaj', 'unit' => 'kg', 'weight' => '1 kg', 'names' => ['Super Basmati Rice', 'Chana Daal Premium', 'Moong Daal Special', 'Maash Daal Whole', 'Masoor Daal Red', 'Wheat Flour (Atta)', 'Fine Flour (Maida)', 'Semolina (Suji)', 'White Chickpeas (Kala Chana)', 'Red Beans (Lobia)']],
-            ['category' => 'cold_drinks', 'unit' => 'pcs', 'weight' => '1.5 Ltr', 'names' => ['Cola Soda Classic', 'Lemon Orange Fizzy', 'Dew Mountain Drink', 'Sprite Lemon Lime', 'Fanta Citrus Blast', 'Mango Fruit Juice', 'Apple Nectar Drink', 'Peach Iced Tea', 'Club Soda Water', 'Energy Boost Drink']],
+            ['category' => 'beverages', 'unit' => 'pcs', 'weight' => '1.5 Ltr', 'names' => ['Cola Soda Classic', 'Lemon Orange Fizzy', 'Dew Mountain Drink', 'Sprite Lemon Lime', 'Fanta Citrus Blast', 'Mango Fruit Juice', 'Apple Nectar Drink', 'Peach Iced Tea', 'Club Soda Water', 'Energy Boost Drink', 'Pure Mineral Water', 'Spring Drinking Water', 'Purified Alkaline Water', 'Sparkling Club Water', 'Electrolyte Water Bottle', 'Smart Hydration Water', 'Zero Sodium Water', 'Natural Mineral Water', 'Eco Bottle Water', 'Premium Glacial Water']],
             ['category' => 'ice_cream', 'unit' => 'pcs', 'weight' => '500 ml', 'names' => ['Vanilla Fudge Ice Cream', 'Chocolate Belgian Tub', 'Mango King Delight', 'Strawberry Swirl Scoop', 'Kulfa Traditional Cup', 'Pista Almond Cone', 'Caramel Crunch Bar', 'Blueberry Frozen Yogurt', 'Tutti Frutti Tub', 'Coconut Cream Ice Cream']],
-            ['category' => 'water', 'unit' => 'pcs', 'weight' => '500 ml', 'names' => ['Pure Mineral Water', 'Spring Drinking Water', 'Purified Alkaline Water', 'Sparkling Club Water', 'Electrolyte Water Bottle', 'Smart Hydration Water', 'Zero Sodium Water', 'Natural Mineral Water', 'Eco Bottle Water', 'Premium Glacial Water']],
             ['category' => 'milk', 'unit' => 'pcs', 'weight' => '1 Ltr', 'names' => ['UHT Whole Milk', 'Low Fat Slim Milk', 'Organic Soy Milk', 'Almond Nut Milk', 'Fresh Dairy Milk', 'Condensed Sweet Milk', 'Evaporated Milk Can', 'Chocolate Milk Shake', 'Strawberry Dairy Drink', 'Powdered Milk Premium']],
             ['category' => 'cosmetics', 'unit' => 'pcs', 'weight' => '200 ml', 'names' => ['Anti-Dandruff Shampoo', 'Moisturizing Hair Conditioner', 'Aloe Vera Body Wash', 'Charcoal Face Scrub', 'Sandalwood Beauty Soap', 'Herbal Toothpaste', 'Deodorant Body Spray', 'Hydrating Face Cream', 'Rose Water Spray', 'Sunscreen Lotion SPF 50']]
         ];
@@ -175,7 +174,7 @@ if (isset($_POST['seed_products'])) {
         <ul class="list-disc pl-4 space-y-1">
             <li>Convert database `category` column to VARCHAR to support new categories.</li>
             <li>Clean up previously seeded dummy products with empty categories.</li>
-            <li>Fix category of existing 7UP to 'cold_drinks'.</li>
+            <li>Fix category of existing 7UP to 'beverages'.</li>
             <li>Seed 50 new products distributed across standard categories (Qty: 99).</li>
         </ul>
     </div>

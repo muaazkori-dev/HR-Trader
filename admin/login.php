@@ -145,8 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i class="fas fa-lock"></i>
                 </span>
                 <input type="password" id="password" name="password" required
-                       class="w-full pl-10 pr-3 py-2 bg-white border border-slate-355 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900 placeholder-slate-400"
+                       class="w-full pl-10 pr-10 py-2 bg-white border border-slate-355 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900 placeholder-slate-400"
                        placeholder="••••••••">
+                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                </button>
             </div>
         </div>
 
@@ -160,6 +163,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="text-[10px] text-slate-500">Notice: Sessions are fully encrypted and tracked. Unauthorized attempts will be logged.</p>
     </div>
 </div>
+
+<script>
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const icon = document.getElementById('togglePasswordIcon');
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+});
+</script>
 
 </body>
 </html>

@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-update: Staff credentials reset script update, layout fixes, AJAX updates, dynamic db config"
+git commit -m "Auto-update: Password visibility toggle, merged cold drinks and water into beverages category"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )
