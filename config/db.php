@@ -73,6 +73,11 @@ try {
     );
     
     // Automatic DB migrations for category updates
+    try {
+        $pdo->exec("ALTER TABLE products MODIFY COLUMN category VARCHAR(50) NOT NULL");
+    } catch (PDOException $e) {
+        // Ignore
+    }
     $pdo->exec("UPDATE products SET category = 'anaj' WHERE category = 'pulses_rice'");
     $pdo->exec("UPDATE products SET category = 'anaj' WHERE category = 'snacks_chips'");
     $pdo->exec("UPDATE products SET category = 'beverages' WHERE category IN ('cold_drinks', 'water')");

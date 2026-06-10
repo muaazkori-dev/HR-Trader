@@ -1,7 +1,5 @@
 <?php
 // HR Traders Database Diagnostics & Manual Migrator
-// Helps identify exactly why automatic migrations might be failing (e.g., permissions, locks)
-
 header('Content-Type: text/html; charset=utf-8');
 
 error_reporting(E_ALL);
@@ -12,51 +10,48 @@ require_once __DIR__ . '/config/db.php';
 echo "<h2>HR Traders Database Diagnostic Tool</h2>";
 echo "Connected successfully to database: <strong>" . DB_NAME . "</strong><br><br>";
 
-$migrations = [
-    "ALTER TABLE products ADD COLUMN unit VARCHAR(20) DEFAULT 'pcs'",
-    "ALTER TABLE products ADD COLUMN purchase_price DECIMAL(10,2) NOT NULL DEFAULT 0.00",
-    "ALTER TABLE products ADD COLUMN image VARCHAR(255) NULL",
-    "ALTER TABLE orders ADD COLUMN user_id INT DEFAULT NULL",
-    "ALTER TABLE orders ADD COLUMN payment_method VARCHAR(50) NOT NULL DEFAULT 'COD'",
-    "ALTER TABLE orders ADD COLUMN status ENUM('pending', 'packaging', 'out_for_delivery', 'delivered', 'cancelled') DEFAULT 'pending'",
-    "ALTER TABLE users ADD COLUMN phone VARCHAR(20) DEFAULT NULL",
-    "ALTER TABLE users ADD COLUMN address TEXT DEFAULT NULL",
-    "CREATE TABLE IF NOT EXISTS `sales` (
-      `id` INT AUTO_INCREMENT PRIMARY KEY,
-      `transaction_type` ENUM('POS', 'Online') NOT NULL DEFAULT 'POS',
-      `order_id` INT DEFAULT NULL,
-      `total_amount` DECIMAL(10,2) NOT NULL,
-      `total_profit` DECIMAL(10,2) NOT NULL,
-      `payment_method` VARCHAR(50) NOT NULL DEFAULT 'Cash',
-      `cashier_id` INT DEFAULT NULL,
-      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-    "ALTER TABLE sales ADD COLUMN order_id INT DEFAULT NULL",
-    "ALTER TABLE sales ADD COLUMN total_profit DECIMAL(10,2) NOT NULL DEFAULT 0.00",
-    "ALTER TABLE sales ADD COLUMN payment_method VARCHAR(50) NOT NULL DEFAULT 'Cash'",
-    "ALTER TABLE sales ADD COLUMN cashier_id INT DEFAULT NULL",
-    "CREATE TABLE IF NOT EXISTS `sale_items` (
-      `id` INT AUTO_INCREMENT PRIMARY KEY,
-      `sale_id` INT NOT NULL,
-      `product_id` INT NOT NULL,
-      `quantity` INT NOT NULL,
-      `price` DECIMAL(10,2) NOT NULL,
-      `purchase_price` DECIMAL(10,2) NOT NULL,
-      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-    "ALTER TABLE sale_items ADD COLUMN purchase_price DECIMAL(10,2) NOT NULL DEFAULT 0.00"
+// Manual category updates trigger
+echo "<h3>1. Running Category Migrations manually...</h3>";
+
+try {
+    $pdo->exec("ALTER TABLE products MODIFY COLUMN category VARCHAR(50) NOT NULL");
+    echo "Column <code>category</code> successfully modified to VARCHAR(50).<br>";
+} catch (PDOException $e) {
+    echo "Info: Column modification status: " . $e->getMessage() . "<br>";
+}
+
+$updates = [
+    "UPDATE products SET category = 'anaj' WHERE category IN ('pulses_rice', 'snacks_chips')",
+    "UPDATE products SET category = 'beverages' WHERE category IN ('cold_drinks', 'water')",
+    "UPDATE products SET category = 'ice_cream' WHERE category = 'frozen_icecream'"
 ];
 
-foreach ($migrations as $sql) {
-    echo "Running: <code>$sql</code> ... ";
+foreach ($updates as $sql) {
     try {
-        $pdo->exec($sql);
-        echo "<span style='color:green;font-weight:bold;'>SUCCESS / ALREADY EXISTS</span><br>";
+        $count = $pdo->exec($sql);
+        echo "Query: <code>$sql</code> - Affected Rows: <strong>$count</strong><br>";
     } catch (PDOException $e) {
-        // If column or table already exists, it might throw an error but that's fine.
-        // We want to see the error details if it is a permissions issue or key constraint mismatch.
-        echo "<span style='color:orange;'>INFO: " . $e->getMessage() . "</span><br>";
+        echo "<span style='color:red;'>Error running migration: " . $e->getMessage() . "</span><br>";
     }
 }
 
-echo "<br><strong>Diagnostics completed. Please refresh the admin panel and try again.</strong>";
+echo "<h3>2. Product Count by Category in Database:</h3>";
+try {
+    $stmt = $pdo->query("SELECT category, COUNT(*) as cnt FROM products GROUP BY category");
+    $rows = $stmt->fetchAll();
+    if (empty($rows)) {
+        echo "<span style='color:orange;'>No products found in the database.</span><br>";
+    } else {
+        echo "<table border='1' cellpadding='5' style='border-collapse:collapse;'>";
+        echo "<tr style='background:#f4f4f4;'><th>Category Name (in DB)</th><th>Product Count</th></tr>";
+        foreach ($rows as $row) {
+            echo "<tr><td><code>" . htmlspecialchars($row['category']) . "</code></td><td>" . $row['cnt'] . "</td></tr>";
+        }
+        echo "</table>";
+    }
+} catch (PDOException $e) {
+    echo "<span style='color:red;'>Error fetching product categories: " . $e->getMessage() . "</span><br>";
+}
+
+echo "<br><strong>Diagnostics completed.</strong>";
+?>
