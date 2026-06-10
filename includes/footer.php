@@ -41,28 +41,42 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
                     <li><a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="hover:text-emerald-600 transition-colors">Beverages</a></li>
                     <li><a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="hover:text-emerald-600 transition-colors">Milk</a></li>
                     <li><a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="hover:text-emerald-600 transition-colors">Cosmetics</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>shop.php?category=snacks#shop-container" class="hover:text-emerald-600 transition-colors">Snacks</a></li>
                 </ul>
             </div>
 
-            <div class="space-y-3">
-                <h4 class="text-slate-800 font-semibold text-sm uppercase tracking-wider">Store Location</h4>
-                <ul class="space-y-3 text-sm text-slate-550">
-                    <li class="flex items-start gap-2">
-                        <i class="fas fa-map-marker-alt text-emerald-600 mt-1 flex-shrink-0"></i>
-                        <a href="<?php echo htmlspecialchars(get_setting('store_maps_url', 'https://maps.app.goo.gl/S7BB1SyefKsfKX5K7')); ?>" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600 transition-colors cursor-pointer leading-tight">
-                            <?php echo htmlspecialchars(get_setting('store_address', 'Toor Colony, Front of Hira Public School, Tando Adam')); ?>
+            <div class="space-y-4">
+                <h4 class="text-slate-800 font-semibold text-sm uppercase tracking-wider">Store Locations</h4>
+                <div class="space-y-4 text-xs text-slate-550">
+                    <!-- Branch 1 -->
+                    <div class="space-y-1.5 border-b border-slate-200/50 pb-3">
+                        <span class="text-[10px] font-bold text-slate-700 block uppercase tracking-wider">Branch 1 (Tando Adam)</span>
+                        <a href="https://maps.app.goo.gl/S7BB1SyefKsfKX5K7" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2 hover:text-emerald-600 transition-colors leading-tight">
+                            <i class="fas fa-map-marker-alt text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                            <span>Toor Colony, Front of Hira Public School, Tando Adam</span>
                         </a>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fas fa-phone-alt text-emerald-600 flex-shrink-0"></i>
-                        <a href="tel:<?php echo htmlspecialchars(get_setting('store_phone', '923033943814')); ?>" class="hover:text-emerald-600 transition-colors cursor-pointer">
-                            <?php echo htmlspecialchars(get_setting('store_phone', '+92 303 3943814')); ?>
+                        <a href="tel:923033943814" class="flex items-center gap-2 hover:text-emerald-600 transition-colors">
+                            <i class="fas fa-phone-alt text-emerald-600 flex-shrink-0 text-[10px]"></i>
+                            <span>+92 303 3943814</span>
                         </a>
-                    </li>
-                    <li class="relative">
+                    </div>
+                    <!-- Branch 2 -->
+                    <div class="space-y-1.5 border-b border-slate-200/50 pb-3">
+                        <span class="text-[10px] font-bold text-slate-700 block uppercase tracking-wider">Branch 2 (Gulshan-e-Sardar)</span>
+                        <a href="https://maps.app.goo.gl/3MThGg3KyDduX4eB7?g_st=awb" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2 hover:text-emerald-600 transition-colors leading-tight">
+                            <i class="fas fa-map-marker-alt text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                            <span>Gulshan-e-Sardar, near Ayoub Hotel, Tando Adam</span>
+                        </a>
+                        <a href="tel:923137889859" class="flex items-center gap-2 hover:text-emerald-600 transition-colors">
+                            <i class="fas fa-phone-alt text-emerald-600 flex-shrink-0 text-[10px]"></i>
+                            <span>+92 313 7889859</span>
+                        </a>
+                    </div>
+                    <!-- Timing/Schedule Button -->
+                    <div class="relative pt-1">
                         <button id="timing-toggle-btn" class="flex items-center gap-2 text-slate-550 hover:text-emerald-600 transition-colors focus:outline-none w-full text-left cursor-pointer">
-                            <i class="fas fa-clock text-emerald-600 flex-shrink-0"></i>
-                            <span><?php echo htmlspecialchars($today_timings); ?> &bull; <span class="text-xs text-emerald-600 font-bold underline decoration-dotted">Weekly Schedule</span></span>
+                            <i class="fas fa-clock text-emerald-600 flex-shrink-0 text-sm"></i>
+                            <span class="font-medium text-xs"><?php echo htmlspecialchars($today_timings); ?> &bull; <span class="text-[10px] text-emerald-600 font-bold underline decoration-dotted">Weekly Schedule</span></span>
                         </button>
                         
                         <!-- Timing Popover Card -->
@@ -108,8 +122,8 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
                                 ?>
                             </div>
                         </div>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -123,13 +137,79 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
     </div>
 </footer>
 
-<!-- FLOATING WHATSAPP CHAT BUTTON -->
-<a href="https://wa.me/<?php echo WHATSAPP_NUMBER; ?>?text=Hi" 
-   target="_blank" 
-   class="whatsapp-float hover:scale-110" 
-   title="Chat with HR Traders on WhatsApp">
+<!-- FLOATING WHATSAPP CHAT SELECTOR -->
+<div id="whatsapp-selector-card" class="fixed bottom-24 right-6 bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 z-50 w-72 transition-all duration-300 transform scale-95 opacity-0 pointer-events-none origin-bottom-right">
+    <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <span class="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
+            <i class="fab fa-whatsapp text-emerald-600 text-lg"></i> WhatsApp Support
+        </span>
+        <button onclick="toggleWhatsappSelector(false)" class="text-slate-400 hover:text-slate-650 p-0.5 rounded-lg hover:bg-slate-105 transition-all focus:outline-none">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+    </div>
+    <div class="space-y-2">
+        <!-- Branch 1 Button -->
+        <a href="https://wa.me/923033943814?text=Salam%20HR%20Traders%20Branch%201" target="_blank" rel="noopener noreferrer" 
+           class="flex items-center gap-3 p-2.5 rounded-2xl border border-slate-100 hover:border-emerald-250 hover:bg-emerald-50/30 transition-all group">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0 group-hover:bg-emerald-100 transition-colors">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <div class="flex-1 text-left">
+                <span class="font-bold text-xs text-slate-800 block leading-tight">Branch 1 (Tando Adam)</span>
+                <span class="text-[10px] text-slate-500 font-mono">+92 303 3943814</span>
+            </div>
+        </a>
+        <!-- Branch 2 Button -->
+        <a href="https://wa.me/923137889859?text=Salam%20HR%20Traders%20Branch%202" target="_blank" rel="noopener noreferrer" 
+           class="flex items-center gap-3 p-2.5 rounded-2xl border border-slate-100 hover:border-emerald-250 hover:bg-emerald-50/30 transition-all group">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0 group-hover:bg-emerald-100 transition-colors">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <div class="flex-1 text-left">
+                <span class="font-bold text-xs text-slate-800 block leading-tight">Branch 2 (Gulshan-e-Sardar)</span>
+                <span class="text-[10px] text-slate-500 font-mono">+92 313 7889859</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- FLOATING WHATSAPP TRIGGER BUTTON -->
+<button onclick="toggleWhatsappSelector()" 
+        class="whatsapp-float hover:scale-110 active:scale-95 focus:outline-none transition-all shadow-xl flex items-center justify-center cursor-pointer" 
+        title="Chat with HR Traders on WhatsApp">
     <i class="fab fa-whatsapp"></i>
-</a>
+</button>
+
+<script>
+function toggleWhatsappSelector(show) {
+    const card = document.getElementById('whatsapp-selector-card');
+    if (!card) return;
+    
+    if (show === undefined) {
+        show = card.classList.contains('pointer-events-none');
+    }
+    
+    if (show) {
+        card.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+        card.classList.add('opacity-100', 'scale-100');
+    } else {
+        card.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+        card.classList.remove('opacity-100', 'scale-100');
+    }
+}
+
+// Close selector card when clicking outside
+document.addEventListener('click', function(e) {
+    const card = document.getElementById('whatsapp-selector-card');
+    const trigger = document.querySelector('.whatsapp-float');
+    if (card && !card.classList.contains('pointer-events-none')) {
+        if (!card.contains(e.target) && !trigger.contains(e.target)) {
+            toggleWhatsappSelector(false);
+        }
+    }
+});
+</script>
+
 
 <!-- PRODUCT DETAILS MODAL (POPUP OVERLAY) -->
 <div id="product-details-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none" onclick="if(event.target === this) closeProductDetails()">

@@ -35,7 +35,7 @@ echo "\n";
 
 // 3. Heal any products with empty or invalid categories
 echo "3. Healing empty or invalid categories using product names...\n";
-$valid_categories = ['anaj', 'ice_cream', 'beverages', 'milk', 'cosmetics'];
+$valid_categories = ['anaj', 'ice_cream', 'beverages', 'milk', 'cosmetics', 'snacks'];
 
 try {
     // Fetch all products
@@ -63,6 +63,8 @@ try {
                 $new_cat = 'milk';
             } elseif (preg_match('/\b(shampoo|conditioner|wash|scrub|soap|toothpaste|spray|cream|lotion|cosmetic|deodorant)\b/i', $name)) {
                 $new_cat = 'cosmetics';
+            } elseif (preg_match('/\b(chips|cookies|biscuits|snacks|nimko|popcorn|krunch|snack|puff|crisps|cheetos|lays|kurkure)\b/i', $name)) {
+                $new_cat = 'snacks';
             }
             
             if ($new_cat !== '') {

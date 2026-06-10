@@ -338,6 +338,10 @@ $CATEGORIES = [
         'name' => 'Cosmetics',
         'urdu' => 'کاسمیٹکس'
     ],
+    'snacks' => [
+        'name' => 'Snacks',
+        'urdu' => 'سنیکس'
+    ],
     // Sub-items map to Cosmetics for unified display
     'shampoo' => [
         'name' => 'Cosmetics (Shampoo)',
