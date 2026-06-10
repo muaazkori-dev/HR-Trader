@@ -34,6 +34,7 @@ $whatsapp_template = get_setting('whatsapp_dispatch_template', 'Hi {name}, your 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png">
     <title>HR Traders - Manager Fulfillment Panel</title>
     <!-- Define BASE_URL globally for client-side JS AJAX fetches -->
     <script>

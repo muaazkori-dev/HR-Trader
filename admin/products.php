@@ -378,6 +378,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png">
     <title>HR Traders - Product Inventory Manager</title>
     <script src="<?php echo BASE_URL; ?>assets/js/tailwind.min.js"></script>
     <script>
