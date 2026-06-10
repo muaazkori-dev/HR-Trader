@@ -110,19 +110,11 @@ try {
                 <div class="glass-card rounded-2xl overflow-hidden flex flex-col border <?php echo $is_frozen ? 'frozen-alert-border border-rose-500/20' : 'border-slate-200'; ?>">
                     
                     <!-- Product Image representation -->
-<<<<<<< HEAD
                     <div onclick="openProductDetails(<?php echo $product['id']; ?>)" class="h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden cursor-pointer group">
                         <?php 
                         $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
                         ?>
                         <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" loading="lazy">
-=======
-                    <div class="h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden">
-                        <?php 
-                        $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
-                        ?>
-                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform hover:scale-105 duration-300" loading="lazy">
->>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
 
                         <!-- Floating Category Label -->
                         <span class="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-600 shadow-sm">
@@ -145,15 +137,11 @@ try {
                     <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                         <div class="space-y-2">
                             <div>
-<<<<<<< HEAD
                                 <h3 class="font-bold text-slate-800 text-base leading-tight truncate-2-lines">
                                     <span class="cursor-pointer hover:text-emerald-600 transition-colors" onclick="openProductDetails(<?php echo $product['id']; ?>)">
                                         <?php echo sanitize($product['name']); ?>
                                     </span>
                                 </h3>
-=======
-                                <h3 class="font-bold text-slate-800 text-base leading-tight truncate-2-lines"><?php echo sanitize($product['name']); ?></h3>
->>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
                                 <p class="text-xs text-slate-550 line-clamp-2 mt-1 min-h-[32px]"><?php echo sanitize($product['description'] ?: 'No description provided.'); ?></p>
                             </div>
                             <div class="flex items-center justify-between text-xs text-slate-500">

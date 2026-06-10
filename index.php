@@ -179,26 +179,17 @@ try {
                 $is_frozen = $product['category'] === 'ice_cream'; 
                 $is_out_of_stock = $product['stock_quantity'] <= 0;
                 ?>
-                <!-- PRODUCT CARD -->
-                <div class="glass-card rounded-2xl overflow-hidden flex flex-col border <?php echo $is_frozen ? 'frozen-alert-border border-rose-500/20' : 'border-slate-200'; ?>">
+                   <div class="glass-card rounded-2xl overflow-hidden flex flex-col border <?php echo $is_frozen ? 'frozen-alert-border border-rose-500/20' : 'border-slate-200'; ?>">
                     
                     <!-- Product Image representation -->
-<<<<<<< HEAD
                     <div onclick="openProductDetails(<?php echo $product['id']; ?>)" class="h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden cursor-pointer group">
                         <?php 
                         $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
                         ?>
                         <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" loading="lazy">
-=======
-                    <div class="h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden">
-                        <?php 
-                        $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
-                        ?>
-                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform hover:scale-105 duration-300" loading="lazy">
->>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
                         
                         <!-- Floating Category Label -->
-                        <span class="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-650 shadow-sm">
+                        <span class="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-655 shadow-sm">
                             <?php echo $CATEGORIES[$product['category']]['name'] ?? $product['category']; ?>
                         </span>
 
@@ -218,17 +209,12 @@ try {
                     <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                         <div class="space-y-2">
                             <div>
-<<<<<<< HEAD
                                 <h3 class="font-bold text-slate-800 text-base leading-tight truncate-2-lines">
                                     <span class="cursor-pointer hover:text-emerald-600 transition-colors" onclick="openProductDetails(<?php echo $product['id']; ?>)">
                                         <?php echo sanitize($product['name']); ?>
                                     </span>
                                 </h3>
                                 <p class="text-xs text-slate-555 line-clamp-2 mt-1 min-h-[32px]"><?php echo sanitize($product['description'] ?: 'No description provided.'); ?></p>
-=======
-                                <h3 class="font-bold text-slate-800 text-base leading-tight truncate-2-lines"><?php echo sanitize($product['name']); ?></h3>
-                                <p class="text-xs text-slate-550 line-clamp-2 mt-1 min-h-[32px]"><?php echo sanitize($product['description'] ?: 'No description provided.'); ?></p>
->>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
                             </div>
                             <div class="flex items-center justify-between text-xs text-slate-500">
                                 <span><?php echo sanitize($product['weight']); ?></span>
