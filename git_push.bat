@@ -18,14 +18,21 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo Step 3: Committing changes...
+echo Step 3: Committing local changes...
 git commit -m "Auto-update: Mobile layout fixes, responsive wrapped header, mobile card view for recent orders, real-time AJAX order alerts with Web Audio sound"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )
 
 echo.
-echo Step 4: Pushing changes to GitHub (origin/main)...
+echo Step 4: Pulling latest updates from GitHub...
+git pull origin main --no-edit
+if %errorlevel% neq 0 (
+    echo [WARNING] Git pull had issues. Attempting to push anyway...
+)
+
+echo.
+echo Step 5: Pushing changes to GitHub (origin/main)...
 git push origin main
 if %errorlevel% neq 0 (
     echo [ERROR] Git push failed. Please check your internet connection or GitHub authentication.
