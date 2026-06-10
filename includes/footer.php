@@ -345,6 +345,56 @@ document.addEventListener('click', function(e) {
     </div>
 </div>
 
+<!-- Cookie Consent Banner -->
+<div id="cookie-consent-banner" class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-2xl shadow-2xl z-[100] transform translate-y-20 opacity-0 pointer-events-none transition-all duration-500 flex flex-col gap-4">
+    <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/20 text-amber-500 flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fas fa-cookie-bite animate-pulse"></i>
+        </div>
+        <div class="space-y-1">
+            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Cookie Settings!</h4>
+            <p class="text-xs text-slate-650 dark:text-slate-400 leading-normal">
+                Hum cookies ka istemal karte hain taake aapka shopping experience behtar ho sake aur cart items aur location preferences ko aapke device par mehfooz rakha ja sake.
+            </p>
+        </div>
+    </div>
+    <div class="flex items-center justify-end gap-2.5">
+        <button onclick="setCookieConsent('declined')" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-250 transition-colors">
+            Decline
+        </button>
+        <button onclick="setCookieConsent('accepted')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/10 transition-all active:scale-95">
+            Accept All
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const consent = localStorage.getItem("cookie_consent");
+    if (!consent) {
+        setTimeout(() => {
+            const banner = document.getElementById("cookie-consent-banner");
+            if (banner) {
+                banner.classList.remove("translate-y-20", "opacity-0", "pointer-events-none");
+                banner.classList.add("translate-y-0", "opacity-100");
+            }
+        }, 1500);
+    }
+});
+
+function setCookieConsent(status) {
+    localStorage.setItem("cookie_consent", status);
+    const banner = document.getElementById("cookie-consent-banner");
+    if (banner) {
+        banner.classList.remove("translate-y-0", "opacity-100");
+        banner.classList.add("translate-y-20", "opacity-0", "pointer-events-none");
+        setTimeout(() => {
+            banner.remove();
+        }, 500);
+    }
+}
+</script>
+
 <!-- Main storefront script -->
 <script src="<?php echo BASE_URL; ?>assets/js/app.js?v=2.1"></script>
 </body>
