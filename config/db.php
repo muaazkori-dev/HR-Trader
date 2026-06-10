@@ -75,7 +75,7 @@ try {
     // Automatic DB migrations for category updates
     $pdo->exec("UPDATE products SET category = 'anaj' WHERE category = 'pulses_rice'");
     $pdo->exec("UPDATE products SET category = 'anaj' WHERE category = 'snacks_chips'");
-    $pdo->exec("UPDATE products SET category = 'cold_drinks' WHERE category = 'beverages'");
+    $pdo->exec("UPDATE products SET category = 'beverages' WHERE category IN ('cold_drinks', 'water')");
     $pdo->exec("UPDATE products SET category = 'ice_cream' WHERE category = 'frozen_icecream'");
 
     // Automatic product table column migrations (self-healing schema)
@@ -304,13 +304,6 @@ try {
                 }
             }
         }
-    }
-
-    // Automatic products category migration (combine cold_drinks and water into beverages)
-    try {
-        $pdo->exec("UPDATE products SET category = 'beverages' WHERE category IN ('cold_drinks', 'water')");
-    } catch (PDOException $e) {
-        // Ignore
     }
 } catch (PDOException $e) {
     // If the database does not exist yet, we will output a link to install.php

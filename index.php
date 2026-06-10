@@ -87,7 +87,7 @@ try {
         <p class="text-sm text-slate-500">Select a category to filter your grocery requirements</p>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <!-- Category 1: Anaj -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
