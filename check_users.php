@@ -8,18 +8,29 @@ $status = "";
 // Handle Password Reset Request
 if (isset($_POST['reset_passwords'])) {
     try {
+<<<<<<< HEAD
         $hashed_owner = password_hash('Owner124421', PASSWORD_DEFAULT);
         $hashed_manager = password_hash('Manager124421', PASSWORD_DEFAULT);
+=======
+        $hashed_password = password_hash('admin123', PASSWORD_DEFAULT);
+>>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
         
         // Check if owner exists, update or insert
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = 'owner'");
         $stmt->execute();
         if ($stmt->fetch()) {
             $stmt = $pdo->prepare("UPDATE users SET password = :pass, role = 'owner', name = 'Owner Admin' WHERE username = 'owner'");
+<<<<<<< HEAD
             $stmt->execute(['pass' => $hashed_owner]);
         } else {
             $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('owner', :pass, 'owner', 'Owner Admin', '03033943814', 'Tando Adam')");
             $stmt->execute(['pass' => $hashed_owner]);
+=======
+            $stmt->execute(['pass' => $hashed_password]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('owner', :pass, 'owner', 'Owner Admin', '03033943814', 'Tando Adam')");
+            $stmt->execute(['pass' => $hashed_password]);
+>>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
         }
 
         // Check if manager exists, update or insert
@@ -27,6 +38,7 @@ if (isset($_POST['reset_passwords'])) {
         $stmt->execute();
         if ($stmt->fetch()) {
             $stmt = $pdo->prepare("UPDATE users SET password = :pass, role = 'manager', name = 'Store Manager' WHERE username = 'manager'");
+<<<<<<< HEAD
             $stmt->execute(['pass' => $hashed_manager]);
         } else {
             $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('manager', :pass, 'manager', 'Store Manager', '03217654321', 'Lahore')");
@@ -40,6 +52,16 @@ if (isset($_POST['reset_passwords'])) {
 
         $status = "success";
         $message = "Passwords successfully updated: owner is set to <strong>Owner124421</strong> and manager is set to <strong>Manager124421</strong>. Admin Secret Key reset to: <strong>hr_secure_desk_99</strong>";
+=======
+            $stmt->execute(['pass' => $hashed_password]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('manager', :pass, 'manager', 'Store Manager', '03217654321', 'Lahore')");
+            $stmt->execute(['pass' => $hashed_password]);
+        }
+
+        $status = "success";
+        $message = "Passwords for 'owner' and 'manager' have been successfully reset to: <strong>admin123</strong>";
+>>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
     } catch (PDOException $e) {
         $status = "error";
         $message = "Failed to reset passwords: " . $e->getMessage();
@@ -97,6 +119,7 @@ try {
         </div>
     <?php endif; ?>
 
+<<<<<<< HEAD
     <!-- ADMIN SECRET KEY STATUS -->
     <?php
     $current_secret = 'hr_secure_desk_99';
@@ -120,6 +143,8 @@ try {
         </div>
     </div>
 
+=======
+>>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
     <!-- USERS LIST -->
     <div class="space-y-3">
         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Registered Accounts in Database</h3>
@@ -160,7 +185,11 @@ try {
         <form action="" method="POST" class="flex-1">
             <button type="submit" name="reset_passwords" 
                     class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+<<<<<<< HEAD
                 <i class="fas fa-key"></i> Set Owner &amp; Manager Passwords
+=======
+                <i class="fas fa-key"></i> Reset owner &amp; manager to "admin123"
+>>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
             </button>
         </form>
         <a href="<?php echo BASE_URL; ?>admin/login.php" 

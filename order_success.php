@@ -117,6 +117,7 @@ $whatsapp_url = "https://api.whatsapp.com/send?phone=" . WHATSAPP_NUMBER . "&tex
         </div>
 
         <!-- Totals Column -->
+<<<<<<< HEAD
         <?php $shipping_fee = (float)get_setting('shipping_fee', '0.00'); ?>
         <div class="border-t border-slate-200 pt-6 space-y-3">
             <div class="flex items-center justify-between text-sm text-slate-500">
@@ -124,6 +125,12 @@ $whatsapp_url = "https://api.whatsapp.com/send?phone=" . WHATSAPP_NUMBER . "&tex
                 <span class="font-bold text-slate-800">
                     <?php echo $shipping_fee > 0 ? format_price($shipping_fee) : 'Rs. 0.00 (Free)'; ?>
                 </span>
+=======
+        <div class="border-t border-slate-200 pt-6 space-y-3">
+            <div class="flex items-center justify-between text-sm text-slate-500">
+                <span>Shipping / Delivery Fee</span>
+                <span class="font-bold text-slate-800">Rs. 0.00 (Free)</span>
+>>>>>>> a400bda411881ddbd9dae80bf05bc85dcd4dfdd1
             </div>
             <div class="flex items-center justify-between text-base font-bold text-slate-800 border-t border-slate-200 pt-3">
                 <span>Grand Total Invoice</span>
