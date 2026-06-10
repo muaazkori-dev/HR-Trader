@@ -8,28 +8,32 @@ $status = "";
 // Handle Password Reset Request
 if (isset($_POST['reset_passwords'])) {
     try {
-        $hashed_owner = password_hash('Owner124421', PASSWORD_DEFAULT);
-        $hashed_manager = password_hash('Manager124421', PASSWORD_DEFAULT);
+        $hashed_owner = password_hash('Haroon124421', PASSWORD_DEFAULT);
+        $hashed_manager = password_hash('Admin124421', PASSWORD_DEFAULT);
+        
+        // Clean up old usernames 'owner' and 'manager' to avoid confusion
+        $stmt_cleanup = $pdo->prepare("DELETE FROM users WHERE username IN ('owner', 'manager')");
+        $stmt_cleanup->execute();
         
         // Check if owner exists, update or insert
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = 'owner'");
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = 'Haroon'");
         $stmt->execute();
         if ($stmt->fetch()) {
-            $stmt = $pdo->prepare("UPDATE users SET password = :pass, role = 'owner', name = 'Owner Admin' WHERE username = 'owner'");
+            $stmt = $pdo->prepare("UPDATE users SET password = :pass, role = 'owner', name = 'Haroon' WHERE username = 'Haroon'");
             $stmt->execute(['pass' => $hashed_owner]);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('owner', :pass, 'owner', 'Owner Admin', '03033943814', 'Tando Adam')");
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('Haroon', :pass, 'owner', 'Haroon', '03033943814', 'Tando Adam')");
             $stmt->execute(['pass' => $hashed_owner]);
         }
 
         // Check if manager exists, update or insert
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = 'manager'");
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = 'Admin'");
         $stmt->execute();
         if ($stmt->fetch()) {
-            $stmt = $pdo->prepare("UPDATE users SET password = :pass, role = 'manager', name = 'Store Manager' WHERE username = 'manager'");
+            $stmt = $pdo->prepare("UPDATE users SET password = :pass, role = 'manager', name = 'Admin Manager' WHERE username = 'Admin'");
             $stmt->execute(['pass' => $hashed_manager]);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('manager', :pass, 'manager', 'Store Manager', '03217654321', 'Lahore')");
+            $stmt = $pdo->prepare("INSERT INTO users (username, password, role, name, phone, address) VALUES ('Admin', :pass, 'manager', 'Admin Manager', '03217654321', 'Lahore')");
             $stmt->execute(['pass' => $hashed_manager]);
         }
 
@@ -39,7 +43,7 @@ if (isset($_POST['reset_passwords'])) {
         $stmt_secret->execute();
 
         $status = "success";
-        $message = "Passwords successfully updated: owner is set to <strong>Owner124421</strong> and manager is set to <strong>Manager124421</strong>. Admin Secret Key reset to: <strong>hr_secure_desk_99</strong>";
+        $message = "Passwords successfully updated: owner username is <strong>Haroon</strong> with password <strong>Haroon124421</strong>, and manager username is <strong>Admin</strong> with password <strong>Admin124421</strong>. Old default accounts 'owner' and 'manager' deleted. Admin Secret Key reset to: <strong>hr_secure_desk_99</strong>";
     } catch (PDOException $e) {
         $status = "error";
         $message = "Failed to reset passwords: " . $e->getMessage();

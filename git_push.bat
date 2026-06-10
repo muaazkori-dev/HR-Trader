@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-update: Mobile layout fixes, responsive wrapped header, mobile card view for recent orders, real-time AJAX order alerts with Web Audio sound, dynamic db.php"
+git commit -m "Auto-update: Staff credentials reset script update, layout fixes, AJAX updates, dynamic db config"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )
