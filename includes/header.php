@@ -54,7 +54,7 @@ $seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics s
         }
     </script>
     <!-- Favicon link -->
-    <link rel="icon" type="image/jpeg" href="<?php echo BASE_URL; ?>assets/images/favicon.jpg">
+    <link rel="icon" type="image/png" href="<?php echo BASE_URL; ?>assets/images/favicon.png">
     <!-- Google Fonts (Preconnected & Loaded in Parallel) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

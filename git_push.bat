@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-update: Grid column count adjusted to 5 to match merged beverages category"
+git commit -m "Auto-update: Redesigned brand logo, favicon, and category images with transparent PNGs"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )

@@ -102,7 +102,7 @@ try {
         <!-- Category 2: Ice Cream -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.jpg" alt="Ice Cream" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.png" alt="Ice Cream" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Ice Cream</h4>
@@ -124,7 +124,7 @@ try {
         <!-- Category 5: Milk -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.jpg" alt="Milk" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.png" alt="Milk" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Milk</h4>
