@@ -10,8 +10,9 @@ git config user.email "muaazkori-dev@users.noreply.github.com"
 git config user.name "muaazkori-dev"
 
 echo.
-echo Step 2: Adding all updated files to Git...
+echo Step 2: Adding all files (including database configuration)...
 git add .
+git add -f config/db.php
 if %errorlevel% neq 0 (
     echo [ERROR] Git add failed. Please make sure Git is installed and configured.
     goto end
@@ -19,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-update: Mobile layout fixes, responsive wrapped header, mobile card view for recent orders, real-time AJAX order alerts with Web Audio sound"
+git commit -m "Auto-update: Mobile layout fixes, responsive wrapped header, mobile card view for recent orders, real-time AJAX order alerts with Web Audio sound, dynamic db.php"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )
