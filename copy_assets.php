@@ -3,7 +3,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 $copies = [
     'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/hr_traders_logo_1781111060749.png' => __DIR__ . '/assets/images/logo.png',
-    'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/hr_traders_favicon_1781111078204.png' => __DIR__ . '/assets/images/favicon.png',
+    'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/hr_traders_new_favicon_1781114812720.png' => __DIR__ . '/assets/images/favicon.png',
     'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/anaj_category_1781111095610.png' => __DIR__ . '/assets/images/categories/anaj.png',
     'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/ice_cream_category_1781111112679.png' => __DIR__ . '/assets/images/categories/ice_cream.png',
     'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/beverages_category_1781111130213.png' => __DIR__ . '/assets/images/categories/cold_drinks.png',

@@ -14,9 +14,13 @@ try {
 } catch (PDOException $e) {
     $quick_products = [];
 }
+// Set HTML class based on theme type (light or dark)
+$current_theme = get_setting('active_theme', 'emerald_green');
+$dark_themes = ['midnight_indigo', 'cyberpunk_neon', 'deep_purple', 'forest_dark', 'crimson_dark'];
+$html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="<?php echo $html_class; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +47,7 @@ try {
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-hidden">
+<body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-hidden">
 
 <!-- POS HEADER -->
 <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between z-10 flex-shrink-0">

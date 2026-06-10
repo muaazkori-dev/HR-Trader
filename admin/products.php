@@ -372,9 +372,12 @@ try {
 } catch (PDOException $e) {
     die("Error querying inventory details: " . $e->getMessage());
 }
+$current_theme = get_setting('active_theme', 'emerald_green');
+$dark_themes = ['midnight_indigo', 'cyberpunk_neon', 'deep_purple', 'forest_dark', 'forest_green', 'crimson_dark', 'crimson_rose'];
+$html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="<?php echo $html_class; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

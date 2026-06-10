@@ -54,6 +54,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle deleting staff accounts
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_staff') {
+    if (!is_owner()) {
+        $error_message = "Access Denied: Managers cannot delete staff accounts.";
+    } else {
+        $staff_id = (int)$_POST['staff_id'];
+        if ($staff_id === (int)$_SESSION['user_id']) {
+            $error_message = "Error: You cannot delete your own logged-in account.";
+        } else {
+            try {
+                $stmt = $pdo->prepare("DELETE FROM users WHERE id = :id");
+                $stmt->execute(['id' => $staff_id]);
+                $success_message = "Staff account deleted successfully.";
+            } catch (PDOException $e) {
+                $error_message = "Failed to delete staff account: " . $e->getMessage();
+            }
+        }
+    }
+}
+
+// Handle resetting staff password
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_password') {
+    if (!is_owner()) {
+        $error_message = "Access Denied: Managers cannot reset staff passwords.";
+    } else {
+        $staff_id = (int)$_POST['staff_id'];
+        $new_password = trim($_POST['new_password'] ?? '');
+        if (empty($new_password)) {
+            $error_message = "Error: Password cannot be empty.";
+        } else {
+            try {
+                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("UPDATE users SET password = :pass WHERE id = :id");
+                $stmt->execute(['pass' => $hashed_password, 'id' => $staff_id]);
+                $success_message = "Password for staff member updated successfully.";
+            } catch (PDOException $e) {
+                $error_message = "Failed to reset password: " . $e->getMessage();
+            }
+        }
+    }
+}
+
 // Handle Settings updates (theme, timings, status, threshold, whatsapp template)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_settings') {
     if (!is_owner()) {
@@ -64,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $theme = trim($_POST['active_theme']);
             $valid_themes = [
                 'emerald_green', 'midnight_indigo', 'rose_gold', 'cyberpunk_neon', 
-                'slate_blue', 'amber_honey', 'deep_purple', 'forest_green', 
-                'crimson_rose', 'classic_light'
+                'slate_blue', 'amber_honey', 'deep_purple', 'forest_dark', 
+                'crimson_dark', 'classic_light'
             ];
             if (in_array($theme, $valid_themes)) {
                 update_setting('active_theme', $theme);
@@ -257,9 +299,12 @@ try {
 } catch (PDOException $e) {
     die("Database query error: " . $e->getMessage());
 }
+$current_theme = get_setting('active_theme', 'emerald_green');
+$dark_themes = ['midnight_indigo', 'cyberpunk_neon', 'deep_purple', 'forest_dark', 'forest_green', 'crimson_dark', 'crimson_rose'];
+$html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="<?php echo $html_class; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -638,16 +683,47 @@ try {
                             <span class="font-bold text-slate-800 block"><?php echo sanitize($sm['name']); ?></span>
                             <span class="text-slate-500 block">User: <strong class="font-mono"><?php echo sanitize($sm['username']); ?></strong></span>
                         </div>
-                        <div class="text-right">
-                            <span class="px-2 py-0.5 rounded-[4px] text-[8px] font-bold uppercase <?php echo $sm['role'] === 'owner' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-750 border border-slate-200'; ?>">
-                                <?php echo $sm['role']; ?>
-                            </span>
-                            <span class="text-[9px] text-slate-500 block font-mono mt-1">ID: #<?php echo $sm['id']; ?></span>
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <span class="px-2 py-0.5 rounded-[4px] text-[8px] font-bold uppercase <?php echo $sm['role'] === 'owner' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-750 border border-slate-200'; ?>">
+                                    <?php echo $sm['role']; ?>
+                                </span>
+                                <span class="text-[9px] text-slate-500 block font-mono mt-1">ID: #<?php echo $sm['id']; ?></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+                                <button onclick="triggerResetPassword(<?php echo $sm['id']; ?>, '<?php echo htmlspecialchars(addslashes($sm['name']), ENT_QUOTES, 'UTF-8'); ?>')" 
+                                        class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-600 flex items-center justify-center transition-colors shadow-sm"
+                                        title="Reset Password">
+                                    <i class="fas fa-key text-[10px]"></i>
+                                </button>
+                                <?php if ($sm['id'] !== (int)$_SESSION['user_id']): ?>
+                                <button onclick="triggerDeleteStaff(<?php echo $sm['id']; ?>, '<?php echo htmlspecialchars(addslashes($sm['name']), ENT_QUOTES, 'UTF-8'); ?>')" 
+                                        class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 flex items-center justify-center transition-colors shadow-sm"
+                                        title="Delete Staff">
+                                    <i class="fas fa-trash-alt text-[10px]"></i>
+                                </button>
+                                <?php else: ?>
+                                <div class="w-7 h-7 flex items-center justify-center text-slate-300" title="Self (Cannot delete)">
+                                    <i class="fas fa-ban text-[10px]"></i>
+                                </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
         </div>
+
+        <form id="delete-staff-form" action="dashboard.php" method="POST" style="display:none;">
+            <input type="hidden" name="action" value="delete_staff">
+            <input type="hidden" name="staff_id" value="">
+        </form>
+
+        <form id="reset-password-form" action="dashboard.php" method="POST" style="display:none;">
+            <input type="hidden" name="action" value="reset_password">
+            <input type="hidden" name="staff_id" value="">
+            <input type="hidden" name="new_password" value="">
+        </form>
         <?php endif; ?>
     </div>
     </div> <!-- OVERVIEW TAB END -->
@@ -759,8 +835,8 @@ try {
                         'slate_blue' => ['name' => 'Slate Blue', 'type' => 'light', 'primary' => '#2563eb', 'bg' => '#f8fafc', 'border' => '#cbd5e1'],
                         'amber_honey' => ['name' => 'Amber Honey', 'type' => 'light', 'primary' => '#d97706', 'bg' => '#fffdf5', 'border' => '#fde68a'],
                         'deep_purple' => ['name' => 'Deep Purple', 'type' => 'dark', 'primary' => '#a855f7', 'bg' => '#0b0716', 'border' => '#4a148c'],
-                        'forest_green' => ['name' => 'Forest Green', 'type' => 'light', 'primary' => '#15803d', 'bg' => '#f4fdf7', 'border' => '#bbf7d0'],
-                        'crimson_rose' => ['name' => 'Crimson Rose', 'type' => 'light', 'primary' => '#e11d48', 'bg' => '#fffafb', 'border' => '#fecdd3'],
+                        'forest_dark' => ['name' => 'Forest Emerald', 'type' => 'dark', 'primary' => '#10b981', 'bg' => '#020804', 'border' => '#047857'],
+                        'crimson_dark' => ['name' => 'Crimson Ruby', 'type' => 'dark', 'primary' => '#f43f5e', 'bg' => '#080103', 'border' => '#9f1239'],
                         'classic_light' => ['name' => 'Classic Monochrome', 'type' => 'light', 'primary' => '#000000', 'bg' => '#ffffff', 'border' => '#000000']
                     ];
                     $current_theme = get_setting('active_theme', 'emerald_green');
@@ -1223,6 +1299,28 @@ document.addEventListener('click', function() {
 function selectTheme(themeKey) {
     document.getElementById('selected-theme-input').value = themeKey;
     document.getElementById('theme-selector-form').submit();
+}
+
+function triggerDeleteStaff(staffId, staffName) {
+    if (confirm("Kya aap waqai staff member '" + staffName + "' ko delete karna chahte hain?")) {
+        const form = document.getElementById('delete-staff-form');
+        form.querySelector('input[name="staff_id"]').value = staffId;
+        form.submit();
+    }
+}
+
+function triggerResetPassword(staffId, staffName) {
+    const newPassword = prompt("Staff member '" + staffName + "' ke liye naya password darj karein:");
+    if (newPassword !== null) {
+        if (newPassword.trim() === "") {
+            alert("Password khali nahi ho sakta!");
+            return;
+        }
+        const form = document.getElementById('reset-password-form');
+        form.querySelector('input[name="staff_id"]').value = staffId;
+        form.querySelector('input[name="new_password"]').value = newPassword;
+        form.submit();
+    }
 }
 
 function switchTab(tabId) {

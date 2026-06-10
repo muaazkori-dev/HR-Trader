@@ -21,55 +21,18 @@ body {
 .theme-emerald_green {
     --theme-primary: #10b981;
     --theme-primary-hover: #059669;
+    --theme-emerald-50: #f0fdf4;
+    --theme-emerald-100: #dcfce7;
+    --theme-emerald-200: #bbf7d0;
 }
 
-/* 2. Midnight Indigo (Dark Mode) */
-.theme-midnight_indigo {
-    --theme-primary: #6366f1;
-    --theme-primary-hover: #4f46e5;
-    --theme-emerald-50: #1e1b4b;
-    --theme-emerald-100: #312e81;
-    --theme-emerald-200: #4338ca;
-    background-color: #030712 !important;
-    color: #e5e7eb !important;
-}
-.theme-midnight_indigo .glass-panel,
-.theme-midnight_indigo .glass-card,
-.theme-midnight_indigo header,
-.theme-midnight_indigo .bg-white,
-.theme-midnight_indigo .glass-card-bg {
-    background-color: #0f172a !important;
-    border-color: #1e293b !important;
-    color: #f3f4f6 !important;
-}
-.theme-midnight_indigo select,
-.theme-midnight_indigo input,
-.theme-midnight_indigo textarea {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #ffffff !important;
-}
-.theme-midnight_indigo text-slate-800,
-.theme-midnight_indigo .text-slate-900,
-.theme-midnight_indigo .text-slate-805,
-.theme-midnight_indigo .text-slate-700,
-.theme-midnight_indigo .text-slate-650 {
-    color: #f3f4f6 !important;
-}
-.theme-midnight_indigo .text-slate-500,
-.theme-midnight_indigo .text-slate-400 {
-    color: #94a3b8 !important;
-}
-.theme-midnight_indigo .bg-slate-50,
-.theme-midnight_indigo .bg-slate-100 {
-    background-color: #1e293b !important;
-    color: #e5e7eb !important;
-}
-
-/* 3. Rose Gold (Light Elegant) */
+/* 2. Rose Gold (Light Elegant) */
 .theme-rose_gold {
     --theme-primary: #db2777;
     --theme-primary-hover: #be185d;
+    --theme-emerald-50: #fff1f2;
+    --theme-emerald-100: #ffe4e6;
+    --theme-emerald-200: #fecdd3;
     background-color: #fffbfd !important;
 }
 .theme-rose_gold .glass-panel,
@@ -79,7 +42,70 @@ body {
     border-color: #fbcfe8 !important;
 }
 
-/* 4. Cyberpunk Neon (Dark Mode Neon) */
+/* 3. Slate Blue (Light Soft) */
+.theme-slate_blue {
+    --theme-primary: #2563eb;
+    --theme-primary-hover: #1d4ed8;
+    --theme-emerald-50: #eff6ff;
+    --theme-emerald-100: #dbeafe;
+    --theme-emerald-200: #bfdbfe;
+    background-color: #f8fafc !important;
+}
+.theme-slate_blue .glass-panel,
+.theme-slate_blue .glass-card,
+.theme-slate_blue header {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* 4. Amber Honey (Light Sunny) */
+.theme-amber_honey {
+    --theme-primary: #d97706;
+    --theme-primary-hover: #b45309;
+    --theme-emerald-50: #fffbeb;
+    --theme-emerald-100: #fef3c7;
+    --theme-emerald-200: #fde68a;
+    background-color: #fffdf5 !important;
+}
+.theme-amber_honey .glass-panel,
+.theme-amber_honey .glass-card,
+.theme-amber_honey header {
+    background-color: #ffffff !important;
+    border-color: #fde68a !important;
+}
+
+/* 5. Classic Monochrome (Light Contrast) */
+.theme-classic_light {
+    --theme-primary: #000000;
+    --theme-primary-hover: #27272a;
+    --theme-emerald-50: #f4f4f5;
+    --theme-emerald-100: #e4e4e7;
+    --theme-emerald-200: #d4d4d8;
+    background-color: #ffffff !important;
+}
+.theme-classic_light .glass-panel,
+.theme-classic_light .glass-card,
+.theme-classic_light header {
+    background-color: #ffffff !important;
+    border-color: #000000 !important;
+    border-width: 1px !important;
+}
+
+
+/* --- 5 DARK THEMES --- */
+
+/* 6. Midnight Indigo (Dark Mode) */
+.theme-midnight_indigo {
+    --theme-primary: #6366f1;
+    --theme-primary-hover: #4f46e5;
+    --theme-emerald-50: #1e1b4b;
+    --theme-emerald-100: #312e81;
+    --theme-emerald-200: #4338ca;
+    background-color: #030712 !important;
+    color: #e5e7eb !important;
+}
+
+/* 7. Cyberpunk Neon (Dark Mode Neon) */
 .theme-cyberpunk_neon {
     --theme-primary: #06b6d4;
     --theme-primary-hover: #0891b2;
@@ -91,60 +117,17 @@ body {
 }
 .theme-cyberpunk_neon .glass-panel,
 .theme-cyberpunk_neon .glass-card,
-.theme-cyberpunk_neon header,
-.theme-cyberpunk_neon .bg-white,
-.theme-cyberpunk_neon .bg-slate-50,
-.theme-cyberpunk_neon .bg-slate-100 {
-    background-color: #0a0a14 !important;
+.theme-cyberpunk_neon header {
     border-color: #ff007f !important;
-    color: #e2e8f0 !important;
 }
 .theme-cyberpunk_neon select,
 .theme-cyberpunk_neon input,
 .theme-cyberpunk_neon textarea {
-    background-color: #08080f !important;
     border-color: #00ffcc !important;
     color: #00ffcc !important;
 }
-.theme-cyberpunk_neon text-slate-800,
-.theme-cyberpunk_neon .text-slate-900,
-.theme-cyberpunk_neon .text-slate-805,
-.theme-cyberpunk_neon .text-slate-700,
-.theme-cyberpunk_neon .text-slate-650 {
-    color: #e2e8f0 !important;
-}
-.theme-cyberpunk_neon .text-slate-500,
-.theme-cyberpunk_neon .text-slate-400 {
-    color: #a78bfa !important;
-}
 
-/* 5. Slate Blue (Light Soft) */
-.theme-slate_blue {
-    --theme-primary: #2563eb;
-    --theme-primary-hover: #1d4ed8;
-    background-color: #f8fafc !important;
-}
-.theme-slate_blue .glass-panel,
-.theme-slate_blue .glass-card,
-.theme-slate_blue header {
-    background-color: #ffffff !important;
-    border-color: #cbd5e1 !important;
-}
-
-/* 6. Amber Honey (Light Sunny) */
-.theme-amber_honey {
-    --theme-primary: #d97706;
-    --theme-primary-hover: #b45309;
-    background-color: #fffdf5 !important;
-}
-.theme-amber_honey .glass-panel,
-.theme-amber_honey .glass-card,
-.theme-amber_honey header {
-    background-color: #ffffff !important;
-    border-color: #fde68a !important;
-}
-
-/* 7. Deep Purple (Dark Mode Royal) */
+/* 8. Deep Purple (Dark Mode Royal) */
 .theme-deep_purple {
     --theme-primary: #a855f7;
     --theme-primary-hover: #9333ea;
@@ -154,75 +137,115 @@ body {
     background-color: #0b0716 !important;
     color: #f3e8ff !important;
 }
-.theme-deep_purple .glass-panel,
-.theme-deep_purple .glass-card,
-.theme-deep_purple header,
-.theme-deep_purple .bg-white,
-.theme-deep_purple .bg-slate-50,
-.theme-deep_purple .bg-slate-100 {
-    background-color: #120c24 !important;
-    border-color: #4a148c !important;
-    color: #f3e8ff !important;
+
+/* 9. Forest Emerald (Dark Mode Nature) */
+.theme-forest_dark {
+    --theme-primary: #10b981;
+    --theme-primary-hover: #059669;
+    --theme-emerald-50: #022c22;
+    --theme-emerald-100: #064e3b;
+    --theme-emerald-200: #047857;
+    background-color: #020804 !important;
+    color: #ecfdf5 !important;
 }
-.theme-deep_purple select,
-.theme-deep_purple input,
-.theme-deep_purple textarea {
-    background-color: #181030 !important;
-    border-color: #a855f7 !important;
+
+/* 10. Crimson Ruby (Dark Mode Intense) */
+.theme-crimson_dark {
+    --theme-primary: #f43f5e;
+    --theme-primary-hover: #e11d48;
+    --theme-emerald-50: #4c0519;
+    --theme-emerald-100: #881337;
+    --theme-emerald-200: #9f1239;
+    background-color: #080103 !important;
+    color: #fff1f2 !important;
+}
+
+
+/* --- COMMON DARK THEMES GLOBAL OVERRIDES --- */
+.theme-midnight_indigo,
+.theme-cyberpunk_neon,
+.theme-deep_purple,
+.theme-forest_dark,
+.theme-crimson_dark {
+    color: #e5e7eb !important;
+}
+
+/* Panels, cards, header, modals, tables, and white bg sections */
+.theme-midnight_indigo .glass-panel, .theme-midnight_indigo .glass-card, .theme-midnight_indigo header, .theme-midnight_indigo .bg-white, .theme-midnight_indigo .glass-card-bg, .theme-midnight_indigo .modal-content, .theme-midnight_indigo .bg-white\/80,
+.theme-cyberpunk_neon .glass-panel, .theme-cyberpunk_neon .glass-card, .theme-cyberpunk_neon header, .theme-cyberpunk_neon .bg-white, .theme-cyberpunk_neon .glass-card-bg, .theme-cyberpunk_neon .modal-content, .theme-cyberpunk_neon .bg-white\/80,
+.theme-deep_purple .glass-panel, .theme-deep_purple .glass-card, .theme-deep_purple header, .theme-deep_purple .bg-white, .theme-deep_purple .glass-card-bg, .theme-deep_purple .modal-content, .theme-deep_purple .bg-white\/80,
+.theme-forest_dark .glass-panel, .theme-forest_dark .glass-card, .theme-forest_dark header, .theme-forest_dark .bg-white, .theme-forest_dark .glass-card-bg, .theme-forest_dark .modal-content, .theme-forest_dark .bg-white\/80,
+.theme-crimson_dark .glass-panel, .theme-crimson_dark .glass-card, .theme-crimson_dark header, .theme-crimson_dark .bg-white, .theme-crimson_dark .glass-card-bg, .theme-crimson_dark .modal-content, .theme-crimson_dark .bg-white\/80 {
+    background-color: #111827 !important; /* tailwind gray-900 */
+    border-color: #1f2937 !important; /* tailwind gray-800 */
+    color: #f3f4f6 !important;
+}
+
+/* Secondary dark backgrounds (slate-50, slate-100, gray-50, etc.) */
+.theme-midnight_indigo .bg-slate-50, .theme-midnight_indigo .bg-slate-100, .theme-midnight_indigo .bg-slate-200, .theme-midnight_indigo .bg-gray-50, .theme-midnight_indigo .bg-gray-100,
+.theme-cyberpunk_neon .bg-slate-50, .theme-cyberpunk_neon .bg-slate-100, .theme-cyberpunk_neon .bg-slate-200, .theme-cyberpunk_neon .bg-gray-50, .theme-cyberpunk_neon .bg-gray-100,
+.theme-deep_purple .bg-slate-50, .theme-deep_purple .bg-slate-100, .theme-deep_purple .bg-slate-200, .theme-deep_purple .bg-gray-50, .theme-deep_purple .bg-gray-100,
+.theme-forest_dark .bg-slate-50, .theme-forest_dark .bg-slate-100, .theme-forest_dark .bg-slate-200, .theme-forest_dark .bg-gray-50, .theme-forest_dark .bg-gray-100,
+.theme-crimson_dark .bg-slate-50, .theme-crimson_dark .bg-slate-100, .theme-crimson_dark .bg-slate-200, .theme-crimson_dark .bg-gray-50, .theme-crimson_dark .bg-gray-100 {
+    background-color: #1f2937 !important; /* tailwind gray-800 */
+    color: #e5e7eb !important;
+}
+
+/* Inputs, Selects, and Textareas */
+.theme-midnight_indigo select, .theme-midnight_indigo input, .theme-midnight_indigo textarea,
+.theme-cyberpunk_neon select, .theme-cyberpunk_neon input, .theme-cyberpunk_neon textarea,
+.theme-deep_purple select, .theme-deep_purple input, .theme-deep_purple textarea,
+.theme-forest_dark select, .theme-forest_dark input, .theme-forest_dark textarea,
+.theme-crimson_dark select, .theme-crimson_dark input, .theme-crimson_dark textarea {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
     color: #ffffff !important;
 }
-.theme-deep_purple text-slate-800,
-.theme-deep_purple .text-slate-900,
-.theme-deep_purple .text-slate-805,
-.theme-deep_purple .text-slate-700,
-.theme-deep_purple .text-slate-650 {
-    color: #f3e8ff !important;
+
+/* High contrast text overrides */
+.theme-midnight_indigo .text-slate-900, .theme-midnight_indigo .text-slate-805, .theme-midnight_indigo .text-slate-800, .theme-midnight_indigo .text-slate-700, .theme-midnight_indigo .text-slate-650, .theme-midnight_indigo .text-slate-600, .theme-midnight_indigo .text-gray-900, .theme-midnight_indigo .text-gray-800,
+.theme-cyberpunk_neon .text-slate-900, .theme-cyberpunk_neon .text-slate-805, .theme-cyberpunk_neon .text-slate-800, .theme-cyberpunk_neon .text-slate-700, .theme-cyberpunk_neon .text-slate-650, .theme-cyberpunk_neon .text-slate-600, .theme-cyberpunk_neon .text-gray-900, .theme-cyberpunk_neon .text-gray-800,
+.theme-deep_purple .text-slate-900, .theme-deep_purple .text-slate-805, .theme-deep_purple .text-slate-800, .theme-deep_purple .text-slate-700, .theme-deep_purple .text-slate-650, .theme-deep_purple .text-slate-600, .theme-deep_purple .text-gray-900, .theme-deep_purple .text-gray-800,
+.theme-forest_dark .text-slate-900, .theme-forest_dark .text-slate-805, .theme-forest_dark .text-slate-800, .theme-forest_dark .text-slate-700, .theme-forest_dark .text-slate-650, .theme-forest_dark .text-slate-600, .theme-forest_dark .text-gray-900, .theme-forest_dark .text-gray-800,
+.theme-crimson_dark .text-slate-900, .theme-crimson_dark .text-slate-805, .theme-crimson_dark .text-slate-800, .theme-crimson_dark .text-slate-700, .theme-crimson_dark .text-slate-650, .theme-crimson_dark .text-slate-600, .theme-crimson_dark .text-gray-900, .theme-crimson_dark .text-gray-800 {
+    color: #f3f4f6 !important;
 }
 
-/* 8. Forest Green (Light Organic) */
-.theme-forest_green {
-    --theme-primary: #15803d;
-    --theme-primary-hover: #166534;
-    background-color: #f4fdf7 !important;
-}
-.theme-forest_green .glass-panel,
-.theme-forest_green .glass-card,
-.theme-forest_green header {
-    background-color: #ffffff !important;
-    border-color: #bbf7d0 !important;
+/* Secondary muted texts (slate-500, slate-400, gray-500, gray-400) */
+.theme-midnight_indigo .text-slate-500, .theme-midnight_indigo .text-slate-400, .theme-midnight_indigo .text-gray-500, .theme-midnight_indigo .text-gray-400,
+.theme-cyberpunk_neon .text-slate-500, .theme-cyberpunk_neon .text-slate-400, .theme-cyberpunk_neon .text-gray-500, .theme-cyberpunk_neon .text-gray-400,
+.theme-deep_purple .text-slate-500, .theme-deep_purple .text-slate-400, .theme-deep_purple .text-gray-500, .theme-deep_purple .text-gray-400,
+.theme-forest_dark .text-slate-500, .theme-forest_dark .text-slate-400, .theme-forest_dark .text-gray-500, .theme-forest_dark .text-gray-400,
+.theme-crimson_dark .text-slate-500, .theme-crimson_dark .text-slate-400, .theme-crimson_dark .text-gray-500, .theme-crimson_dark .text-gray-400 {
+    color: #94a3b8 !important; /* slate-400 */
 }
 
-/* 9. Crimson Rose (Light Ruby) */
-.theme-crimson_rose {
-    --theme-primary: #e11d48;
-    --theme-primary-hover: #be123c;
-    background-color: #fffafb !important;
+/* Footer specific overrides */
+.theme-midnight_indigo footer,
+.theme-cyberpunk_neon footer,
+.theme-deep_purple footer,
+.theme-forest_dark footer,
+.theme-crimson_dark footer {
+    background-color: #0b0f19 !important; /* Sleek footer background */
+    border-color: #1e293b !important;
+    color: #94a3b8 !important;
 }
-.theme-crimson_rose .glass-panel,
-.theme-crimson_rose .glass-card,
-.theme-crimson_rose header {
-    background-color: #ffffff !important;
-    border-color: #fecdd3 !important;
+.theme-midnight_indigo footer .border-slate-200\/50,
+.theme-cyberpunk_neon footer .border-slate-200\/50,
+.theme-deep_purple footer .border-slate-200\/50,
+.theme-forest_dark footer .border-slate-200\/50,
+.theme-crimson_dark footer .border-slate-200\/50 {
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* 10. Classic Light (High Contrast Monochrome) */
-.theme-classic_light {
-    --theme-primary: #000000;
-    --theme-primary-hover: #27272a;
+/* Logo containers in header/footer to stay cleanly white in dark modes */
+.theme-midnight_indigo header a div, .theme-midnight_indigo footer div div,
+.theme-cyberpunk_neon header a div, .theme-cyberpunk_neon footer div div,
+.theme-deep_purple header a div, .theme-deep_purple footer div div,
+.theme-forest_dark header a div, .theme-forest_dark footer div div,
+.theme-crimson_dark header a div, .theme-crimson_dark footer div div {
     background-color: #ffffff !important;
-}
-.theme-classic_light .glass-panel,
-.theme-classic_light .glass-card,
-.theme-classic_light header {
-    background-color: #ffffff !important;
-    border-color: #000000 !important;
-    border-width: 2px !important;
-    border-radius: 8px !important;
-}
-.theme-classic_light .rounded-3xl,
-.theme-classic_light .rounded-2xl,
-.theme-classic_light .rounded-xl {
-    border-radius: 8px !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 
