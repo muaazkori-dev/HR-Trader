@@ -25,17 +25,25 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo Step 4: Pulling latest updates from GitHub...
-git pull origin main --no-edit
+echo Step 4: Pulling and merging updates from GitHub...
+git pull origin main --allow-unrelated-histories --no-edit
 if %errorlevel% neq 0 (
-    echo [WARNING] Git pull had issues. Attempting to push anyway...
+    echo [WARNING] Normal pull failed or has conflicts.
 )
 
 echo.
 echo Step 5: Pushing changes to GitHub (origin/main)...
 git push origin main
 if %errorlevel% neq 0 (
-    echo [ERROR] Git push failed. Please check your internet connection or GitHub authentication.
+    echo.
+    echo [WARNING] Standard push failed. Remote history has diverged.
+    echo Attempting to force-push local files as the source of truth...
+    echo.
+    git push -f origin main
+)
+
+if %errorlevel% neq 0 (
+    echo [ERROR] Git push failed. Please check your internet connection or GitHub credentials.
     goto end
 )
 
