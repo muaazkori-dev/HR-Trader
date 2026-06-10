@@ -161,7 +161,7 @@ require_once __DIR__ . '/includes/header.php';
                 
                 <div class="divide-y divide-slate-200">
                     <?php foreach ($cart_items as $item): ?>
-                        <?php $is_frozen = $item['category'] === 'frozen_icecream'; ?>
+                        <?php $is_frozen = $item['category'] === 'ice_cream'; ?>
                         <div class="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm"><?php echo sanitize($item['name']); ?></h4>

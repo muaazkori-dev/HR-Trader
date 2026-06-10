@@ -39,7 +39,7 @@ try {
             <span class="inline-block bg-emerald-100 text-emerald-700 border border-emerald-200/50 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Organic Crops</span>
             <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 leading-tight">Fresh Pulses & Grains</h1>
             <p class="text-xs sm:text-sm text-slate-600">Directly sourced from premium farms. Pure, machine-cleaned, and packed under strict hygiene conditions for your health.</p>
-            <a href="<?php echo BASE_URL; ?>shop.php?category=pulses_rice" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/10">
+            <a href="<?php echo BASE_URL; ?>shop.php?category=anaj" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/10">
                 Explore Pulses <i class="fas fa-arrow-right"></i>
             </a>
         </div>
@@ -65,7 +65,7 @@ try {
             <span class="inline-block bg-cyan-100 text-cyan-700 border border-cyan-200/50 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Frozen Delights</span>
             <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 leading-tight">Frozen Ice Creams</h1>
             <p class="text-xs sm:text-sm text-slate-600">Family pack ice creams and chicken frozen snacks. *Available for nearby Lahore locations only to maintain cold-chain storage.</p>
-            <a href="<?php echo BASE_URL; ?>shop.php?category=frozen_icecream" class="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-cyan-600/10">
+            <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream" class="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-cyan-600/10">
                 Browse Frozen Items <i class="fas fa-arrow-right"></i>
             </a>
         </div>

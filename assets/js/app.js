@@ -219,7 +219,7 @@ function refreshCartDrawer() {
             
             let html = '';
             data.items.forEach(item => {
-                const isFrozen = item.category === 'frozen_icecream';
+                const isFrozen = item.category === 'ice_cream';
                 html += `
                     <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                         <!-- Product Icon -->
@@ -261,10 +261,14 @@ function refreshCartDrawer() {
  */
 function getProductIcon(category) {
     switch (category) {
-        case 'pulses_rice': return 'fa-seedling';
-        case 'snacks_chips': return 'fa-cookie';
+        case 'anaj': return 'fa-seedling';
         case 'beverages': return 'fa-glass-water';
-        case 'frozen_icecream': return 'fa-ice-cream';
+        case 'ice_cream': return 'fa-ice-cream';
+        case 'milk': return 'fa-cow';
+        case 'cosmetics': return 'fa-sparkles';
+        case 'shampoo': return 'fa-pump-soap';
+        case 'soap': return 'fa-soap';
+        case 'toothpaste': return 'fa-tooth';
         default: return 'fa-box';
     }
 }
