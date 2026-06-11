@@ -5,9 +5,11 @@
 ob_start();
 
 if (session_status() == PHP_SESSION_NONE) {
-    // Keep user logged in for 1 year (31,536,000 seconds)
-    ini_set('session.cookie_lifetime', 31536000);
-    ini_set('session.gc_maxlifetime', 31536000);
+    // Keep user logged in for 1 year (31,536,000 seconds) safely
+    if (function_exists('ini_set')) {
+        @ini_set('session.cookie_lifetime', 31536000);
+        @ini_set('session.gc_maxlifetime', 31536000);
+    }
     session_start();
 }
 
