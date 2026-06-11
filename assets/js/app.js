@@ -365,8 +365,8 @@ function setupStorefrontSearch(inputId, suggestionsId) {
                     let html = '';
                     products.forEach(p => {
                         html += `
-                            <div onclick="window.location.href = '${BASE_URL}shop.php?query=' + encodeURIComponent('${p.name.replace(/'/g, "\\'")}')" 
-                                 class="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 border-b border-slate-100 last:border-0 cursor-pointer transition-colors">
+                            <a href="${BASE_URL}shop.php?query=${encodeURIComponent(p.name)}" 
+                                 class="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 border-b border-slate-100 last:border-0 cursor-pointer transition-colors block">
                                 <div class="flex items-center gap-3">
                                     <img src="${BASE_URL + p.image}" class="w-8 h-8 object-cover rounded-lg border border-slate-200 bg-slate-50 flex-shrink-0" loading="lazy">
                                     <div>
@@ -377,7 +377,7 @@ function setupStorefrontSearch(inputId, suggestionsId) {
                                 <span class="px-2 py-0.5 rounded text-[8px] uppercase font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex-shrink-0">
                                     ${p.category.replace('_', ' ')}
                                 </span>
-                            </div>
+                            </a>
                         `;
                     });
                     suggestionsBox.innerHTML = html;

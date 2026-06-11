@@ -182,7 +182,7 @@ try {
                    <div class="glass-card rounded-2xl overflow-hidden flex flex-col border <?php echo $is_frozen ? 'frozen-alert-border border-rose-500/20' : 'border-slate-200'; ?>">
                     
                     <!-- Product Image representation -->
-                    <div onclick="openProductDetails(<?php echo $product['id']; ?>)" class="h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden cursor-pointer group">
+                    <a href="javascript:void(0)" onclick="openProductDetails(<?php echo $product['id']; ?>); return false;" class="block h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden cursor-pointer group">
                         <?php 
                         $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
                         ?>
@@ -203,16 +203,16 @@ try {
                                 In Stock (<?php echo $product['stock_quantity']; ?>)
                             </span>
                         <?php endif; ?>
-                    </div>
+                    </a>
 
                     <!-- Body -->
                     <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                         <div class="space-y-2">
                             <div>
                                 <h3 class="font-bold text-slate-800 text-base leading-tight truncate-2-lines">
-                                    <span class="cursor-pointer hover:text-emerald-600 transition-colors" onclick="openProductDetails(<?php echo $product['id']; ?>)">
+                                    <a href="javascript:void(0)" onclick="openProductDetails(<?php echo $product['id']; ?>); return false;" class="hover:text-emerald-600 transition-colors">
                                         <?php echo sanitize($product['name']); ?>
-                                    </span>
+                                    </a>
                                 </h3>
                                 <p class="text-xs text-slate-555 line-clamp-2 mt-1 min-h-[32px]"><?php echo sanitize($product['description'] ?: 'No description provided.'); ?></p>
                             </div>

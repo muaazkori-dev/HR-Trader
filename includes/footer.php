@@ -735,6 +735,6 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 
 <!-- Main storefront script -->
-<script src="<?php echo BASE_URL; ?>assets/js/app.js?v=2.3"></script>
+<script src="<?php echo BASE_URL; ?>assets/js/app.js?v=2.4"></script>
 </body>
 </html>
