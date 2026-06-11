@@ -94,7 +94,19 @@ $is_first_order = false;
 if (is_logged_in()) {
     $is_first_order = true;
     try {
-        $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
+        // 1. Check if user has already received free delivery before (total_amount = items subtotal)
+        $stmt_check = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM orders o
+            JOIN (
+                SELECT order_id, SUM(price * quantity) AS subtotal 
+                FROM order_items 
+                GROUP BY order_id
+            ) oi ON o.id = oi.order_id
+            WHERE o.user_id = :uid 
+              AND o.status != 'cancelled' 
+              AND o.total_amount = oi.subtotal
+        ");
         $stmt_check->execute(['uid' => $_SESSION['user_id']]);
         if ((int)$stmt_check->fetchColumn() > 0) {
             $is_first_order = false;
@@ -103,7 +115,19 @@ if (is_logged_in()) {
 
     if ($is_first_order && !empty($preset_phone)) {
         try {
-            $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+            // 2. Check by phone number for previous free delivery
+            $stmt_phone_check = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM orders o
+                JOIN (
+                    SELECT order_id, SUM(price * quantity) AS subtotal 
+                    FROM order_items 
+                    GROUP BY order_id
+                ) oi ON o.id = oi.order_id
+                WHERE o.customer_phone = :phone 
+                  AND o.status != 'cancelled' 
+                  AND o.total_amount = oi.subtotal
+            ");
             $stmt_phone_check->execute(['phone' => $preset_phone]);
             if ((int)$stmt_phone_check->fetchColumn() > 0) {
                 $is_first_order = false;
@@ -119,7 +143,19 @@ if (is_logged_in()) {
                 }
             }
             $input_addr_clean = normalize_address_for_check($preset_address);
-            $stmt_addr = $pdo->query("SELECT DISTINCT customer_address FROM orders WHERE status != 'cancelled'");
+            
+            // Retrieve addresses of orders that received free delivery
+            $stmt_addr = $pdo->query("
+                SELECT DISTINCT o.customer_address 
+                FROM orders o
+                JOIN (
+                    SELECT order_id, SUM(price * quantity) AS subtotal 
+                    FROM order_items 
+                    GROUP BY order_id
+                ) oi ON o.id = oi.order_id
+                WHERE o.status != 'cancelled' 
+                  AND o.total_amount = oi.subtotal
+            ");
             $addresses = $stmt_addr->fetchAll(PDO::FETCH_COLUMN);
             foreach ($addresses as $addr) {
                 if (normalize_address_for_check($addr) === $input_addr_clean) {
@@ -151,7 +187,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
             if (is_logged_in()) {
                 $post_is_first = true;
                 try {
-                    $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
+                    $stmt_check = $pdo->prepare("
+                        SELECT COUNT(*) 
+                        FROM orders o
+                        JOIN (
+                            SELECT order_id, SUM(price * quantity) AS subtotal 
+                            FROM order_items 
+                            GROUP BY order_id
+                        ) oi ON o.id = oi.order_id
+                        WHERE o.user_id = :uid 
+                          AND o.status != 'cancelled' 
+                          AND o.total_amount = oi.subtotal
+                    ");
                     $stmt_check->execute(['uid' => $_SESSION['user_id']]);
                     if ((int)$stmt_check->fetchColumn() > 0) {
                         $post_is_first = false;
@@ -160,7 +207,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
 
                 if ($post_is_first && !empty($customer_phone)) {
                     try {
-                        $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+                        $stmt_phone_check = $pdo->prepare("
+                            SELECT COUNT(*) 
+                            FROM orders o
+                            JOIN (
+                                SELECT order_id, SUM(price * quantity) AS subtotal 
+                                FROM order_items 
+                                GROUP BY order_id
+                            ) oi ON o.id = oi.order_id
+                            WHERE o.customer_phone = :phone 
+                              AND o.status != 'cancelled' 
+                              AND o.total_amount = oi.subtotal
+                        ");
                         $stmt_phone_check->execute(['phone' => $customer_phone]);
                         if ((int)$stmt_phone_check->fetchColumn() > 0) {
                             $post_is_first = false;
@@ -176,7 +234,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                             }
                         }
                         $input_addr_clean = normalize_address_for_check($customer_address);
-                        $stmt_addr = $pdo->query("SELECT DISTINCT customer_address FROM orders WHERE status != 'cancelled'");
+                        
+                        // Retrieve addresses of orders that received free delivery
+                        $stmt_addr = $pdo->query("
+                            SELECT DISTINCT o.customer_address 
+                            FROM orders o
+                            JOIN (
+                                SELECT order_id, SUM(price * quantity) AS subtotal 
+                                FROM order_items 
+                                GROUP BY order_id
+                            ) oi ON o.id = oi.order_id
+                            WHERE o.status != 'cancelled' 
+                              AND o.total_amount = oi.subtotal
+                        ");
                         $addresses = $stmt_addr->fetchAll(PDO::FETCH_COLUMN);
                         foreach ($addresses as $addr) {
                             if (normalize_address_for_check($addr) === $input_addr_clean) {
