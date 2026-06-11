@@ -419,5 +419,6 @@ function associateLocalOrdersToAccount() {
 }
 <?php endif; ?>
 </script>
+<?php endif; ?>
 
 <main class="flex-1">
