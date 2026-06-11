@@ -321,6 +321,16 @@ try {
             }
         }
     }
+
+    // Default standard shipping fee to 180.00 if unset or 0.00
+    try {
+        $fee_val = get_setting('shipping_fee', '');
+        if ($fee_val === '' || (float)$fee_val === 0.00) {
+            update_setting('shipping_fee', '180.00');
+        }
+    } catch (Exception $e) {
+        // Ignore
+    }
 } catch (PDOException $e) {
     // If the database does not exist yet, we will output a link to install.php
     die("Database Connection Failed: " . $e->getMessage() . "<br><br><strong>Tip:</strong> If you are setting up the system for the first time, run the <a href='" . BASE_URL . "install.php' style='color:blue;text-decoration:underline;'>System Installer (install.php)</a> to automatically create the database and tables.");

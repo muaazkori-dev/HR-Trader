@@ -89,6 +89,28 @@ if (is_logged_in()) {
     }
 }
 
+// Determine if this qualifies as a first order to adjust shipping fee
+$is_first_order = true;
+if (is_logged_in()) {
+    try {
+        $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
+        $stmt_check->execute(['uid' => $_SESSION['user_id']]);
+        if ((int)$stmt_check->fetchColumn() > 0) {
+            $is_first_order = false;
+        }
+    } catch (PDOException $e) {}
+}
+if ($is_first_order && !empty($preset_phone)) {
+    try {
+        $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+        $stmt_phone_check->execute(['phone' => $preset_phone]);
+        if ((int)$stmt_phone_check->fetchColumn() > 0) {
+            $is_first_order = false;
+        }
+    } catch (PDOException $e) {}
+}
+$shipping_fee = $is_first_order ? 0.00 : (float)get_setting('shipping_fee', '180.00');
+
 // 2. Handle COD checkout form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
     if (get_setting('shop_status', 'open') === 'closed') {
@@ -97,14 +119,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
         $checkout_error = "Order subtotal is below the minimum required order value of " . format_price($min_order_value) . ".";
     } else {
         $customer_name = trim($_POST['customer_name'] ?? '');
-    $customer_phone = trim($_POST['customer_phone'] ?? '');
-    $customer_address = trim($_POST['customer_address'] ?? '');
+        $customer_phone = trim($_POST['customer_phone'] ?? '');
+        $customer_address = trim($_POST['customer_address'] ?? '');
 
-    if (empty($customer_name) || empty($customer_phone) || empty($customer_address)) {
-        $checkout_error = "All shipping fields are required to process delivery.";
-    } else {
-        // Run database transaction to record order and lock stock levels
-        $pdo->beginTransaction();
+        if (empty($customer_name) || empty($customer_phone) || empty($customer_address)) {
+            $checkout_error = "All shipping fields are required to process delivery.";
+        } else {
+            // Re-evaluate shipping fee based on submitted phone number / user ID to prevent client tampering
+            $post_is_first = true;
+            if (is_logged_in()) {
+                try {
+                    $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
+                    $stmt_check->execute(['uid' => $_SESSION['user_id']]);
+                    if ((int)$stmt_check->fetchColumn() > 0) {
+                        $post_is_first = false;
+                    }
+                } catch (PDOException $e) {}
+            }
+            if ($post_is_first && !empty($customer_phone)) {
+                try {
+                    $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+                    $stmt_phone_check->execute(['phone' => $customer_phone]);
+                    if ((int)$stmt_phone_check->fetchColumn() > 0) {
+                        $post_is_first = false;
+                    }
+                } catch (PDOException $e) {}
+            }
+            $shipping_fee = $post_is_first ? 0.00 : (float)get_setting('shipping_fee', '180.00');
+
+            // Run database transaction to record order and lock stock levels
+            $pdo->beginTransaction();
         try {
             // Verify stock is still valid before placing
             foreach ($cart_items as $item) {
@@ -232,13 +276,13 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                     <div class="flex items-center justify-between">
                         <span>Delivery Charges</span>
-                        <span class="font-bold <?php echo $shipping_fee > 0 ? 'text-slate-850' : 'text-emerald-600'; ?>">
+                        <span id="checkout-delivery-charges" class="font-bold <?php echo $shipping_fee > 0 ? 'text-slate-850' : 'text-emerald-600'; ?>">
                             <?php echo $shipping_fee > 0 ? format_price($shipping_fee) : 'FREE'; ?>
                         </span>
                     </div>
                     <div class="flex items-center justify-between font-bold text-base pt-3 border-t border-slate-200 text-slate-900">
                         <span>Total Invoice Amount</span>
-                        <span class="text-xl text-emerald-600"><?php echo format_price($subtotal + $shipping_fee); ?></span>
+                        <span id="checkout-grand-total" class="text-xl text-emerald-600"><?php echo format_price($subtotal + $shipping_fee); ?></span>
                     </div>
                 </div>
             </div>
@@ -307,5 +351,50 @@ require_once __DIR__ . '/includes/header.php';
 
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const phoneInput = document.getElementById('customer_phone');
+    if (!phoneInput) return;
+
+    const subtotal = <?php echo (float)$subtotal; ?>;
+    let checkTimeout;
+
+    phoneInput.addEventListener('input', () => {
+        clearTimeout(checkTimeout);
+        checkTimeout = setTimeout(checkFirstOrderShipping, 500);
+    });
+
+    phoneInput.addEventListener('blur', checkFirstOrderShipping);
+
+    function checkFirstOrderShipping() {
+        const phone = phoneInput.value.trim();
+        if (phone.length < 10) return;
+
+        fetch(BASE_URL + 'api/check_shipping.php?phone=' + encodeURIComponent(phone))
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const fee = parseFloat(data.shipping_fee);
+                    const chargesEl = document.getElementById('checkout-delivery-charges');
+                    const grandTotalEl = document.getElementById('checkout-grand-total');
+
+                    if (chargesEl && grandTotalEl) {
+                        if (fee > 0) {
+                            chargesEl.className = 'font-bold text-slate-850';
+                            chargesEl.innerText = 'Rs. ' + fee.toFixed(2);
+                            grandTotalEl.innerText = 'Rs. ' + (subtotal + fee).toFixed(2);
+                        } else {
+                            chargesEl.className = 'font-bold text-emerald-600';
+                            chargesEl.innerText = 'FREE';
+                            grandTotalEl.innerText = 'Rs. ' + subtotal.toFixed(2);
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

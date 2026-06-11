@@ -513,8 +513,8 @@ function openInvoiceModal(orderId) {
     document.getElementById('invoice-items-body').innerHTML = itemsHtml;
 
     // Set totals
-    const shipping = parseFloat(shippingFeeConfig);
-    document.getElementById('inv-shipping-fee').innerText = shipping > 0 ? `Rs. ${shipping.toFixed(2)}` : 'Rs. 0.00 (Free)';
+    const shipping = Math.max(0, parseFloat(order.total_amount) - subtotal);
+    document.getElementById('inv-shipping-fee').innerText = shipping > 0 ? `Rs. ${shipping.toFixed(2)}` : 'FREE';
     document.getElementById('inv-grand-total').innerText = `Rs. ${parseFloat(order.total_amount).toFixed(2)}`;
 
     // Show modal transition

@@ -117,12 +117,21 @@ $whatsapp_url = "https://api.whatsapp.com/send?phone=" . WHATSAPP_NUMBER . "&tex
         </div>
 
         <!-- Totals Column -->
-        <?php $shipping_fee = (float)get_setting('shipping_fee', '0.00'); ?>
+        <?php 
+        $items_subtotal = 0;
+        foreach ($order_items as $item) {
+            $items_subtotal += (float)$item['price'] * (int)$item['quantity'];
+        }
+        $shipping_fee = (float)$order['total_amount'] - $items_subtotal;
+        if ($shipping_fee < 0.01) {
+            $shipping_fee = 0.00;
+        }
+        ?>
         <div class="border-t border-slate-200 pt-6 space-y-3">
             <div class="flex items-center justify-between text-sm text-slate-500">
                 <span>Shipping / Delivery Fee</span>
                 <span class="font-bold text-slate-800">
-                    <?php echo $shipping_fee > 0 ? format_price($shipping_fee) : 'Rs. 0.00 (Free)'; ?>
+                    <?php echo $shipping_fee > 0 ? format_price($shipping_fee) : 'FREE'; ?>
                 </span>
             </div>
             <div class="flex items-center justify-between text-base font-bold text-slate-800 border-t border-slate-200 pt-3">
