@@ -2,6 +2,7 @@
 // HR Traders E-commerce Header Component
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/auth.php';
 
 // Calculate cart count
 $cart_count = 0;
@@ -15,6 +16,10 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 $seo_title = get_setting('seo_title', STORE_NAME . ' - Premium Online Grocery & Grain Store');
 $seo_desc = get_setting('seo_description', 'Shop the freshest grains, cold drinks, dairy, and cosmetics online with fast delivery.');
 $seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics shop, dry fruits, fresh milk');
+
+// Google Auth Settings
+$google_client_id = get_setting('google_client_id', '');
+$google_auth_enabled = get_setting('google_auth_enabled', '0');
 
 // Set HTML class based on theme type (light or dark)
 $current_theme = get_setting('active_theme', 'emerald_green');
@@ -81,6 +86,10 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
             });
         }
     </script>
+    <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <?php endif; ?>
 </head>
 <body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
@@ -136,6 +145,50 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                 </nav>
 
 
+
+                <!-- Demand Box Button -->
+                <button onclick="openDemandModal()" class="relative p-2 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-600 rounded-xl transition-all flex items-center justify-center gap-1.5 px-3" title="Submit Product Demand">
+                    <i class="fas fa-clipboard-list text-base"></i>
+                    <span class="text-xs font-bold hidden sm:inline-block">Demand Box</span>
+                </button>
+
+                <!-- Customer Authentication / Profile Dropdown -->
+                <?php if (is_logged_in()): ?>
+                    <div class="relative inline-block text-left" id="user-profile-menu">
+                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-1.5 p-2 bg-slate-105 hover:bg-slate-200 border border-slate-300 rounded-xl transition-all px-3.5 focus:outline-none cursor-pointer">
+                            <i class="fas fa-user-circle text-lg text-emerald-600"></i>
+                            <span class="text-xs font-bold text-slate-800 max-w-[100px] truncate"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
+                            <i class="fas fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-2xl shadow-2xl z-50 py-1.5 origin-top-right">
+                            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-450">
+                                Logged in as: <strong class="block text-slate-800 dark:text-white truncate"><?php echo htmlspecialchars($_SESSION['username']); ?></strong>
+                            </div>
+                            <?php if ($_SESSION['role'] === 'owner' || $_SESSION['role'] === 'manager'): ?>
+                                <a href="<?php echo BASE_URL; ?>admin/dashboard.php" class="flex items-center gap-2 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <i class="fas fa-chart-line text-slate-450 w-4"></i> Admin Panel
+                                </a>
+                            <?php endif; ?>
+                            <a href="<?php echo BASE_URL; ?>my_account.php" class="flex items-center gap-2 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <i class="fas fa-user-circle text-slate-450 w-4"></i> My Account &amp; Orders
+                            </a>
+                            <button onclick="openDemandModal(); toggleProfileDropdown();" class="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left cursor-pointer focus:outline-none">
+                                <i class="fas fa-clipboard-list text-slate-450 w-4"></i> Submit Demand
+                            </button>
+                            <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
+                            <a href="<?php echo BASE_URL; ?>logout.php" class="flex items-center gap-2 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors">
+                                <i class="fas fa-sign-out-alt text-rose-450 w-4"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
+                        <button onclick="openAuthModal()" class="relative p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-700 rounded-xl transition-all flex items-center justify-center gap-1.5 px-3.5 cursor-pointer" title="Login / Sign Up">
+                            <i class="fas fa-sign-in-alt text-base"></i>
+                            <span class="text-xs font-bold hidden sm:inline-block">Login / Register</span>
+                        </button>
+                    <?php endif; ?>
+                <?php endif; ?>
 
                 <!-- Cart Button -->
                 <button onclick="toggleCartDrawer(true)" class="relative p-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-all">
@@ -204,5 +257,150 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
         </div>
     </div>
 </div>
+
+<?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
+<!-- CUSTOMER AUTH MODAL -->
+<div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeAuthModal()">
+    <div class="relative w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col gap-6 text-center text-slate-800">
+        <!-- Close button -->
+        <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-all focus:outline-none">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+
+        <!-- Header -->
+        <div class="space-y-2">
+            <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mx-auto border border-emerald-200">
+                <i class="fas fa-user-lock"></i>
+            </div>
+            <h3 class="font-extrabold text-slate-900 text-lg">Join HR Traders!</h3>
+            <p class="text-[11px] text-slate-500 max-w-[250px] mx-auto leading-relaxed">Apne Google account ke sath 1-click me register ya login karein aur shopping start karein.</p>
+        </div>
+
+        <!-- Google Sign-in Button wrapper -->
+        <div class="flex flex-col items-center justify-center min-h-[50px] py-2 border-t border-b border-slate-100 my-1">
+            <div id="google-signin-btn-container"></div>
+        </div>
+
+        <!-- Footer terms -->
+        <p class="text-[9px] text-slate-400 leading-normal">
+            By continuing, you agree to our cookie preferences. We verify your identity securely via Google.
+        </p>
+    </div>
+</div>
+
+<script>
+// Customer Profile Dropdown Toggle
+function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+// Close dropdown on clicking outside
+document.addEventListener('click', function(e) {
+    const profileMenu = document.getElementById('user-profile-menu');
+    const dropdown = document.getElementById('profile-dropdown');
+    if (profileMenu && dropdown && !dropdown.classList.contains('hidden')) {
+        if (!profileMenu.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    }
+});
+
+function openAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('.relative').classList.remove('scale-95');
+        modal.querySelector('.relative').classList.add('scale-100');
+    }, 50);
+
+    // Initialize Google Sign-In button inside the modal dynamically if SDK loaded
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({
+            client_id: '<?php echo htmlspecialchars($google_client_id, ENT_QUOTES, 'UTF-8'); ?>',
+            callback: handleGoogleAuthCallback,
+            auto_select: false
+        });
+        google.accounts.id.renderButton(
+            document.getElementById('google-signin-btn-container'),
+            { theme: 'outline', size: 'large', width: 280, shape: 'pill', text: 'continue_with' }
+        );
+    }
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (!modal) return;
+    modal.classList.add('opacity-0');
+    modal.querySelector('.relative').classList.remove('scale-100');
+    modal.querySelector('.relative').classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function handleGoogleAuthCallback(response) {
+    if (typeof showToast === 'function') {
+        showToast('Verifying account with Google...', 'info');
+    }
+    
+    const formData = new FormData();
+    formData.append('credential', response.credential);
+
+    fetch(BASE_URL + 'api/google_auth.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof showToast === 'function') {
+                showToast(`Salam, ${data.user.name}! Successful login.`, 'success');
+            }
+            closeAuthModal();
+            
+            // Link local guest orders if available
+            associateLocalOrdersToAccount();
+            
+            // Reload page to refresh header state
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            alert(data.message || 'Verification failed.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Authentication error occurred, please try again.');
+    });
+}
+
+function associateLocalOrdersToAccount() {
+    let placedOrders = [];
+    try {
+        placedOrders = JSON.parse(localStorage.getItem('placed_orders') || '[]');
+    } catch(e) {}
+    
+    if (placedOrders.length > 0) {
+        const formData = new FormData();
+        formData.append('orders', placedOrders.join(','));
+        fetch(BASE_URL + 'api/link_orders.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Link orders response:', data);
+        })
+        .catch(err => console.error('Error linking orders:', err));
+    }
+}
+</script>
+<?php endif; ?>
 
 <main class="flex-1">

@@ -51,6 +51,43 @@ try {
     $checkout_error = "Failed to load cart items from database.";
 }
 
+// Fetch user profile presets for logged in customers
+$preset_name = '';
+$preset_phone = '';
+$preset_address = '';
+
+if (is_logged_in()) {
+    try {
+        // Fetch direct profile details from users table
+        $stmt_u = $pdo->prepare("SELECT name, phone, address FROM users WHERE id = :id LIMIT 1");
+        $stmt_u->execute(['id' => $_SESSION['user_id']]);
+        $u_profile = $stmt_u->fetch(PDO::FETCH_ASSOC);
+        
+        if ($u_profile) {
+            $preset_name = $u_profile['name'];
+            $preset_phone = $u_profile['phone'] ?? '';
+            $preset_address = $u_profile['address'] ?? '';
+        }
+        
+        // If phone or address are empty in users table profile, fallback to last placed order details
+        if (empty($preset_phone) || empty($preset_address)) {
+            $stmt_pref = $pdo->prepare("SELECT customer_phone, customer_address FROM orders WHERE user_id = :user_id ORDER BY id DESC LIMIT 1");
+            $stmt_pref->execute(['user_id' => $_SESSION['user_id']]);
+            $pref = $stmt_pref->fetch(PDO::FETCH_ASSOC);
+            if ($pref) {
+                if (empty($preset_phone)) {
+                    $preset_phone = $pref['customer_phone'] ?? '';
+                }
+                if (empty($preset_address)) {
+                    $preset_address = $pref['customer_address'] ?? '';
+                }
+            }
+        }
+    } catch (PDOException $e) {
+        // Ignore
+    }
+}
+
 // 2. Handle COD checkout form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
     if (get_setting('shop_status', 'open') === 'closed') {
@@ -222,16 +259,16 @@ require_once __DIR__ . '/includes/header.php';
                 
                 <form action="checkout.php" method="POST" class="space-y-4">
                     <div>
-                        <label for="customer_name" class="block text-xs font-semibold text-slate-650 mb-1.5 uppercase tracking-wider">Full Name</label>
+                        <label for="customer_name" class="block text-xs font-semibold text-slate-655 mb-1.5 uppercase tracking-wider">Full Name</label>
                         <input type="text" id="customer_name" name="customer_name" required
-                               placeholder="Enter your name"
+                               placeholder="Enter your name" value="<?php echo sanitize($preset_name); ?>"
                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900">
                     </div>
 
                     <div>
                         <label for="customer_phone" class="block text-xs font-semibold text-slate-655 mb-1.5 uppercase tracking-wider">Contact Phone Number</label>
                         <input type="text" id="customer_phone" name="customer_phone" required
-                               placeholder="e.g. 03001234567"
+                               placeholder="e.g. 03001234567" value="<?php echo sanitize($preset_phone); ?>"
                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900 font-mono">
                     </div>
 
@@ -239,7 +276,7 @@ require_once __DIR__ . '/includes/header.php';
                         <label for="customer_address" class="block text-xs font-semibold text-slate-655 mb-1.5 uppercase tracking-wider">Complete Shipping Address</label>
                         <textarea id="customer_address" name="customer_address" rows="3" required
                                   placeholder="House No, Street, Society Block, Area, Lahore"
-                                  class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900"></textarea>
+                                  class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900"><?php echo sanitize($preset_address); ?></textarea>
                     </div>
 
                     <div class="bg-slate-100 p-4 border border-slate-200 rounded-xl space-y-2">

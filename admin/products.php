@@ -545,22 +545,24 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                                         <?php echo $prod['stock_quantity']; ?>
                                     </span>
                                 </td>
-                                <td class="p-4 text-center pr-5 space-x-1.5">
-                                    <!-- Edit product trigger -->
-                                    <button onclick="openEditModal(<?php echo htmlspecialchars(json_encode($prod), ENT_QUOTES, 'UTF-8'); ?>)" 
-                                            class="p-2 bg-slate-100 text-slate-600 hover:bg-slate-205 hover:text-slate-900 border border-slate-200 rounded-lg transition-colors" title="Edit Product">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <?php if (is_owner()): ?>
-                                    <!-- Delete product trigger -->
-                                    <form action="products.php" method="POST" class="inline-block" onsubmit="return confirm('Remove product entirely from register?');">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="id" value="<?php echo $prod['id']; ?>">
-                                        <button type="submit" class="p-2 bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 rounded-lg transition-colors" title="Delete Product">
-                                            <i class="fas fa-trash-can"></i>
+                                <td class="p-4 text-center pr-5 whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <!-- Edit product trigger -->
+                                        <button onclick="openEditModal(<?php echo htmlspecialchars(json_encode($prod), ENT_QUOTES, 'UTF-8'); ?>)" 
+                                                class="p-2 bg-slate-100 text-slate-600 hover:bg-slate-205 hover:text-slate-900 border border-slate-200 rounded-lg transition-colors" title="Edit Product">
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                    </form>
-                                    <?php endif; ?>
+                                        <?php if (is_owner()): ?>
+                                        <!-- Delete product trigger -->
+                                        <form action="products.php" method="POST" class="inline-block m-0" onsubmit="return confirm('Remove product entirely from register?');">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo $prod['id']; ?>">
+                                            <button type="submit" class="p-2 bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 rounded-lg transition-colors" title="Delete Product">
+                                                <i class="fas fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

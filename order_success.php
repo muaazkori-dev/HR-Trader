@@ -146,4 +146,20 @@ $whatsapp_url = "https://api.whatsapp.com/send?phone=" . WHATSAPP_NUMBER . "&tex
     </div>
 </div>
 
+<?php if ($order_id > 0): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let placedOrders = [];
+    try {
+        placedOrders = JSON.parse(localStorage.getItem('placed_orders') || '[]');
+    } catch(e) {}
+    const currentOrderId = <?php echo (int)$order_id; ?>;
+    if (!placedOrders.includes(currentOrderId)) {
+        placedOrders.push(currentOrderId);
+        localStorage.setItem('placed_orders', JSON.stringify(placedOrders));
+    }
+});
+</script>
+<?php endif; ?>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

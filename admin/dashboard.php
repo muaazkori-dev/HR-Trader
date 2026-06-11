@@ -74,6 +74,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle deleting product demands
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_demand') {
+    $demand_id = (int)$_POST['demand_id'];
+    try {
+        $stmt = $pdo->prepare("DELETE FROM product_demands WHERE id = :id");
+        $stmt->execute(['id' => $demand_id]);
+        $success_message = "Customer product demand request deleted successfully.";
+    } catch (PDOException $e) {
+        $error_message = "Failed to delete demand request: " . $e->getMessage();
+    }
+}
+
+// Handle confirming product demands
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'confirm_demand') {
+    $demand_id = (int)$_POST['demand_id'];
+    try {
+        $stmt = $pdo->prepare("UPDATE product_demands SET status = 'confirmed' WHERE id = :id");
+        $stmt->execute(['id' => $demand_id]);
+        $success_message = "Customer product demand request confirmed successfully.";
+    } catch (PDOException $e) {
+        $error_message = "Failed to confirm demand request: " . $e->getMessage();
+    }
+}
+
 // Handle resetting staff password
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_password') {
     if (!is_owner()) {
@@ -223,6 +247,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $success_message = "Store configurations updated successfully.";
             }
         }
+        
+        // 11. Google Auth Settings
+        if (isset($_POST['google_client_id'])) {
+            update_setting('google_client_id', trim($_POST['google_client_id']));
+            $success_message = "Store configurations updated successfully.";
+        }
+        $google_auth_enabled_post = isset($_POST['google_auth_enabled']) ? '1' : '0';
+        update_setting('google_auth_enabled', $google_auth_enabled_post);
     }
 }
 
@@ -266,6 +298,14 @@ try {
     $stmt = $pdo->query("SELECT id, username, role, name, phone, created_at FROM users WHERE role IN ('owner', 'manager') ORDER BY id ASC");
     $staff_members = $stmt->fetchAll();
 
+    // Fetch customer product demands
+    try {
+        $stmt_demands = $pdo->query("SELECT * FROM product_demands ORDER BY id DESC LIMIT 30");
+        $customer_demands = $stmt_demands->fetchAll();
+    } catch (PDOException $e) {
+        $customer_demands = [];
+    }
+
     // 9. Fetch system settings
     $low_stock_threshold = (int)get_setting('low_stock_threshold', '5');
     $stmt_low = $pdo->prepare("SELECT id, barcode, name, stock_quantity, category, price FROM products WHERE stock_quantity <= :thresh ORDER BY stock_quantity ASC");
@@ -295,6 +335,8 @@ try {
     $seo_description = get_setting('seo_description', 'Shop the freshest grains, cold drinks, dairy, and cosmetics online with fast delivery.');
     $seo_keywords = get_setting('seo_keywords', 'grain store, online grocery, cosmetics shop, dry fruits, fresh milk');
     $admin_secret_key = get_setting('admin_secret_key', 'hr_secure_desk_99');
+    $google_client_id = get_setting('google_client_id', '');
+    $google_auth_enabled = get_setting('google_auth_enabled', '0');
 
 } catch (PDOException $e) {
     die("Database query error: " . $e->getMessage());
@@ -725,6 +767,71 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
             <input type="hidden" name="new_password" value="">
         </form>
         <?php endif; ?>
+
+        <!-- Customer Demands Panel -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4 bg-white shadow-sm mt-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <i class="fas fa-clipboard-list text-amber-500"></i> Customer Demands
+                </h3>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    <?php echo count($customer_demands); ?> Requests
+                </span>
+            </div>
+            
+            <div class="divide-y divide-slate-200 max-h-96 overflow-y-auto pr-1 space-y-2.5">
+                <?php if (empty($customer_demands)): ?>
+                    <p class="text-xs text-slate-400 text-center py-6">No pending product demands.</p>
+                <?php else: ?>
+                    <?php foreach ($customer_demands as $cd): ?>
+                        <div class="py-2.5 space-y-1.5 first:pt-0 last:pb-0 text-xs">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5">
+                                    <strong class="text-slate-800 font-bold block"><?php echo sanitize($cd['customer_name']); ?></strong>
+                                    <?php if (($cd['status'] ?? 'pending') === 'confirmed'): ?>
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Confirmed</span>
+                                    <?php else: ?>
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                                    <?php endif; ?>
+                                </div>
+                                <span class="text-[9px] text-slate-400 font-mono"><?php echo date('d-M h:i A', strtotime($cd['created_at'])); ?></span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]">
+                                <a href="tel:<?php echo sanitize($cd['customer_phone']); ?>" class="text-slate-500 hover:text-emerald-600 transition-colors font-mono flex items-center gap-1">
+                                    <i class="fas fa-phone-alt text-[9px]"></i> <?php echo sanitize($cd['customer_phone']); ?>
+                                </a>
+                                <div class="flex items-center gap-1">
+                                    <?php if (($cd['status'] ?? 'pending') !== 'confirmed'): ?>
+                                        <button onclick="triggerConfirmDemand(<?php echo $cd['id']; ?>)" 
+                                                class="w-6 h-6 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-colors"
+                                                title="Confirm Demand">
+                                            <i class="fas fa-check text-[9px]"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                    <button onclick="triggerDeleteDemand(<?php echo $cd['id']; ?>)" 
+                                            class="w-6 h-6 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors"
+                                            title="Delete Demand">
+                                        <i class="fas fa-trash-alt text-[9px]"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-655 border border-slate-200/50 mt-1 italic break-words">
+                                "<?php echo sanitize($cd['demand_details']); ?>"
+                            </p>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <form id="delete-demand-form" action="dashboard.php" method="POST" style="display:none;">
+            <input type="hidden" name="action" value="delete_demand">
+            <input type="hidden" name="demand_id" value="">
+        </form>
+        <form id="confirm-demand-form" action="dashboard.php" method="POST" style="display:none;">
+            <input type="hidden" name="action" value="confirm_demand">
+            <input type="hidden" name="demand_id" value="">
+        </form>
     </div>
     </div> <!-- OVERVIEW TAB END -->
 
@@ -1126,6 +1233,63 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
         </div>
 
+        <!-- Google Authentication Options Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <!-- Google Sign-In Configurations Form -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-4">
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">Google Auth Settings</h3>
+                    <p class="text-[10px] text-slate-505">Configure customer sign-up and login credentials using Google Accounts.</p>
+                </div>
+
+                <form action="dashboard.php" method="POST" class="space-y-4">
+                    <input type="hidden" name="action" value="update_settings">
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <div class="space-y-0.5 text-left">
+                            <span class="block text-xs font-bold text-slate-800">Enable Google Authentication</span>
+                            <span class="block text-[9px] text-slate-400">Allow customers to log in and sign up with Google</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="google_auth_enabled" value="1" <?php echo ($google_auth_enabled === '1') ? 'checked' : ''; ?> class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="text-left">
+                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Google Client ID</label>
+                        <input type="text" name="google_client_id" value="<?php echo sanitize($google_client_id); ?>" placeholder="e.g. 123456-abcde.apps.googleusercontent.com"
+                               class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-mono">
+                        <span class="text-[9px] text-slate-400 block mt-1">Obtained from Google Cloud Developer Console. Authorized JavaScript Origin should match: <strong class="font-mono text-emerald-600"><?php echo BASE_URL; ?></strong></span>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest pt-2.5 shadow-md shadow-emerald-600/10">
+                        Save Google Auth Settings
+                    </button>
+                </form>
+            </div>
+
+            <!-- Developer Instructions Card -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+                <div class="space-y-3 text-left">
+                    <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+                        <i class="fab fa-google text-emerald-600"></i> Google Developer Setup Guide
+                    </h3>
+                    <p class="text-[11px] text-slate-505 leading-relaxed">
+                        To enable customer Google Sign-In, follow these steps:<br>
+                        1. Visit the <a href="https://console.cloud.google.com/" target="_blank" class="text-emerald-600 underline font-bold">Google Cloud Console</a>.<br>
+                        2. Create a new project or select an existing one.<br>
+                        3. Go to **APIs & Services** ➔ **Credentials**.<br>
+                        4. Click **Create Credentials** and choose **OAuth client ID**.<br>
+                        5. Set application type to **Web application**.<br>
+                        6. Under **Authorized JavaScript origins**, add your website root URL:<br>
+                           <code class="px-1.5 py-0.5 bg-slate-100 rounded text-emerald-650 font-mono text-[10px]"><?php echo BASE_URL; ?></code><br>
+                        7. Copy the generated **Client ID** and paste it into the form on the left.
+                    </p>
+                </div>
+            </div>
+        </div>
+
     </div>
     <?php endif; ?>
 </main>
@@ -1319,6 +1483,22 @@ function triggerResetPassword(staffId, staffName) {
         const form = document.getElementById('reset-password-form');
         form.querySelector('input[name="staff_id"]').value = staffId;
         form.querySelector('input[name="new_password"]').value = newPassword;
+        form.submit();
+    }
+}
+
+function triggerDeleteDemand(demandId) {
+    if (confirm("Kya aap waqai is customer demand request ko delete karna chahte hain?")) {
+        const form = document.getElementById('delete-demand-form');
+        form.querySelector('input[name="demand_id"]').value = demandId;
+        form.submit();
+    }
+}
+
+function triggerConfirmDemand(demandId) {
+    if (confirm("Kya aap is customer demand request ko confirm/resolve karna chahte hain?")) {
+        const form = document.getElementById('confirm-demand-form');
+        form.querySelector('input[name="demand_id"]').value = demandId;
         form.submit();
     }
 }

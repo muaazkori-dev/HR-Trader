@@ -50,7 +50,7 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
                 <div class="space-y-4 text-xs text-slate-550">
                     <!-- Branch 1 -->
                     <div class="space-y-1.5 border-b border-slate-200/50 pb-3">
-                        <span class="text-[10px] font-bold text-slate-700 block uppercase tracking-wider">Branch 1 (Tando Adam)</span>
+                        <span class="text-[10px] font-bold text-slate-700 block uppercase tracking-wider">Branch 1 (Toor Colony)</span>
                         <a href="https://maps.app.goo.gl/S7BB1SyefKsfKX5K7" target="_blank" rel="noopener noreferrer" class="flex items-start gap-2 hover:text-emerald-600 transition-colors leading-tight">
                             <i class="fas fa-map-marker-alt text-emerald-600 mt-0.5 flex-shrink-0"></i>
                             <span>Toor Colony, Front of Hira Public School, Tando Adam</span>
@@ -155,7 +155,7 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
                 <i class="fab fa-whatsapp"></i>
             </div>
             <div class="flex-1 text-left">
-                <span class="font-bold text-xs text-slate-800 block leading-tight">Branch 1 (Tando Adam)</span>
+                <span class="font-bold text-xs text-slate-800 block leading-tight">Branch 1 (Toor Colony)</span>
                 <span class="text-[10px] text-slate-500 font-mono">+92 303 3943814</span>
             </div>
         </a>
@@ -345,6 +345,54 @@ document.addEventListener('click', function(e) {
     </div>
 </div>
 
+<!-- PRODUCT DEMAND MODAL DIALOG -->
+<div id="demand-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+    <div class="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col gap-5 text-slate-800">
+        <!-- Close button -->
+        <button onclick="toggleDemandModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+
+        <!-- Header -->
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/20 text-amber-500 flex items-center justify-center text-lg flex-shrink-0">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="text-left">
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Demand Box / Item Request</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Jo grocery item hamare paas nahi hai, uski demand yahan likhein!</p>
+            </div>
+        </div>
+
+        <!-- Form content -->
+        <form id="demand-box-form" onsubmit="event.preventDefault(); submitProductDemand();" class="space-y-4">
+            <div class="text-left">
+                <label for="demand-name" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Apna Naam (Your Name)</label>
+                <input type="text" id="demand-name" required placeholder="Enter your full name" 
+                       class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:border-amber-500 placeholder-slate-405 text-slate-900 dark:text-white font-semibold">
+            </div>
+
+            <div class="text-left">
+                <label for="demand-phone" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">WhatsApp / Phone Number</label>
+                <input type="tel" id="demand-phone" required placeholder="e.g. 03001234567" 
+                       class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:border-amber-500 placeholder-slate-405 text-slate-900 dark:text-white font-semibold font-mono">
+            </div>
+
+            <div class="text-left">
+                <label for="demand-details" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Required Item Details (Product details)</label>
+                <textarea id="demand-details" required rows="3" placeholder="Type items name, brand, or weight details..." 
+                          class="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:border-amber-500 placeholder-slate-405 text-slate-900 dark:text-white font-semibold resize-none"></textarea>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" id="demand-submit-btn" 
+                    class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10 active:scale-95 uppercase tracking-wider mt-2">
+                <i class="fas fa-paper-plane text-[10px]"></i> Submit Demand
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- Cookie Consent Banner -->
 <div id="cookie-consent-banner" class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-2xl shadow-2xl z-[100] transform translate-y-20 opacity-0 pointer-events-none transition-all duration-500 flex flex-col gap-4">
     <div class="flex items-start gap-3.5">
@@ -380,7 +428,25 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }, 1500);
     }
+    
+    // Background polling for order and demand statuses
+    pollStatuses();
+    setInterval(pollStatuses, 30000); // every 30 seconds
 });
+
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                new Notification('HR Traders', {
+                    body: 'Shukriya! Ab aapko order aur demand status updates ke notifications milenge.',
+                    icon: BASE_URL + 'assets/images/logo.png'
+                });
+                pollStatuses();
+            }
+        });
+    }
+}
 
 function setCookieConsent(status) {
     localStorage.setItem("cookie_consent", status);
@@ -392,6 +458,215 @@ function setCookieConsent(status) {
             banner.remove();
         }, 500);
     }
+    if (status === 'accepted') {
+        requestNotificationPermission();
+    }
+}
+
+function triggerOrderNotification(orderId, status) {
+    let title = 'Order Update - HR Traders';
+    let body = '';
+    const paddedId = String(orderId).padStart(5, '0');
+    
+    switch (status) {
+        case 'pending':
+            body = `Aapka order #HRT-${paddedId} pending status par hai.`;
+            break;
+        case 'packaging':
+            body = `Aapka order #HRT-${paddedId} ab pack ho raha hai! 📦`;
+            break;
+        case 'out_for_delivery':
+            body = `Aapka order #HRT-${paddedId} delivery ke liye nikal chuka hai! 🚴`;
+            break;
+        case 'delivered':
+            body = `Aapka order #HRT-${paddedId} kamyabi se deliver ho chuka hai. Shukriya! 🎉`;
+            break;
+        case 'cancelled':
+            body = `Aapka order #HRT-${paddedId} cancel kar diya gaya hai.`;
+            break;
+        default:
+            body = `Aapke order #HRT-${paddedId} ka status ab '${status}' hai.`;
+    }
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: BASE_URL + 'assets/images/logo.png'
+        });
+    }
+}
+
+function triggerDemandNotification(demandId, status, details) {
+    let title = 'Demand Box Update - HR Traders';
+    let body = '';
+    const itemTruncated = details.length > 30 ? details.substring(0, 30) + '...' : details;
+    
+    if (status === 'confirmed') {
+        body = `Aapki demand "${itemTruncated}" confirm ho chuki hai! Humne iska intezam kar liya hai. 🛒`;
+    } else {
+        body = `Aapki demand "${itemTruncated}" ka status ab '${status}' hai.`;
+    }
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: BASE_URL + 'assets/images/logo.png'
+        });
+    }
+}
+
+function pollStatuses() {
+    if (!('Notification' in window) || Notification.permission !== 'granted' || localStorage.getItem('cookie_consent') !== 'accepted') {
+        return;
+    }
+
+    let placedOrders = [];
+    let placedDemands = [];
+    try {
+        placedOrders = JSON.parse(localStorage.getItem('placed_orders') || '[]');
+    } catch(e) {}
+    try {
+        placedDemands = JSON.parse(localStorage.getItem('placed_demands') || '[]');
+    } catch(e) {}
+
+    if (placedOrders.length === 0 && placedDemands.length === 0) {
+        return;
+    }
+
+    const params = new URLSearchParams();
+    if (placedOrders.length > 0) {
+        params.append('ids', placedOrders.join(','));
+    }
+    if (placedDemands.length > 0) {
+        params.append('demands', placedDemands.join(','));
+    }
+
+    fetch(BASE_URL + 'check_order_status.php?' + params.toString())
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                let cachedStatuses = null;
+                const cachedStr = localStorage.getItem('cached_statuses');
+                if (cachedStr) {
+                    try { cachedStatuses = JSON.parse(cachedStr); } catch(e) {}
+                }
+
+                const isFirstRun = (cachedStatuses === null);
+                if (isFirstRun) {
+                    cachedStatuses = {};
+                }
+
+                // Process orders
+                if (data.orders && Array.isArray(data.orders)) {
+                    data.orders.forEach(order => {
+                        const orderId = order.id;
+                        const newStatus = order.status;
+                        const oldStatus = cachedStatuses['order_' + orderId];
+
+                        if (!isFirstRun && oldStatus !== undefined && oldStatus !== newStatus) {
+                            triggerOrderNotification(orderId, newStatus);
+                        }
+                        cachedStatuses['order_' + orderId] = newStatus;
+                    });
+                }
+
+                // Process demands
+                if (data.demands && Array.isArray(data.demands)) {
+                    data.demands.forEach(demand => {
+                        const demandId = demand.id;
+                        const newStatus = demand.status;
+                        const oldStatus = cachedStatuses['demand_' + demandId];
+
+                        if (!isFirstRun && oldStatus !== undefined && oldStatus !== newStatus) {
+                            triggerDemandNotification(demandId, newStatus, demand.demand_details);
+                        }
+                        cachedStatuses['demand_' + demandId] = newStatus;
+                    });
+                }
+
+                localStorage.setItem('cached_statuses', JSON.stringify(cachedStatuses));
+            }
+        })
+        .catch(err => console.error('Error polling statuses:', err));
+}
+
+function toggleDemandModal(show) {
+    const modal = document.getElementById('demand-modal');
+    if (!modal) return;
+    
+    if (show) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.querySelector('.relative').classList.remove('scale-95');
+            modal.querySelector('.relative').classList.add('scale-100');
+        }, 50);
+    } else {
+        modal.classList.remove('opacity-100');
+        modal.querySelector('.relative').classList.remove('scale-100');
+        modal.querySelector('.relative').classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden', 'opacity-0');
+        }, 300);
+    }
+}
+
+function openDemandModal() {
+    toggleDemandModal(true);
+}
+
+function submitProductDemand() {
+    const name = document.getElementById('demand-name').value;
+    const phone = document.getElementById('demand-phone').value;
+    const details = document.getElementById('demand-details').value;
+    const btn = document.getElementById('demand-submit-btn');
+
+    if (!name.trim() || !phone.trim() || !details.trim()) {
+        alert("Please fill in all fields!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-1"></i> Submitting...';
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('phone', phone);
+    formData.append('details', details);
+
+    fetch(BASE_URL + 'submit_demand.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane text-[10px]"></i> Submit Demand';
+        
+        if (data.success) {
+            alert(data.message);
+            if (data.id) {
+                let placedDemands = [];
+                try {
+                    placedDemands = JSON.parse(localStorage.getItem('placed_demands') || '[]');
+                } catch(e) {}
+                const idVal = parseInt(data.id);
+                if (!placedDemands.includes(idVal)) {
+                    placedDemands.push(idVal);
+                    localStorage.setItem('placed_demands', JSON.stringify(placedDemands));
+                }
+            }
+            document.getElementById('demand-box-form').reset();
+            toggleDemandModal(false);
+        } else {
+            alert(data.message || "Failed to submit request.");
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane text-[10px]"></i> Submit Demand';
+        alert("An error occurred: " + err.message);
+    });
 }
 </script>
 

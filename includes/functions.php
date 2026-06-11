@@ -14,6 +14,37 @@ try {
     // Ignore
 }
 
+// Self-healing database check for product_demands table
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS product_demands (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        customer_name VARCHAR(100) NOT NULL,
+        customer_phone VARCHAR(50) NOT NULL,
+        demand_details TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+} catch (PDOException $e) {
+    // Ignore
+}
+
+// Self-healing database check for users table (Google Sign-In integration)
+try {
+    $q = $pdo->query("SHOW COLUMNS FROM users LIKE 'google_id'");
+    if (!$q->fetch()) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN google_id VARCHAR(100) DEFAULT NULL UNIQUE AFTER password");
+    }
+    
+    $q2 = $pdo->query("SHOW COLUMNS FROM users LIKE 'email'");
+    if (!$q2->fetch()) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN email VARCHAR(150) DEFAULT NULL UNIQUE AFTER google_id");
+    }
+    
+    $pdo->exec("ALTER TABLE users MODIFY COLUMN password VARCHAR(255) DEFAULT NULL");
+} catch (PDOException $e) {
+    // Ignore
+}
+
 try {
     $q = $pdo->query("SHOW COLUMNS FROM sale_items LIKE 'purchase_price'");
     if (!$q->fetch()) {
