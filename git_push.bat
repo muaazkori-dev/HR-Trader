@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-update: Fixed category column type migration to VARCHAR to support new categories"
+git commit -m "Auto-cleanup: Purged seeded dummy products and associated images"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )
