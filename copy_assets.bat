@@ -20,6 +20,8 @@ copy "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-9
 copy "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-925d8b5f8b89\milk_category_1781111150329.png" "assets\images\categories\milk.png" /y
 copy "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-925d8b5f8b89\cosmetics_category_1781111169166.png" "assets\images\categories\cosmetics.png" /y
 copy "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-925d8b5f8b89\snacks_category_icon_1781113888680.png" "assets\images\categories\snacks.png" /y
+copy "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-925d8b5f8b89\bakery_category_icon_1781205886278.png" "assets\images\categories\bakery.png" /y
+copy "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-925d8b5f8b89\sauce_category_icon_1781205898231.png" "assets\images\categories\sauce.png" /y
 
 
 echo.

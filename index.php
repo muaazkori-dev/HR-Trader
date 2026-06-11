@@ -87,22 +87,22 @@ try {
         <p class="text-sm text-slate-500">Select a category to filter your grocery requirements</p>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <!-- Category 1: Anaj -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/anaj.png?v=2.1" alt="Anaj" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/anaj.png?v=2.4" alt="Anaj" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Anaj</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">اناج</p>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">اناج</p>
             </div>
         </a>
 
         <!-- Category 2: Ice Cream -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.png?v=2.1" alt="Ice Cream" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.png?v=2.4" alt="Ice Cream" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Ice Cream</h4>
@@ -113,48 +113,71 @@ try {
         <!-- Category 3: Beverages -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png?v=2.1" alt="Beverages" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png?v=2.4" alt="Beverages" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Beverages</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">مشروبات</p>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">مشروبات</p>
             </div>
         </a>
 
-        <!-- Category 5: Milk -->
+        <!-- Category 4: Milk -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.png?v=2.1" alt="Milk" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.png?v=2.4" alt="Milk" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Milk</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">دودھ</p>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">دودھ</p>
             </div>
         </a>
 
-        <!-- Category 6: Cosmetics -->
+        <!-- Category 5: Cosmetics -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cosmetics.png?v=2.1" alt="Cosmetics" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/cosmetics.png?v=2.4" alt="Cosmetics" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Cosmetics</h4>
-                <p class="text-[10px] text-slate-500 urdu-text tracking-wider">کاسمیٹکس</p>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">کاسمیٹکس</p>
             </div>
         </a>
 
-        <!-- Category 7: Snacks -->
+        <!-- Category 6: Snacks -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=snacks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200 bg-white">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/snacks.png?v=2.1" alt="Snacks" class="w-full h-full object-cover">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/snacks.png?v=2.4" alt="Snacks" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Snacks</h4>
                 <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سنیکس</p>
             </div>
         </a>
+
+        <!-- Category 7: Bakery -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=bakery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-orange-200 bg-white">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/bakery.png?v=2.4" alt="Bakery" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800">Bakery</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">بیکری</p>
+            </div>
+        </a>
+
+        <!-- Category 8: Sauce -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=sauce#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-red-200 bg-white">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/sauce.png?v=2.4" alt="Sauces" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800">Sauces</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سوس</p>
+            </div>
+        </a>
     </div>
 </section>
+
 
 <!-- FEATURED PRODUCTS GRID -->
 <section class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 border-t border-slate-200">
