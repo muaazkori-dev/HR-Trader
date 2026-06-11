@@ -20,7 +20,7 @@ if (isset($_SESSION['user_id'])) {
 $keep_ids_str = implode(',', array_filter(array_unique($keep_user_ids)));
 
 try {
-    $pdo->beginTransaction();
+    // Disable foreign keys to truncate safely
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
 
     // 1. Clear all orders & order line items
@@ -41,27 +41,27 @@ try {
         $pdo->exec("DELETE FROM users WHERE role NOT IN ('owner', 'manager')");
     }
 
+    // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
-    $pdo->commit();
 
-    echo "<div style='font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #dcdcdc; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>";
+    echo "<div style='font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #10b981; background-color: #f0fdf4; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>";
     echo "<h2 style='color: #10b981; margin-top: 0;'>Database Reset Completed!</h2>";
-    echo "<p style='color: #4b5563; font-size: 14px;'>Saray test orders, sales records, demands, aur fake test sign-ups ko kamyabi se clear kar diya gaya hai.</p>";
-    echo "<p style='color: #4b5563; font-size: 14px;'>Aapka active logged-in session aur default admin credentials bilkul mehfooz hain.</p>";
-    echo "<hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>";
+    echo "<p style='color: #374151; font-size: 14px;'>Saray test orders, sales records, demands, aur fake test sign-ups ko kamyabi se clear kar diya gaya hai.</p>";
+    echo "<p style='color: #374151; font-size: 14px;'>Aapka active logged-in session aur default admin credentials bilkul mehfooz hain.</p>";
+    echo "<hr style='border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;'>";
     echo "<p style='color: #6b7280; font-size: 12px; font-style: italic;'>Security Notice: Yeh script chalne ke baad server se khud-ba-khud delete (self-deleted) ho gayi hai.</p>";
     echo "</div>";
 
 } catch (Exception $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    // Attempt recovery of foreign key checks in case of error
+    try { $pdo->exec("SET FOREIGN_KEY_CHECKS = 1"); } catch(Exception $ex) {}
+    
     echo "<div style='font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #fecaca; background-color: #fef2f2; border-radius: 12px; color: #991b1b;'>";
     echo "<h2 style='margin-top: 0;'>Reset Failed!</h2>";
     echo "<p style='font-size: 14px;'>" . htmlspecialchars($e->getMessage()) . "</p>";
     echo "</div>";
 }
 
-// Self-delete the file for production safety
+// Self-delete the file for security
 @unlink(__FILE__);
 exit();
