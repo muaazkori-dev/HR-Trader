@@ -189,6 +189,15 @@ function updateCartBadge(count) {
             badge.classList.add('hidden');
         }
     }
+    const mobileBadge = document.getElementById('mobile-cart-badge');
+    if (mobileBadge) {
+        mobileBadge.innerText = count;
+        if (count > 0) {
+            mobileBadge.classList.remove('hidden');
+        } else {
+            mobileBadge.classList.add('hidden');
+        }
+    }
 }
 
 /**

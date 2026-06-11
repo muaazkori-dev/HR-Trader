@@ -670,6 +670,70 @@ function submitProductDemand() {
 }
 </script>
 
+<!-- MOBILE BOTTOM NAVIGATION BAR -->
+<div class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] md:hidden z-40 flex items-center justify-around h-16 px-2">
+    <!-- Home Tab -->
+    <a href="<?php echo BASE_URL; ?>" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-emerald-600 transition-colors">
+        <i class="fas fa-home text-lg"></i>
+        <span class="text-[10px] font-bold mt-1">Home</span>
+    </a>
+    
+    <!-- Shop Tab -->
+    <a href="<?php echo BASE_URL; ?>shop.php" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-emerald-600 transition-colors">
+        <i class="fas fa-store text-lg"></i>
+        <span class="text-[10px] font-bold mt-1">Shop</span>
+    </a>
+    
+    <!-- Demand Box Tab -->
+    <button onclick="openDemandModal()" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-emerald-600 transition-colors focus:outline-none cursor-pointer">
+        <i class="fas fa-clipboard-list text-lg"></i>
+        <span class="text-[10px] font-bold mt-1">Demand</span>
+    </button>
+    
+    <!-- Cart Tab -->
+    <button onclick="toggleCartDrawer(true)" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-emerald-600 transition-colors relative focus:outline-none cursor-pointer">
+        <i class="fas fa-shopping-basket text-lg"></i>
+        <span id="mobile-cart-badge" class="absolute top-0.5 right-4 bg-emerald-600 text-white font-bold text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center transition-all <?php echo $cart_count > 0 ? '' : 'hidden'; ?>">
+            <?php echo $cart_count; ?>
+        </span>
+        <span class="text-[10px] font-bold mt-1">Cart</span>
+    </button>
+    
+    <!-- Profile / Account Tab -->
+    <?php if (is_logged_in()): ?>
+        <a href="<?php echo BASE_URL; ?>my_account.php" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-emerald-600 transition-colors">
+            <i class="fas fa-user-circle text-lg"></i>
+            <span class="text-[10px] font-bold mt-1">Account</span>
+        </a>
+    <?php else: ?>
+        <button onclick="openAuthModal()" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-emerald-600 transition-colors focus:outline-none cursor-pointer">
+            <i class="fas fa-sign-in-alt text-lg"></i>
+            <span class="text-[10px] font-bold mt-1">Login</span>
+        </button>
+    <?php endif; ?>
+</div>
+
+<style>
+@media (max-w: 768px) {
+    body {
+        padding-bottom: 4rem !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll(".fixed.bottom-0 a");
+    navLinks.forEach(link => {
+        if (currentPath === link.pathname || (link.pathname !== "<?php echo BASE_URL; ?>" && currentPath.includes(link.pathname))) {
+            link.classList.remove("text-slate-500");
+            link.classList.add("text-emerald-600");
+        }
+    });
+});
+</script>
+
 <!-- Main storefront script -->
 <script src="<?php echo BASE_URL; ?>assets/js/app.js?v=2.1"></script>
 </body>

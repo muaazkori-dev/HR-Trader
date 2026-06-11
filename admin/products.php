@@ -351,8 +351,9 @@ try {
     $params = [];
 
     if (!empty($search_query)) {
-        $sql .= " AND (name LIKE :search OR barcode LIKE :search)";
-        $params['search'] = "%" . $search_query . "%";
+        $sql .= " AND (name LIKE :search1 OR barcode LIKE :search2)";
+        $params['search1'] = "%" . $search_query . "%";
+        $params['search2'] = "%" . $search_query . "%";
     }
 
     if (array_key_exists($filter_cat, $CATEGORIES)) {

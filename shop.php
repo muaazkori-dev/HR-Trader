@@ -26,9 +26,10 @@ try {
     }
 
     if ($search_query !== '') {
-        $sql .= " AND (name LIKE :search OR category LIKE :search)";
+        $sql .= " AND (name LIKE :search1 OR category LIKE :search2)";
         $clean_search = preg_replace('/\s+/', '%', $search_query);
-        $params['search'] = "%" . $clean_search . "%";
+        $params['search1'] = "%" . $clean_search . "%";
+        $params['search2'] = "%" . $clean_search . "%";
     }
 
     $sql .= " ORDER BY name ASC";
