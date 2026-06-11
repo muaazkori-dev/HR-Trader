@@ -272,33 +272,95 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     </div>
 </div>
 
-<?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
 <!-- CUSTOMER AUTH MODAL -->
 <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeAuthModal()">
-    <div class="relative w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col gap-6 text-center text-slate-800">
+    <div class="relative w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col gap-5 text-slate-800">
         <!-- Close button -->
         <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-all focus:outline-none">
             <i class="fas fa-times text-lg"></i>
         </button>
 
         <!-- Header -->
-        <div class="space-y-2">
-            <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mx-auto border border-emerald-200">
+        <div class="space-y-1.5 text-center">
+            <div class="w-11 h-11 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mx-auto border border-emerald-200">
                 <i class="fas fa-user-lock"></i>
             </div>
-            <h3 class="font-extrabold text-slate-900 text-lg">Join HR Traders!</h3>
-            <p class="text-[11px] text-slate-500 max-w-[250px] mx-auto leading-relaxed">Apne Google account ke sath 1-click me register ya login karein aur shopping start karein.</p>
+            <h3 id="auth-modal-title" class="font-extrabold text-slate-900 text-lg">Sign In to HR Traders</h3>
+            <p id="auth-modal-desc" class="text-[11px] text-slate-500 max-w-[250px] mx-auto leading-relaxed">Apne account me login karein ya naya account banayein.</p>
+        </div>
+
+        <!-- 1. SIGN IN FORM -->
+        <form id="signin-form" onsubmit="handleCustomAuth(event, 'signin')" class="space-y-3">
+            <div class="space-y-1 text-left">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Email or Phone Number</label>
+                <input type="text" name="identity" required placeholder="Enter email or mobile number" 
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 text-xs transition-all">
+            </div>
+            <div class="space-y-1 text-left">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Password</label>
+                <input type="password" name="password" required placeholder="Enter password" 
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 text-xs transition-all">
+            </div>
+            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all flex items-center justify-center shadow-lg shadow-emerald-600/10">
+                Sign In
+            </button>
+            <p class="text-[11px] text-center text-slate-500">
+                Naya account banayein? 
+                <button type="button" onclick="toggleAuthMode('signup')" class="text-emerald-600 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer">Register / Sign Up</button>
+            </p>
+        </form>
+
+        <!-- 2. SIGN UP FORM (HIDDEN BY DEFAULT) -->
+        <form id="signup-form" onsubmit="handleCustomAuth(event, 'signup')" class="space-y-3 hidden">
+            <div class="space-y-1 text-left">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Full Name</label>
+                <input type="text" name="name" required placeholder="Enter your full name" 
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 text-xs transition-all">
+            </div>
+            <div class="space-y-1 text-left">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Mobile Number</label>
+                <input type="text" name="phone" required placeholder="e.g. 03033943814" 
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 text-xs transition-all">
+            </div>
+            <div class="space-y-1 text-left">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Email Address</label>
+                <input type="email" name="email" required placeholder="e.g. example@gmail.com" 
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 text-xs transition-all">
+            </div>
+            <div class="space-y-1 text-left">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Password</label>
+                <input type="password" name="password" required placeholder="Create strong password" 
+                       class="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 text-xs transition-all">
+            </div>
+            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all flex items-center justify-center shadow-lg shadow-emerald-600/10">
+                Register & Sign Up
+            </button>
+            <p class="text-[11px] text-center text-slate-500">
+                Pehle se account hai? 
+                <button type="button" onclick="toggleAuthMode('signin')" class="text-emerald-600 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer">Sign In</button>
+            </p>
+        </form>
+
+        <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
+        <!-- Google Divider -->
+        <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-slate-150"></div>
+            <span class="flex-shrink mx-3 text-[10px] text-slate-400 font-medium uppercase tracking-wider">Or continue with</span>
+            <div class="flex-grow border-t border-slate-150"></div>
         </div>
 
         <!-- Google Sign-in Button wrapper -->
-        <div class="flex flex-col items-center justify-center min-h-[50px] py-2 border-t border-b border-slate-100 my-1">
+        <div class="flex flex-col items-center justify-center min-h-[40px] py-1">
             <div id="google-signin-btn-container"></div>
         </div>
+        <?php endif; ?>
 
-        <!-- Footer terms -->
-        <p class="text-[9px] text-slate-400 leading-normal">
-            By continuing, you agree to our cookie preferences. We verify your identity securely via Google.
-        </p>
+        <!-- Footer skip option -->
+        <div class="text-center pt-2 border-t border-slate-100">
+            <button onclick="closeAuthModal()" class="text-[11px] text-slate-400 hover:text-slate-600 font-bold uppercase tracking-wider transition-all bg-transparent border-0 cursor-pointer">
+                Skip for now
+            </button>
+        </div>
     </div>
 </div>
 
@@ -322,10 +384,32 @@ document.addEventListener('click', function(e) {
     }
 });
 
+function toggleAuthMode(mode) {
+    const signinForm = document.getElementById('signin-form');
+    const signupForm = document.getElementById('signup-form');
+    const modalTitle = document.getElementById('auth-modal-title');
+    const modalDesc = document.getElementById('auth-modal-desc');
+
+    if (mode === 'signup') {
+        signinForm.classList.add('hidden');
+        signupForm.classList.remove('hidden');
+        modalTitle.textContent = 'Create Account / Sign Up';
+        modalDesc.textContent = 'Join HR Traders to track your orders and enjoy premium deliveries.';
+    } else {
+        signupForm.classList.add('hidden');
+        signinForm.classList.remove('hidden');
+        modalTitle.textContent = 'Sign In to HR Traders';
+        modalDesc.textContent = 'Apne account me login karein ya naya account banayein.';
+    }
+}
+
 function openAuthModal() {
-    <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
     const modal = document.getElementById('auth-modal');
     if (!modal) return;
+    
+    // Always start with Sign In view by default
+    toggleAuthMode('signin');
+    
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -333,7 +417,8 @@ function openAuthModal() {
         modal.querySelector('.relative').classList.add('scale-100');
     }, 50);
 
-    // Initialize Google Sign-In button inside the modal dynamically if SDK loaded
+    // Initialize Google Sign-In button inside the modal dynamically if configured
+    <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.initialize({
             client_id: '<?php echo htmlspecialchars($google_client_id, ENT_QUOTES, 'UTF-8'); ?>',
@@ -344,12 +429,6 @@ function openAuthModal() {
             document.getElementById('google-signin-btn-container'),
             { theme: 'outline', size: 'large', width: 280, shape: 'pill', text: 'continue_with' }
         );
-    }
-    <?php else: ?>
-    if (typeof showToast === 'function') {
-        showToast('Login is temporarily disabled (Google Auth credentials are not configured).', 'error');
-    } else {
-        alert('Login is temporarily disabled (Google Auth credentials are not configured).');
     }
     <?php endif; ?>
 }
@@ -363,6 +442,67 @@ function closeAuthModal() {
     setTimeout(() => {
         modal.classList.add('hidden');
     }, 300);
+}
+
+function handleCustomAuth(e, action) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    formData.append('action', action);
+
+    fetch(BASE_URL + 'api/customer_auth.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof showToast === 'function') {
+                showToast(data.message, 'success');
+            } else {
+                alert(data.message);
+            }
+            closeAuthModal();
+            // Associate any guest orders stored in localStorage with this user account
+            associateLocalOrdersToAccount();
+            
+            // Reload page to refresh header state
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            if (typeof showToast === 'function') {
+                showToast(data.message, 'error');
+            } else {
+                alert(data.message);
+            }
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Authentication error occurred, please try again.');
+    });
+}
+
+function associateLocalOrdersToAccount() {
+    let placedOrders = [];
+    try {
+        placedOrders = JSON.parse(localStorage.getItem('placed_orders') || '[]');
+    } catch(e) {}
+    
+    if (placedOrders.length > 0) {
+        const formData = new FormData();
+        formData.append('orders', placedOrders.join(','));
+        fetch(BASE_URL + 'api/link_orders.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Link orders response:', data);
+        })
+        .catch(err => console.error('Error linking orders:', err));
+    }
 }
 
 <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
@@ -402,29 +542,7 @@ function handleGoogleAuthCallback(response) {
         alert('Authentication error occurred, please try again.');
     });
 }
-
-function associateLocalOrdersToAccount() {
-    let placedOrders = [];
-    try {
-        placedOrders = JSON.parse(localStorage.getItem('placed_orders') || '[]');
-    } catch(e) {}
-    
-    if (placedOrders.length > 0) {
-        const formData = new FormData();
-        formData.append('orders', placedOrders.join(','));
-        fetch(BASE_URL + 'api/link_orders.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log('Link orders response:', data);
-        })
-        .catch(err => console.error('Error linking orders:', err));
-    }
-}
 <?php endif; ?>
 </script>
-<?php endif; ?>
 
 <main class="flex-1">

@@ -5,6 +5,9 @@
 ob_start();
 
 if (session_status() == PHP_SESSION_NONE) {
+    // Keep user logged in for 1 year (31,536,000 seconds)
+    ini_set('session.cookie_lifetime', 31536000);
+    ini_set('session.gc_maxlifetime', 31536000);
     session_start();
 }
 
@@ -331,6 +334,17 @@ try {
     } catch (Exception $e) {
         // Ignore
     }
+
+    // Default minimum order value to 250.00 if unset or 0.00
+    try {
+        $min_val = get_setting('min_order_value', '');
+        if ($min_val === '' || (float)$min_val === 0.00) {
+            update_setting('min_order_value', '250.00');
+        }
+    } catch (Exception $e) {
+        // Ignore
+    }
+
 } catch (PDOException $e) {
     // If the database does not exist yet, we will output a link to install.php
     die("Database Connection Failed: " . $e->getMessage() . "<br><br><strong>Tip:</strong> If you are setting up the system for the first time, run the <a href='" . BASE_URL . "install.php' style='color:blue;text-decoration:underline;'>System Installer (install.php)</a> to automatically create the database and tables.");
