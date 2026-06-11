@@ -300,7 +300,73 @@ document.addEventListener("DOMContentLoaded", function () {
     // Background polling for order and demand statuses
     pollStatuses();
     setInterval(pollStatuses, 30000); // every 30 seconds
+
+    // Prompt for notification permission after 3 seconds if needed
+    setTimeout(checkNotificationPrompt, 3000);
 });
+
+const IS_USER_LOGGED_IN = <?php echo is_logged_in() ? 'true' : 'false'; ?>;
+
+function checkNotificationPrompt() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        let placedOrders = [];
+        try { placedOrders = JSON.parse(localStorage.getItem('placed_orders') || '[]'); } catch(e) {}
+        
+        if (placedOrders.length > 0 || IS_USER_LOGGED_IN) {
+            showNotificationPromptBanner();
+        }
+    }
+}
+
+function showNotificationPromptBanner() {
+    if (document.getElementById('notification-prompt-banner')) return;
+    
+    const banner = document.createElement('div');
+    banner.id = 'notification-prompt-banner';
+    banner.className = 'fixed top-4 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-emerald-200 dark:border-emerald-900/40 p-4 rounded-2xl shadow-2xl z-[99] transform -translate-y-20 opacity-0 transition-all duration-500 flex items-center justify-between gap-4';
+    
+    banner.innerHTML = `
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0">
+                <i class="fas fa-bell animate-bounce"></i>
+            </div>
+            <div class="space-y-0.5 text-left">
+                <h5 class="font-bold text-slate-900 dark:text-white text-xs">Enable Order Notifications</h5>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                    Apne order aur delivery updates real-time me screen par dekhne ke liye notification allow karein.
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="dismissNotificationPrompt()" class="px-2.5 py-1.5 text-[10px] font-semibold text-slate-550 hover:text-slate-805 transition-colors cursor-pointer focus:outline-none">
+                Later
+            </button>
+            <button onclick="acceptNotificationPrompt()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] rounded-xl shadow-md shadow-emerald-600/10 transition-all active:scale-95 whitespace-nowrap cursor-pointer focus:outline-none">
+                Allow
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(banner);
+    setTimeout(() => {
+        banner.classList.remove('-translate-y-20', 'opacity-0');
+        banner.classList.add('translate-y-0', 'opacity-100');
+    }, 500);
+}
+
+function dismissNotificationPrompt() {
+    const banner = document.getElementById('notification-prompt-banner');
+    if (banner) {
+        banner.classList.remove('translate-y-0', 'opacity-100');
+        banner.classList.add('-translate-y-20', 'opacity-0');
+        setTimeout(() => banner.remove(), 500);
+    }
+}
+
+function acceptNotificationPrompt() {
+    dismissNotificationPrompt();
+    requestNotificationPermission();
+}
 
 function requestNotificationPermission() {
     if ('Notification' in window) {
@@ -362,6 +428,11 @@ function triggerOrderNotification(orderId, status) {
             icon: BASE_URL + 'assets/images/logo.png'
         });
     }
+    
+    // Always trigger in-app toast
+    if (typeof showToast === 'function') {
+        showToast(body, 'success');
+    }
 }
 
 function triggerDemandNotification(demandId, status, details) {
@@ -381,13 +452,14 @@ function triggerDemandNotification(demandId, status, details) {
             icon: BASE_URL + 'assets/images/logo.png'
         });
     }
+
+    // Always trigger in-app toast
+    if (typeof showToast === 'function') {
+        showToast(body, 'success');
+    }
 }
 
 function pollStatuses() {
-    if (!('Notification' in window) || Notification.permission !== 'granted' || localStorage.getItem('cookie_consent') !== 'accepted') {
-        return;
-    }
-
     let placedOrders = [];
     let placedDemands = [];
     try {
@@ -397,7 +469,7 @@ function pollStatuses() {
         placedDemands = JSON.parse(localStorage.getItem('placed_demands') || '[]');
     } catch(e) {}
 
-    if (placedOrders.length === 0 && placedDemands.length === 0) {
+    if (placedOrders.length === 0 && placedDemands.length === 0 && !IS_USER_LOGGED_IN) {
         return;
     }
 

@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Step 3: Committing local changes...
-git commit -m "Auto-cleanup: Purged dummy products, added Bakery and Sauce categories"
+git commit -m "Auto-update: Configured checkout login prompts and automatic status update notifications"
 if %errorlevel% neq 0 (
     echo [INFO] No new changes to commit or commit failed.
 )

@@ -142,6 +142,40 @@ $whatsapp_url = "https://api.whatsapp.com/send?phone=" . WHATSAPP_NUMBER . "&tex
 
     </div>
 
+    <!-- Real-time Status Notification Promotion -->
+    <div id="notification-optin-card" class="hidden mt-6 p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-800/40 rounded-3xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left transition-all duration-300">
+        <div class="w-12 h-12 bg-emerald-600/10 text-emerald-600 rounded-full flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fas fa-bell animate-swing"></i>
+        </div>
+        <div class="flex-grow space-y-1">
+            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Real-time Order Status Updates!</h4>
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+                Jab aapka order pack ho ya delivery ke liye nikaley, to screen par notification/toast hasil karne ke liye enable karein.
+            </p>
+        </div>
+        <button onclick="optInNotifications()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/10 active:scale-95 transition-all whitespace-nowrap cursor-pointer">
+            Allow Notifications
+        </button>
+    </div>
+
+    <?php if (!is_logged_in()): ?>
+    <!-- Account Creation Prompt -->
+    <div class="mt-6 p-5 bg-amber-50/60 dark:bg-slate-900/50 border border-amber-200/80 dark:border-slate-800 rounded-3xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left transition-all duration-300">
+        <div class="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-full flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="flex-grow space-y-1">
+            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Save your order & track status!</h4>
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+                Sign Up karein taake aap is order ko kisi bhi mobile par aur apney account me track kar sakein.
+            </p>
+        </div>
+        <button onclick="openAuthModal(); toggleAuthMode('signup');" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/10 active:scale-95 transition-all whitespace-nowrap cursor-pointer">
+            Sign Up Now
+        </button>
+    </div>
+    <?php endif; ?>
+
     <!-- WHATSAPP CTA LINK AND MAIN NAVIGATION BUTTONS -->
     <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <a href="<?php echo $whatsapp_url; ?>" target="_blank"
@@ -167,7 +201,37 @@ document.addEventListener("DOMContentLoaded", function () {
         placedOrders.push(currentOrderId);
         localStorage.setItem('placed_orders', JSON.stringify(placedOrders));
     }
+
+    if ('Notification' in window && Notification.permission !== 'granted') {
+        const card = document.getElementById('notification-optin-card');
+        if (card) {
+            card.classList.remove('hidden');
+        }
+    }
 });
+
+function optInNotifications() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                const card = document.getElementById('notification-optin-card');
+                if (card) {
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 300);
+                }
+                new Notification('HR Traders', {
+                    body: 'Shukriya! Ab aapko order updates ke notifications milenge.',
+                    icon: BASE_URL + 'assets/images/logo.png'
+                });
+                if (typeof pollStatuses === 'function') {
+                    pollStatuses();
+                }
+            } else {
+                alert("Notifications block hain. Please browser settings se notifications allow karein.");
+            }
+        });
+    }
+}
 </script>
 <?php endif; ?>
 

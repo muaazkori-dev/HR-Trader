@@ -196,12 +196,10 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                         </div>
                     </div>
                 <?php else: ?>
-                    <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
-                        <button onclick="openAuthModal()" class="relative p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-700 rounded-xl transition-all flex items-center justify-center gap-1.5 px-3.5 cursor-pointer" title="Login / Sign Up">
-                            <i class="fas fa-sign-in-alt text-base"></i>
-                            <span class="text-xs font-bold hidden sm:inline-block">Login / Register</span>
-                        </button>
-                    <?php endif; ?>
+                    <button onclick="openAuthModal()" class="relative p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-700 rounded-xl transition-all flex items-center justify-center gap-1.5 px-3.5 cursor-pointer" title="Login / Register">
+                        <i class="fas fa-sign-in-alt text-base"></i>
+                        <span class="text-xs font-bold hidden sm:inline-block">Login / Register</span>
+                    </button>
                 <?php endif; ?>
 
                 <!-- Cart Button -->

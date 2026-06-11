@@ -302,7 +302,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="glass-panel p-6 rounded-2xl border border-slate-200 sticky top-24">
                 <h3 class="font-bold text-lg text-slate-800 mb-4">Shipping Credentials</h3>
                 
-                <form action="checkout.php" method="POST" class="space-y-4">
+                <form action="checkout.php" method="POST" onsubmit="if(typeof requestNotificationPermission === 'function') requestNotificationPermission();" class="space-y-4">
                     <div>
                         <label for="customer_name" class="block text-xs font-semibold text-slate-655 mb-1.5 uppercase tracking-wider">Full Name</label>
                         <input type="text" id="customer_name" name="customer_name" required
@@ -395,6 +395,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error(err));
     }
 });
+
+<?php if (!is_logged_in()): ?>
+// Auto-prompt guest users to sign in or register upon checking out
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof openAuthModal === 'function') {
+        openAuthModal();
+    }
+});
+<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
