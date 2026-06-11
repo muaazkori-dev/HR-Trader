@@ -182,7 +182,7 @@ try {
                    <div class="glass-card rounded-2xl overflow-hidden flex flex-col border <?php echo $is_frozen ? 'frozen-alert-border border-rose-500/20' : 'border-slate-200'; ?>">
                     
                     <!-- Product Image representation -->
-                    <a href="javascript:void(0)" onclick="openProductDetails(<?php echo $product['id']; ?>); return false;" class="block h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden cursor-pointer group">
+                    <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $product['id']; ?>" class="block h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-200 overflow-hidden cursor-pointer group">
                         <?php 
                         $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
                         ?>
@@ -210,7 +210,7 @@ try {
                         <div class="space-y-2">
                             <div>
                                 <h3 class="font-bold text-slate-800 text-base leading-tight truncate-2-lines">
-                                    <a href="javascript:void(0)" onclick="openProductDetails(<?php echo $product['id']; ?>); return false;" class="hover:text-emerald-600 transition-colors">
+                                    <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $product['id']; ?>" class="hover:text-emerald-600 transition-colors">
                                         <?php echo sanitize($product['name']); ?>
                                     </a>
                                 </h3>

@@ -43,7 +43,7 @@ switch ($action) {
         }
 
         $current_qty = isset($_SESSION['cart'][$product_id]) ? $_SESSION['cart'][$product_id] : 0;
-        $new_qty = $current_qty + 1;
+        $new_qty = $current_qty + $quantity;
 
         if ($product['stock_quantity'] < $new_qty) {
             $response['message'] = "Cannot add more. Only " . $product['stock_quantity'] . " items left in stock.";

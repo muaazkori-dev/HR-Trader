@@ -13,9 +13,15 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 }
 
 // Fetch dynamic SEO configuration settings
-$seo_title = get_setting('seo_title', STORE_NAME . ' - Premium Online Grocery & Grain Store');
-$seo_desc = get_setting('seo_description', 'Shop the freshest grains, cold drinks, dairy, and cosmetics online with fast delivery.');
-$seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics shop, dry fruits, fresh milk');
+if (!isset($seo_title)) {
+    $seo_title = get_setting('seo_title', STORE_NAME . ' - Premium Online Grocery & Grain Store');
+}
+if (!isset($seo_desc)) {
+    $seo_desc = get_setting('seo_description', 'Shop the freshest grains, cold drinks, dairy, and cosmetics online with fast delivery.');
+}
+if (!isset($seo_key)) {
+    $seo_key = get_setting('seo_keywords', 'grain store, online grocery, cosmetics shop, dry fruits, fresh milk');
+}
 
 // Google Auth Settings
 $google_client_id = get_setting('google_client_id', '');
