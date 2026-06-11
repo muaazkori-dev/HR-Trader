@@ -37,6 +37,14 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <!-- Define BASE_URL globally for client-side JS AJAX fetches -->
     <script>
         const BASE_URL = "<?php echo BASE_URL; ?>";
+        
+        // Mobile diagnostic error listener to visually show exceptions
+        window.addEventListener('error', function(e) {
+            const errDiv = document.createElement('div');
+            errDiv.className = 'bg-rose-600 text-white p-3 fixed top-0 left-0 right-0 z-[99999] text-xs font-mono break-all border-b border-rose-700 shadow-2xl';
+            errDiv.innerHTML = `<strong>JS Error:</strong> ${e.message}<br><small>File: ${e.filename.split('/').pop()}:${e.lineno}</small>`;
+            document.body.appendChild(errDiv);
+        });
     </script>
     <!-- Locally saved Tailwind CSS compiler script (offline-ready) -->
     <script src="<?php echo BASE_URL; ?>assets/js/tailwind.min.js"></script>
@@ -70,7 +78,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2.0">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2.2">
     <!-- FontAwesome Icons for graphics (Fallback to unicode if slow) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -309,6 +317,7 @@ document.addEventListener('click', function(e) {
 });
 
 function openAuthModal() {
+    <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
     const modal = document.getElementById('auth-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
@@ -330,6 +339,13 @@ function openAuthModal() {
             { theme: 'outline', size: 'large', width: 280, shape: 'pill', text: 'continue_with' }
         );
     }
+    <?php else: ?>
+    if (typeof showToast === 'function') {
+        showToast('Login is temporarily disabled (Google Auth credentials are not configured).', 'error');
+    } else {
+        alert('Login is temporarily disabled (Google Auth credentials are not configured).');
+    }
+    <?php endif; ?>
 }
 
 function closeAuthModal() {
@@ -343,6 +359,7 @@ function closeAuthModal() {
     }, 300);
 }
 
+<?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
 function handleGoogleAuthCallback(response) {
     if (typeof showToast === 'function') {
         showToast('Verifying account with Google...', 'info');
@@ -400,7 +417,7 @@ function associateLocalOrdersToAccount() {
         .catch(err => console.error('Error linking orders:', err));
     }
 }
-</script>
 <?php endif; ?>
+</script>
 
 <main class="flex-1">
