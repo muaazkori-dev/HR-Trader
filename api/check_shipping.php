@@ -7,31 +7,57 @@ require_once __DIR__ . '/../includes/auth.php';
 header('Content-Type: application/json');
 
 $phone = isset($_GET['phone']) ? trim($_GET['phone']) : '';
-$is_first = true;
+$address = isset($_GET['address']) ? trim($_GET['address']) : '';
 
-// 1. Check by logged-in user ID
+// Helper function to normalize addresses (alphanumeric only, lowercase)
+if (!function_exists('normalize_address_for_check')) {
+    function normalize_address_for_check($addr) {
+        return preg_replace('/[^a-zA-Z0-9]/', '', strtolower($addr));
+    }
+}
+
+// By default, guests do not qualify for free delivery
+$is_first = false;
+
+// Only logged in users qualify for first order free delivery
 if (is_logged_in()) {
+    $is_first = true;
+    
     try {
+        // 1. Check by logged-in user ID
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
         $stmt->execute(['uid' => $_SESSION['user_id']]);
         if ((int)$stmt->fetchColumn() > 0) {
             $is_first = false;
         }
-    } catch (PDOException $e) {
-        // Ignore
-    }
-}
-
-// 2. Check by phone number
-if ($is_first && !empty($phone)) {
-    try {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
-        $stmt->execute(['phone' => $phone]);
-        if ((int)$stmt->fetchColumn() > 0) {
-            $is_first = false;
+        
+        // 2. Check by phone number
+        if ($is_first && !empty($phone)) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+            $stmt->execute(['phone' => $phone]);
+            if ((int)$stmt->fetchColumn() > 0) {
+                $is_first = false;
+            }
+        }
+        
+        // 3. Check by normalized address matching
+        if ($is_first && !empty($address)) {
+            $input_addr_clean = normalize_address_for_check($address);
+            
+            // Retrieve all distinct non-cancelled order addresses
+            $stmt_addr = $pdo->query("SELECT DISTINCT customer_address FROM orders WHERE status != 'cancelled'");
+            $addresses = $stmt_addr->fetchAll(PDO::FETCH_COLUMN);
+            
+            foreach ($addresses as $addr) {
+                if (normalize_address_for_check($addr) === $input_addr_clean) {
+                    $is_first = false;
+                    break;
+                }
+            }
         }
     } catch (PDOException $e) {
-        // Ignore
+        // Fallback on error to standard rate
+        $is_first = false;
     }
 }
 

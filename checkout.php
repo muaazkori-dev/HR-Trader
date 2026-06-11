@@ -90,8 +90,9 @@ if (is_logged_in()) {
 }
 
 // Determine if this qualifies as a first order to adjust shipping fee
-$is_first_order = true;
+$is_first_order = false;
 if (is_logged_in()) {
+    $is_first_order = true;
     try {
         $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
         $stmt_check->execute(['uid' => $_SESSION['user_id']]);
@@ -99,15 +100,35 @@ if (is_logged_in()) {
             $is_first_order = false;
         }
     } catch (PDOException $e) {}
-}
-if ($is_first_order && !empty($preset_phone)) {
-    try {
-        $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
-        $stmt_phone_check->execute(['phone' => $preset_phone]);
-        if ((int)$stmt_phone_check->fetchColumn() > 0) {
-            $is_first_order = false;
-        }
-    } catch (PDOException $e) {}
+
+    if ($is_first_order && !empty($preset_phone)) {
+        try {
+            $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+            $stmt_phone_check->execute(['phone' => $preset_phone]);
+            if ((int)$stmt_phone_check->fetchColumn() > 0) {
+                $is_first_order = false;
+            }
+        } catch (PDOException $e) {}
+    }
+
+    if ($is_first_order && !empty($preset_address)) {
+        try {
+            if (!function_exists('normalize_address_for_check')) {
+                function normalize_address_for_check($addr) {
+                    return preg_replace('/[^a-zA-Z0-9]/', '', strtolower($addr));
+                }
+            }
+            $input_addr_clean = normalize_address_for_check($preset_address);
+            $stmt_addr = $pdo->query("SELECT DISTINCT customer_address FROM orders WHERE status != 'cancelled'");
+            $addresses = $stmt_addr->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($addresses as $addr) {
+                if (normalize_address_for_check($addr) === $input_addr_clean) {
+                    $is_first_order = false;
+                    break;
+                }
+            }
+        } catch (PDOException $e) {}
+    }
 }
 $shipping_fee = $is_first_order ? 0.00 : (float)get_setting('shipping_fee', '180.00');
 
@@ -125,9 +146,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
         if (empty($customer_name) || empty($customer_phone) || empty($customer_address)) {
             $checkout_error = "All shipping fields are required to process delivery.";
         } else {
-            // Re-evaluate shipping fee based on submitted phone number / user ID to prevent client tampering
-            $post_is_first = true;
+            // Re-evaluate shipping fee based on submitted phone number / address to prevent client tampering
+            $post_is_first = false;
             if (is_logged_in()) {
+                $post_is_first = true;
                 try {
                     $stmt_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = :uid AND status != 'cancelled'");
                     $stmt_check->execute(['uid' => $_SESSION['user_id']]);
@@ -135,15 +157,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                         $post_is_first = false;
                     }
                 } catch (PDOException $e) {}
-            }
-            if ($post_is_first && !empty($customer_phone)) {
-                try {
-                    $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
-                    $stmt_phone_check->execute(['phone' => $customer_phone]);
-                    if ((int)$stmt_phone_check->fetchColumn() > 0) {
-                        $post_is_first = false;
-                    }
-                } catch (PDOException $e) {}
+
+                if ($post_is_first && !empty($customer_phone)) {
+                    try {
+                        $stmt_phone_check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_phone = :phone AND status != 'cancelled'");
+                        $stmt_phone_check->execute(['phone' => $customer_phone]);
+                        if ((int)$stmt_phone_check->fetchColumn() > 0) {
+                            $post_is_first = false;
+                        }
+                    } catch (PDOException $e) {}
+                }
+
+                if ($post_is_first && !empty($customer_address)) {
+                    try {
+                        if (!function_exists('normalize_address_for_check')) {
+                            function normalize_address_for_check($addr) {
+                                return preg_replace('/[^a-zA-Z0-9]/', '', strtolower($addr));
+                            }
+                        }
+                        $input_addr_clean = normalize_address_for_check($customer_address);
+                        $stmt_addr = $pdo->query("SELECT DISTINCT customer_address FROM orders WHERE status != 'cancelled'");
+                        $addresses = $stmt_addr->fetchAll(PDO::FETCH_COLUMN);
+                        foreach ($addresses as $addr) {
+                            if (normalize_address_for_check($addr) === $input_addr_clean) {
+                                $post_is_first = false;
+                                break;
+                            }
+                        }
+                    } catch (PDOException $e) {}
+                }
             }
             $shipping_fee = $post_is_first ? 0.00 : (float)get_setting('shipping_fee', '180.00');
 
@@ -302,7 +344,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="glass-panel p-6 rounded-2xl border border-slate-200 sticky top-24">
                 <h3 class="font-bold text-lg text-slate-800 mb-4">Shipping Credentials</h3>
                 
-                <form action="checkout.php" method="POST" onsubmit="if(typeof requestNotificationPermission === 'function') requestNotificationPermission();" class="space-y-4">
+                <form action="checkout.php" method="POST" id="checkout-form" class="space-y-4">
                     <div>
                         <label for="customer_name" class="block text-xs font-semibold text-slate-655 mb-1.5 uppercase tracking-wider">Full Name</label>
                         <input type="text" id="customer_name" name="customer_name" required
@@ -355,23 +397,31 @@ require_once __DIR__ . '/includes/header.php';
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('customer_phone');
+    const addressInput = document.getElementById('customer_address');
     if (!phoneInput) return;
 
     const subtotal = <?php echo (float)$subtotal; ?>;
     let checkTimeout;
 
-    phoneInput.addEventListener('input', () => {
+    const triggerCheck = () => {
         clearTimeout(checkTimeout);
         checkTimeout = setTimeout(checkFirstOrderShipping, 500);
-    });
+    };
 
+    phoneInput.addEventListener('input', triggerCheck);
     phoneInput.addEventListener('blur', checkFirstOrderShipping);
+
+    if (addressInput) {
+        addressInput.addEventListener('input', triggerCheck);
+        addressInput.addEventListener('blur', checkFirstOrderShipping);
+    }
 
     function checkFirstOrderShipping() {
         const phone = phoneInput.value.trim();
+        const address = addressInput ? addressInput.value.trim() : '';
         if (phone.length < 10) return;
 
-        fetch(BASE_URL + 'api/check_shipping.php?phone=' + encodeURIComponent(phone))
+        fetch(BASE_URL + 'api/check_shipping.php?phone=' + encodeURIComponent(phone) + '&address=' + encodeURIComponent(address))
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -394,16 +444,117 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => console.error(err));
     }
+
+    // Intercept checkout form submission to prompt guest users
+    const checkoutForm = document.getElementById('checkout-form');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            // If logged in, submit normally
+            if (typeof IS_USER_LOGGED_IN !== 'undefined' && IS_USER_LOGGED_IN) {
+                if (typeof requestNotificationPermission === 'function') {
+                    requestNotificationPermission();
+                }
+                return;
+            }
+
+            // If guest checkout has not been explicitly confirmed, prompt the promo modal
+            if (!guestConfirmed) {
+                e.preventDefault();
+                openFreeDeliveryPromoModal();
+            } else {
+                if (typeof requestNotificationPermission === 'function') {
+                    requestNotificationPermission();
+                }
+            }
+        });
+    }
 });
 
+let guestConfirmed = false;
+
+function openFreeDeliveryPromoModal() {
+    const modal = document.getElementById('free-delivery-promo-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('.relative').classList.remove('scale-95');
+        modal.querySelector('.relative').classList.add('scale-100');
+    }, 50);
+}
+
+function closeFreeDeliveryPromoModal() {
+    const modal = document.getElementById('free-delivery-promo-modal');
+    if (!modal) return;
+    modal.classList.add('opacity-0');
+    modal.querySelector('.relative').classList.remove('scale-100');
+    modal.querySelector('.relative').classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function optInFreeDeliverySignup() {
+    closeFreeDeliveryPromoModal();
+    if (typeof openAuthModal === 'function') {
+        openAuthModal();
+        if (typeof toggleAuthMode === 'function') {
+            toggleAuthMode('signup');
+        }
+    }
+}
+
+function proceedAsGuestWithCharges() {
+    closeFreeDeliveryPromoModal();
+    guestConfirmed = true;
+    const checkoutForm = document.getElementById('checkout-form');
+    if (checkoutForm) {
+        checkoutForm.submit();
+    }
+}
+</script>
+
+<!-- FREE DELIVERY PROMO MODAL -->
+<div id="free-delivery-promo-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeFreeDeliveryPromoModal()">
+    <div class="relative w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl transform scale-95 transition-all duration-300 flex flex-col gap-5 text-slate-800 text-center">
+        <button onclick="closeFreeDeliveryPromoModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-all focus:outline-none">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+
+        <div class="space-y-1.5">
+            <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto border border-emerald-200">
+                <i class="fas fa-gift animate-bounce"></i>
+            </div>
+            <h3 class="font-extrabold text-slate-900 text-lg">Muft Delivery Hasil Karen! 🎁</h3>
+            <p class="text-[11px] text-slate-500 max-w-[260px] mx-auto leading-relaxed">
+                Apna account register/sign up karein aur pehli delivery bilkul **FREE** hasil karein!
+            </p>
+        </div>
+
+        <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 text-xs text-emerald-700 leading-normal font-semibold">
+            Sign Up karne par aapko first order delivery charges (Rs. 180) bilkul free milenge.
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <button onclick="optInFreeDeliverySignup()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/10 cursor-pointer">
+                <i class="fas fa-user-plus text-[10px]"></i> Sign Up & Get Free Delivery
+            </button>
+            <button onclick="proceedAsGuestWithCharges()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs rounded-xl uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer">
+                Continue as Guest (Pay Rs. 180)
+            </button>
+        </div>
+    </div>
+</div>
+
 <?php if (!is_logged_in()): ?>
+<script>
 // Auto-prompt guest users to sign in or register upon checking out
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof openAuthModal === 'function') {
         openAuthModal();
     }
 });
-<?php endif; ?>
 </script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
