@@ -47,7 +47,7 @@ $host_ip = preg_replace('/:.*$/', '', $host);
 if ($host_ip === 'localhost' || $host_ip === '127.0.0.1' || $host_ip === '::1') {
     $is_local = true;
 } elseif (filter_var($host_ip, FILTER_VALIDATE_IP)) {
-    // Check if host_ip is a private (local) IP address
+    // Check if host_ip is a private (local) IP address requested in the browser
     $is_private = !filter_var(
         $host_ip,
         FILTER_VALIDATE_IP,
@@ -55,23 +55,6 @@ if ($host_ip === 'localhost' || $host_ip === '127.0.0.1' || $host_ip === '::1') 
     );
     if ($is_private) {
         $is_local = true;
-    }
-}
-
-// Fallback to server address check
-if (!$is_local) {
-    $server_addr = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '';
-    if ($server_addr === '127.0.0.1' || $server_addr === '::1') {
-        $is_local = true;
-    } elseif (filter_var($server_addr, FILTER_VALIDATE_IP)) {
-        $is_private_server = !filter_var(
-            $server_addr,
-            FILTER_VALIDATE_IP,
-            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        );
-        if ($is_private_server) {
-            $is_local = true;
-        }
     }
 }
 
