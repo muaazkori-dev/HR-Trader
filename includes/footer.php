@@ -174,8 +174,7 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
 </div>
 
 <!-- FLOATING WHATSAPP TRIGGER BUTTON -->
-<button onclick="toggleWhatsappSelector()" 
-        class="whatsapp-float hover:scale-110 active:scale-95 focus:outline-none transition-all shadow-xl flex items-center justify-center cursor-pointer" 
+<button class="whatsapp-float hover:scale-110 active:scale-95 focus:outline-none transition-all shadow-xl flex items-center justify-center cursor-pointer" 
         title="Chat with HR Traders on WhatsApp">
     <i class="fab fa-whatsapp"></i>
 </button>
@@ -183,13 +182,56 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
 <script>
 function toggleWhatsappSelector(show) {
     const card = document.getElementById('whatsapp-selector-card');
-    if (!card) return;
+    const trigger = document.querySelector('.whatsapp-float');
+    if (!card || !trigger) return;
     
     if (show === undefined) {
         show = card.classList.contains('pointer-events-none');
     }
     
     if (show) {
+        // Position card dynamically near trigger button
+        const triggerRect = trigger.getBoundingClientRect();
+        const triggerCenterX = triggerRect.left + triggerRect.width / 2;
+        const triggerCenterY = triggerRect.top + triggerRect.height / 2;
+        
+        let cardLeft = triggerRect.right - 288; 
+        let cardTop = triggerRect.top - 200; 
+        
+        if (triggerCenterX < window.innerWidth / 2) {
+            // Open on right side of trigger
+            cardLeft = triggerRect.left;
+            card.style.transformOrigin = 'bottom left';
+        } else {
+            // Open on left side of trigger
+            cardLeft = triggerRect.right - 288;
+            card.style.transformOrigin = 'bottom right';
+        }
+        
+        if (triggerCenterY < window.innerHeight / 2) {
+            // Open below trigger
+            cardTop = triggerRect.bottom + 12;
+            if (triggerCenterX < window.innerWidth / 2) {
+                card.style.transformOrigin = 'top left';
+            } else {
+                card.style.transformOrigin = 'top right';
+            }
+        } else {
+            // Open above trigger
+            cardTop = triggerRect.top - 200; 
+        }
+        
+        // Restrict card bounds
+        if (cardLeft < 12) cardLeft = 12;
+        if (cardLeft + 288 > window.innerWidth - 12) cardLeft = window.innerWidth - 300;
+        if (cardTop < 12) cardTop = 12;
+        if (cardTop + 200 > window.innerHeight - 12) cardTop = window.innerHeight - 212;
+        
+        card.style.left = `${cardLeft}px`;
+        card.style.top = `${cardTop}px`;
+        card.style.bottom = 'auto';
+        card.style.right = 'auto';
+        
         card.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
         card.classList.add('opacity-100', 'scale-100');
     } else {
@@ -207,6 +249,146 @@ document.addEventListener('click', function(e) {
             toggleWhatsappSelector(false);
         }
     }
+});
+
+// Drag and Drop script for WhatsApp Button
+document.addEventListener('DOMContentLoaded', () => {
+    const el = document.querySelector('.whatsapp-float');
+    if (!el) return;
+
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialX = 0;
+    let initialY = 0;
+    let dragThreshold = 6; 
+    let hasMoved = false;
+
+    const onDragStart = (clientX, clientY) => {
+        isDragging = true;
+        startX = clientX;
+        startY = clientY;
+        
+        const rect = el.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        
+        el.style.transition = 'none';
+        el.style.bottom = 'auto';
+        el.style.right = 'auto';
+        el.style.left = `${initialX}px`;
+        el.style.top = `${initialY}px`;
+        hasMoved = false;
+    };
+
+    const onDragMove = (clientX, clientY, e) => {
+        if (!isDragging) return;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
+            hasMoved = true;
+        }
+
+        if (hasMoved) {
+            if (e && e.cancelable) e.preventDefault();
+            
+            let newLeft = initialX + deltaX;
+            let newTop = initialY + deltaY;
+
+            const rect = el.getBoundingClientRect();
+            const minX = 6;
+            const minY = 6;
+            const maxX = window.innerWidth - rect.width - 6;
+            const maxY = window.innerHeight - rect.height - 6;
+
+            if (newLeft < minX) newLeft = minX;
+            if (newLeft > maxX) newLeft = maxX;
+            if (newTop < minY) newTop = minY;
+            if (newTop > maxY) newTop = maxY;
+
+            el.style.left = `${newLeft}px`;
+            el.style.top = `${newTop}px`;
+            
+            // Close active selector card while dragging
+            toggleWhatsappSelector(false);
+        }
+    };
+
+    const onDragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        el.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+
+        if (!hasMoved) {
+            toggleWhatsappSelector();
+        } else {
+            const rect = el.getBoundingClientRect();
+            localStorage.setItem('whatsapp_btn_left', rect.left);
+            localStorage.setItem('whatsapp_btn_top', rect.top);
+        }
+    };
+
+    // Load saved position
+    const savedLeft = localStorage.getItem('whatsapp_btn_left');
+    const savedTop = localStorage.getItem('whatsapp_btn_top');
+    if (savedLeft !== null && savedTop !== null) {
+        // Enforce boundary safety checks on load
+        let checkLeft = parseFloat(savedLeft);
+        let checkTop = parseFloat(savedTop);
+        const maxCheckLeft = window.innerWidth - 65;
+        const maxCheckTop = window.innerHeight - 65;
+        if (checkLeft < 6) checkLeft = 6;
+        if (checkLeft > maxCheckLeft) checkLeft = maxCheckLeft;
+        if (checkTop < 6) checkTop = 6;
+        if (checkTop > maxCheckTop) checkTop = maxCheckTop;
+
+        el.style.bottom = 'auto';
+        el.style.right = 'auto';
+        el.style.left = `${checkLeft}px`;
+        el.style.top = `${checkTop}px`;
+    }
+
+    // Mouse listeners
+    el.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; 
+        onDragStart(e.clientX, e.clientY);
+        
+        const onMouseMove = (moveEvent) => {
+            onDragMove(moveEvent.clientX, moveEvent.clientY, moveEvent);
+        };
+        
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            onDragEnd();
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+
+    // Touch listeners
+    el.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        onDragStart(touch.clientX, touch.clientY);
+        
+        const onTouchMove = (moveEvent) => {
+            const t = moveEvent.touches[0];
+            onDragMove(t.clientX, t.clientY, moveEvent);
+        };
+        
+        const onTouchEnd = () => {
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            onDragEnd();
+        };
+        
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd);
+    });
 });
 </script>
 

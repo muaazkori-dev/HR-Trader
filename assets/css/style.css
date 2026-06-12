@@ -287,11 +287,11 @@ body {
 }
 @media (max-w: 768px) {
     .whatsapp-float {
-        bottom: 80px !important;
+        bottom: 90px !important;
         right: 16px !important;
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 26px !important;
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 22px !important;
     }
 }
 .whatsapp-float:hover {
