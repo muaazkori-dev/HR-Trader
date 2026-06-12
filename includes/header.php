@@ -161,7 +161,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
 
                 <!-- Demand Box Button -->
-                <button onclick="openDemandModal()" class="relative p-2 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-600 rounded-xl transition-all flex items-center justify-center gap-1.5 px-3" title="Submit Product Demand">
+                <button onclick="openDemandModal()" class="relative p-2 bg-amber-50 hover:bg-amber-100 border border-amber-250 text-amber-600 rounded-xl transition-all flex items-center justify-center gap-1.5 px-3 hidden sm:flex" title="Submit Product Demand">
                     <i class="fas fa-clipboard-list text-base"></i>
                     <span class="text-xs font-bold hidden sm:inline-block">Demand Box</span>
                 </button>
@@ -169,10 +169,10 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                 <!-- Customer Authentication / Profile Dropdown -->
                 <?php if (is_logged_in()): ?>
                     <div class="relative inline-block text-left" id="user-profile-menu">
-                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-1.5 p-2 bg-slate-105 hover:bg-slate-200 border border-slate-300 rounded-xl transition-all px-3.5 focus:outline-none cursor-pointer">
+                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-1.5 p-2 bg-slate-105 hover:bg-slate-200 border border-slate-300 rounded-xl transition-all px-2 sm:px-3.5 focus:outline-none cursor-pointer">
                             <i class="fas fa-user-circle text-lg text-emerald-600"></i>
-                            <span class="text-xs font-bold text-slate-800 max-w-[100px] truncate"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
-                            <i class="fas fa-chevron-down text-[10px] text-slate-400"></i>
+                            <span class="text-xs font-bold text-slate-800 max-w-[100px] truncate hidden sm:inline-block"><?php echo htmlspecialchars($_SESSION['name']); ?></span>
+                            <i class="fas fa-chevron-down text-[10px] text-slate-400 hidden sm:inline-block"></i>
                         </button>
                         <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-2xl shadow-2xl z-50 py-1.5 origin-top-right">
                             <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-450">
