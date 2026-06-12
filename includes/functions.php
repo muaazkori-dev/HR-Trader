@@ -38,6 +38,15 @@ try {
     $q2 = $pdo->query("SHOW COLUMNS FROM users LIKE 'email'");
     if (!$q2->fetch()) {
         $pdo->exec("ALTER TABLE users ADD COLUMN email VARCHAR(150) DEFAULT NULL UNIQUE AFTER google_id");
+    } else {
+        try {
+            $q_idx = $pdo->query("SHOW INDEX FROM users WHERE Column_name = 'email'");
+            if (!$q_idx->fetch()) {
+                $pdo->exec("ALTER TABLE users ADD UNIQUE INDEX idx_unique_email (email)");
+            }
+        } catch (PDOException $ex) {
+            // Ignore if duplicates prevent UNIQUE constraint application
+        }
     }
     
     $pdo->exec("ALTER TABLE users MODIFY COLUMN password VARCHAR(255) DEFAULT NULL");

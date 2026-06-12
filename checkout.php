@@ -347,7 +347,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <!-- Left: Cart items checklist -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-6 order-2 lg:order-1">
             <div class="glass-panel p-6 rounded-2xl border border-slate-200">
                 <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
                     <i class="fas fa-basket-shopping text-emerald-600"></i> Review Invoice Items
@@ -410,7 +410,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <!-- Right: COD Checkout Form -->
-        <div class="col-span-1">
+        <div class="col-span-1 order-1 lg:order-2">
             <div class="glass-panel p-6 rounded-2xl border border-slate-200 sticky top-24">
                 <h3 class="font-bold text-lg text-slate-800 mb-4">Shipping Credentials</h3>
                 

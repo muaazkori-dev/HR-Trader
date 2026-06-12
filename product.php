@@ -105,8 +105,8 @@ $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL .
     <!-- MAIN PRODUCT DETAIL GRID -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        <!-- LEFT COLUMN: Product Image & Specs Card -->
-        <div class="lg:col-span-5 space-y-6">
+        <!-- LEFT COLUMN: Product Image -->
+        <div class="lg:col-span-5">
             <!-- Image Card -->
             <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center relative min-h-[300px] sm:min-h-[400px]">
                 <img src="<?php echo $img_src; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="max-h-[280px] sm:max-h-[360px] max-w-full object-contain rounded-2xl drop-shadow-lg transition-transform hover:scale-105 duration-350">
@@ -127,30 +127,10 @@ $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL .
                     </span>
                 <?php endif; ?>
             </div>
-
-            <!-- Specs Table Card -->
-            <div class="glass-panel p-5 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-4">
-                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">Product Specifications</h3>
-                <div class="divide-y divide-slate-100 text-xs text-slate-700">
-                    <div class="flex justify-between py-2.5">
-                        <span class="font-medium text-slate-500">Unit / Weight</span>
-                        <span class="font-bold text-slate-800"><?php echo htmlspecialchars($product['weight'] ?: 'N/A'); ?></span>
-                    </div>
-                    <div class="flex justify-between py-2.5">
-                        <span class="font-medium text-slate-500">Barcode / SKU</span>
-                        <span class="font-mono font-bold text-slate-800"><?php echo htmlspecialchars($product['barcode'] ?: 'N/A'); ?></span>
-                    </div>
-                    <div class="flex justify-between py-2.5">
-                        <span class="font-medium text-slate-500">Inventory Category</span>
-                        <span class="font-bold text-slate-800 uppercase"><?php echo str_replace('_', ' ', $product['category']); ?></span>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- RIGHT COLUMN: Title, Pricing, Actions, Description -->
-        <div class="lg:col-span-7 space-y-6">
-            
+        <!-- RIGHT COLUMN: Title, Pricing, Actions -->
+        <div class="lg:col-span-7">
             <!-- Title Card -->
             <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-4">
                 
@@ -211,7 +191,7 @@ $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL .
                             <div class="flex items-center bg-white border border-slate-300 rounded-xl h-11">
                                 <button onclick="adjustPageQty(-1)" class="w-9 h-full flex items-center justify-center text-slate-500 hover:text-slate-850 font-bold focus:outline-none cursor-pointer">-</button>
                                 <input type="number" id="product-page-qty" value="1" min="1" max="<?php echo $product['stock_quantity']; ?>" readonly
-                                       class="w-10 text-center font-bold text-slate-850 text-sm focus:outline-none border-none bg-transparent">
+                                       class="w-10 text-center font-bold text-slate-855 text-sm focus:outline-none border-none bg-transparent">
                                 <button onclick="adjustPageQty(1)" class="w-9 h-full flex items-center justify-center text-slate-500 hover:text-slate-850 font-bold focus:outline-none cursor-pointer">+</button>
                             </div>
                             
@@ -228,7 +208,38 @@ $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL .
                 </div>
 
             </div>
+        </div>
 
+    </div>
+
+    <!-- SECONDARY PRODUCT SPECS & DETAILS GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-8">
+        
+        <!-- LEFT COLUMN: Product Specifications -->
+        <div class="lg:col-span-5">
+            <!-- Specs Table Card -->
+            <div class="glass-panel p-5 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-4">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">Product Specifications</h3>
+                <div class="divide-y divide-slate-100 text-xs text-slate-700">
+                    <div class="flex justify-between py-2.5">
+                        <span class="font-medium text-slate-500">Unit / Weight</span>
+                        <span class="font-bold text-slate-800"><?php echo htmlspecialchars($product['weight'] ?: 'N/A'); ?></span>
+                    </div>
+                    <div class="flex justify-between py-2.5">
+                        <span class="font-medium text-slate-500">Barcode / SKU</span>
+                        <span class="font-mono font-bold text-slate-800"><?php echo htmlspecialchars($product['barcode'] ?: 'N/A'); ?></span>
+                    </div>
+                    <div class="flex justify-between py-2.5">
+                        <span class="font-medium text-slate-500">Inventory Category</span>
+                        <span class="font-bold text-slate-800 uppercase"><?php echo str_replace('_', ' ', $product['category']); ?></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Description & Reviews -->
+        <div class="lg:col-span-7 space-y-6">
+            
             <!-- Description Card -->
             <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-3">
                 <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">Product Details</h3>

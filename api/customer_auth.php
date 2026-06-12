@@ -28,26 +28,41 @@ if ($action === 'signup') {
         exit();
     }
 
+    $clean_email = strtolower(trim($email));
+
+    // Normalize phone to last 10 digits
+    $clean_phone = preg_replace('/[^0-9]/', '', $phone);
+    if (strlen($clean_phone) < 10) {
+        echo json_encode(['success' => false, 'message' => 'Please enter a valid phone number (at least 10 digits).']);
+        exit();
+    }
+    $last_10_phone = substr($clean_phone, -10);
+
     try {
-        // Check if email already exists
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
-        $stmt->execute(['email' => $email]);
+        // Check if email already exists case-insensitively
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(TRIM(email)) = :email LIMIT 1");
+        $stmt->execute(['email' => $clean_email]);
         if ($stmt->fetch()) {
             echo json_encode(['success' => false, 'message' => 'An account with this email already exists. Please Sign In.']);
             exit();
         }
 
-        // Check if phone already exists
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = :phone LIMIT 1");
-        $stmt->execute(['phone' => $phone]);
-        if ($stmt->fetch()) {
-            echo json_encode(['success' => false, 'message' => 'An account with this phone number already exists. Please Sign In.']);
-            exit();
+        // Check if phone already exists by matching last 10 digits
+        $stmt = $pdo->prepare("SELECT id, phone FROM users WHERE phone LIKE :phone_pattern");
+        $stmt->execute(['phone_pattern' => '%' . $last_10_phone]);
+        $matching_phones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($matching_phones as $row) {
+            $db_phone_clean = preg_replace('/[^0-9]/', '', $row['phone']);
+            if (strlen($db_phone_clean) >= 10 && substr($db_phone_clean, -10) === $last_10_phone) {
+                echo json_encode(['success' => false, 'message' => 'An account with this phone number already exists. Please Sign In.']);
+                exit();
+            }
         }
 
         // Hash password securely
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $username = $email; // use email as unique username
+        $username = $clean_email; // use email as unique username
 
         // Insert new user
         $stmt_ins = $pdo->prepare("INSERT INTO users (username, password, email, name, phone, role) 
@@ -55,7 +70,7 @@ if ($action === 'signup') {
         $stmt_ins->execute([
             'username' => $username,
             'password' => $hashed_password,
-            'email' => $email,
+            'email' => $clean_email,
             'name' => $name,
             'phone' => $phone
         ]);
@@ -97,10 +112,33 @@ if ($action === 'signup') {
     }
 
     try {
-        // Search user by email or phone
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :identity OR phone = :identity LIMIT 1");
-        $stmt->execute(['identity' => $identity]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user = null;
+        $identity_clean = trim($identity);
+
+        if (strpos($identity_clean, '@') !== false) {
+            // It's an email
+            $email_lookup = strtolower($identity_clean);
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE LOWER(TRIM(email)) = :email OR LOWER(TRIM(username)) = :email LIMIT 1");
+            $stmt->execute(['email' => $email_lookup]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        } else {
+            // It's a phone number
+            $phone_digits = preg_replace('/[^0-9]/', '', $identity_clean);
+            if (strlen($phone_digits) >= 10) {
+                $last10 = substr($phone_digits, -10);
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE phone LIKE :phone_pattern");
+                $stmt->execute(['phone_pattern' => '%' . $last10]);
+                $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($candidates as $candidate) {
+                    $cand_phone_digits = preg_replace('/[^0-9]/', '', $candidate['phone']);
+                    if (strlen($cand_phone_digits) >= 10 && substr($cand_phone_digits, -10) === $last10) {
+                        $user = $candidate;
+                        break;
+                    }
+                }
+            }
+        }
 
         if (!$user || empty($user['password']) || !password_verify($password, $user['password'])) {
             echo json_encode(['success' => false, 'message' => 'Invalid email/phone or password. Please try again.']);
