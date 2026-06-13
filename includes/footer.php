@@ -29,6 +29,12 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
                     <a href="https://wa.me/<?php echo WHATSAPP_NUMBER; ?>?text=Hi" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600"><i class="fab fa-whatsapp"></i></a>
                     <a href="<?php echo htmlspecialchars(get_setting('facebook_url', '#')); ?>" target="_blank" class="hover:text-emerald-600"><i class="fab fa-facebook"></i></a>
                     <a href="<?php echo htmlspecialchars(get_setting('instagram_url', '#')); ?>" target="_blank" class="hover:text-emerald-600"><i class="fab fa-instagram"></i></a>
+                    <?php 
+                    $tt_url = get_setting('tiktok_url', '#');
+                    if ($tt_url !== '#'):
+                    ?>
+                        <a href="<?php echo htmlspecialchars($tt_url); ?>" target="_blank" class="hover:text-emerald-600"><i class="fab fa-tiktok"></i></a>
+                    <?php endif; ?>
                 </div>
             </div>
 

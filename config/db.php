@@ -355,6 +355,24 @@ try {
         // Ignore
     }
 
+    // Seed new default social media links if not set or equal to default '#' or empty
+    try {
+        $fb = get_setting('facebook_url', '#');
+        if ($fb === '#' || empty($fb) || $fb === 'https://facebook.com') {
+            update_setting('facebook_url', 'https://www.facebook.com/share/19NUvTTDPS/');
+        }
+        $ig = get_setting('instagram_url', '#');
+        if ($ig === '#' || empty($ig) || $ig === 'https://instagram.com') {
+            update_setting('instagram_url', 'https://www.instagram.com/hrtraderstdm?utm_source=qr&igsh=OHNjb2Vpb241ZGdq');
+        }
+        $tt = get_setting('tiktok_url', '#');
+        if ($tt === '#' || empty($tt)) {
+            update_setting('tiktok_url', 'https://www.tiktok.com/@hr_traders3?_r=1&_t=ZS-97B8A6PrV3p');
+        }
+    } catch (Exception $e) {
+        // Ignore
+    }
+
 } catch (PDOException $e) {
     // If the database does not exist yet, we will output a link to install.php
     die("Database Connection Failed: " . $e->getMessage() . "<br><br><strong>Tip:</strong> If you are setting up the system for the first time, run the <a href='" . BASE_URL . "install.php' style='color:blue;text-decoration:underline;'>System Installer (install.php)</a> to automatically create the database and tables.");

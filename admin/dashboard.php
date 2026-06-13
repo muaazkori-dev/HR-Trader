@@ -216,6 +216,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             update_setting('instagram_url', trim($_POST['instagram_url']));
             $success_message = "Store configurations updated successfully.";
         }
+        if (isset($_POST['tiktok_url'])) {
+            update_setting('tiktok_url', trim($_POST['tiktok_url']));
+            $success_message = "Store configurations updated successfully.";
+        }
         
         // 9. Checkout rules
         if (isset($_POST['min_order_value'])) {
@@ -329,6 +333,7 @@ try {
     $whatsapp_number = get_setting('whatsapp_number', '923033943814');
     $facebook_url = get_setting('facebook_url', '#');
     $instagram_url = get_setting('instagram_url', '#');
+    $tiktok_url = get_setting('tiktok_url', '#');
     $min_order_value = get_setting('min_order_value', '0.00');
     $shipping_fee = get_setting('shipping_fee', '0.00');
     $seo_title = get_setting('seo_title', 'HR Traders - Premium Online Grocery & Grain Store');
@@ -1175,21 +1180,26 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-1">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
                             <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">WhatsApp No</label>
                             <input type="text" name="whatsapp_number" value="<?php echo sanitize($whatsapp_number); ?>" required
                                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-mono">
                         </div>
-                        <div class="col-span-1">
+                        <div>
                             <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Facebook Link</label>
                             <input type="text" name="facebook_url" value="<?php echo sanitize($facebook_url); ?>" required
                                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800">
                         </div>
-                        <div class="col-span-1">
+                        <div>
                             <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Instagram Link</label>
                             <input type="text" name="instagram_url" value="<?php echo sanitize($instagram_url); ?>" required
                                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">TikTok Link</label>
+                            <input type="text" name="tiktok_url" value="<?php echo sanitize($tiktok_url); ?>" required
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-mono">
                         </div>
                     </div>
 
