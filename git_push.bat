@@ -4,6 +4,8 @@ echo ===================================================
 echo     HR TRADERS GITHUB AUTO-PUSH UTILITY
 echo ===================================================
 echo.
+echo Step 0: Copying category icons and assets...
+copy /y "C:\Users\Administrator\.gemini\antigravity\brain\1419d0d6-16b6-426a-9bf0-925d8b5f8b89\grocery_icon_1781453922347.png" "d:\xampp orginal\htdocs\HR Traders\assets\images\categories\grocery.png"
 
 echo Step 1: Configuring local git author details...
 git config user.email "muaazkori-dev@users.noreply.github.com"

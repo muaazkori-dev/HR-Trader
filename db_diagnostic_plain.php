@@ -1,33 +1,36 @@
 <?php
-// HR Traders - Plain-text Database Diagnostic Tool
+// Database & Filesystem Diagnostics for HR Traders
 require_once __DIR__ . '/config/db.php';
-header('Content-Type: text/plain; charset=utf-8');
 
-echo "=== DATABASE DIAGNOSTIC ===\n";
-echo "Host: " . DB_HOST . "\n";
-echo "DB Name: " . DB_NAME . "\n";
+echo "=== DATABASE CONFIG ===\n";
+echo "DB_HOST: " . DB_HOST . "\n";
+echo "DB_NAME: " . DB_NAME . "\n";
+echo "BASE_URL: " . BASE_URL . "\n\n";
 
+echo "=== PRODUCTS IN DB ===\n";
 try {
-    $stmt = $pdo->query("SELECT category, COUNT(*) as cnt FROM products GROUP BY category");
-    $rows = $stmt->fetchAll();
-    echo "\nCATEGORIES & PRODUCT COUNTS IN DATABASE:\n";
-    foreach ($rows as $row) {
-        $cat = $row['category'];
-        $count = $row['cnt'];
-        echo "- '" . $cat . "' (Length: " . strlen($cat) . "): " . $count . "\n";
+    $stmt = $pdo->query("SELECT id, name, category, image FROM products ORDER BY id DESC LIMIT 15");
+    while ($row = $stmt->fetch()) {
+        echo "ID: {$row['id']} | Name: {$row['name']} | Cat: {$row['category']} | Image: " . ($row['image'] ?? 'NULL') . "\n";
     }
 } catch (Exception $e) {
-    echo "ERROR FETCHING CATEGORIES: " . $e->getMessage() . "\n";
+    echo "Error: " . $e->getMessage() . "\n";
 }
+echo "\n";
 
-try {
-    echo "\nSAMPLE PRODUCTS:\n";
-    $stmt = $pdo->query("SELECT id, name, category FROM products LIMIT 30");
-    $products = $stmt->fetchAll();
-    foreach ($products as $p) {
-        echo "- ID " . $p['id'] . ": '" . $p['name'] . "' -> category: '" . $p['category'] . "' (Length: " . strlen($p['category']) . ")\n";
+echo "=== FILESYSTEM CHECK ===\n";
+$dirs = [
+    'assets/images/',
+    'assets/images/categories/',
+    'assets/images/products/'
+];
+
+foreach ($dirs as $d) {
+    $path = __DIR__ . '/' . $d;
+    echo "Path: {$d} -> " . (is_dir($path) ? "EXISTS" : "MISSING") . " | Writable: " . (is_writable($path) ? "YES" : "NO") . "\n";
+    if (is_dir($path)) {
+        $files = scandir($path);
+        echo "Files: " . implode(', ', array_diff($files, ['.', '..'])) . "\n";
     }
-} catch (Exception $e) {
-    echo "ERROR FETCHING PRODUCTS: " . $e->getMessage() . "\n";
+    echo "\n";
 }
-?>
