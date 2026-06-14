@@ -42,6 +42,7 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
             <div class="space-y-3">
                 <h4 class="text-slate-800 font-semibold text-sm uppercase tracking-wider">Quick Categories</h4>
                 <ul class="space-y-2 text-sm text-slate-650">
+                    <li><a href="<?php echo BASE_URL; ?>shop.php?category=grocery#shop-container" class="hover:text-emerald-600 transition-colors">Grocery</a></li>
                     <li><a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="hover:text-emerald-600 transition-colors">Anaj</a></li>
                     <li><a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="hover:text-emerald-600 transition-colors">Ice Cream</a></li>
                     <li><a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="hover:text-emerald-600 transition-colors">Beverages</a></li>

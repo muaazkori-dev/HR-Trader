@@ -369,6 +369,12 @@ try {
         if ($tt === '#' || empty($tt)) {
             update_setting('tiktok_url', 'https://www.tiktok.com/@hr_traders3?_r=1&_t=ZS-97B8A6PrV3p');
         }
+        // Auto-healing category image files copy
+        $src_grocery_img = 'C:/Users/Administrator/.gemini/antigravity/brain/1419d0d6-16b6-426a-9bf0-925d8b5f8b89/grocery_icon_1781453922347.png';
+        $dest_grocery_img = __DIR__ . '/../assets/images/categories/grocery.png';
+        if (file_exists($src_grocery_img) && !file_exists($dest_grocery_img)) {
+            @copy($src_grocery_img, $dest_grocery_img);
+        }
     } catch (Exception $e) {
         // Ignore
     }
@@ -383,6 +389,10 @@ $CATEGORIES = [
     'anaj' => [
         'name' => 'Anaj',
         'urdu' => 'اناج'
+    ],
+    'grocery' => [
+        'name' => 'Grocery',
+        'urdu' => 'گروسری'
     ],
     'ice_cream' => [
         'name' => 'Ice Cream',

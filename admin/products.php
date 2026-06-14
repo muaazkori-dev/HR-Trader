@@ -649,7 +649,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
             <div class="col-span-2">
                 <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Product Image</label>
-                <input type="file" name="image" accept="image/*"
+                <input type="file" name="image" accept="image/*" onchange="checkFileSize(this)"
                        class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-700 focus:bg-slate-50/50">
             </div>
 
@@ -742,7 +742,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                     <img id="edit-image-preview" src="" alt="Product Preview" class="w-12 h-12 object-cover rounded-lg border border-slate-300">
                     <span class="text-[10px] text-slate-500">Current uploaded image</span>
                 </div>
-                <input type="file" name="image" accept="image/*"
+                <input type="file" name="image" accept="image/*" onchange="checkFileSize(this)"
                        class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-700 focus:bg-slate-50/50">
             </div>
 
@@ -781,6 +781,16 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 <!-- Scripts -->
 <script>
 const BASE_URL = "<?php echo BASE_URL; ?>";
+
+function checkFileSize(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            alert("Sizing Warning: Yeh image bohot barri hai (" + (file.size / (1024 * 1024)).toFixed(2) + " MB). 10MB se barri images upload hone me time le sakti hain ya network issue se fail ho sakti hain. Koshish karein ke image compress kar ke upload karein.");
+        }
+    }
+}
 
 function toggleModal(modalId, show) {
     const modal = document.getElementById(modalId);

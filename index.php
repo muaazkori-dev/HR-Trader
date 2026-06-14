@@ -87,7 +87,7 @@ try {
         <p class="text-sm text-slate-500">Select a category to filter your grocery requirements</p>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
         <!-- Category 1: Anaj -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
@@ -96,6 +96,17 @@ try {
             <div>
                 <h4 class="font-bold text-slate-800">Anaj</h4>
                 <p class="text-[10px] text-slate-550 urdu-text tracking-wider">اناج</p>
+            </div>
+        </a>
+
+        <!-- Category 1.5: Grocery -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=grocery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
+                <img src="<?php echo BASE_URL; ?>assets/images/categories/grocery.png?v=2.4" alt="Grocery" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800">Grocery</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">گروسری</p>
             </div>
         </a>
 

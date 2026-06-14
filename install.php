@@ -122,6 +122,10 @@ $CATEGORIES = [
         'name' => 'Anaj',
         'urdu' => 'اناج'
     ],
+    'grocery' => [
+        'name' => 'Grocery',
+        'urdu' => 'گروسری'
+    ],
     'ice_cream' => [
         'name' => 'Ice Cream',
         'urdu' => 'آئس کریم',
