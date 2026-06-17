@@ -54,6 +54,4 @@ echo.
 echo ===================================================
 echo [SUCCESS] All changes pushed to GitHub successfully!
 echo ===================================================
-:end
-echo.
-pause
+echo Done.
