@@ -82,7 +82,8 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <!-- Google Fonts (Preconnected & Loaded in Parallel) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet"></noscript>
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2.3">
     <!-- Local FontAwesome Icons (Fast and CDN-independent) -->

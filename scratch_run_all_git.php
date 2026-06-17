@@ -8,11 +8,8 @@ echo shell_exec("git status 2>&1");
 echo "\n=== RUNNING GIT ADD ===\n";
 echo shell_exec("git add -v -A 2>&1");
 
-echo "\n=== GIT STATUS AFTER ADD ===\n";
-echo shell_exec("git status 2>&1");
-
 echo "\n=== RUNNING GIT COMMIT ===\n";
-echo shell_exec('git commit -m "Deploy local FontAwesome assets, fix CDN paths, and add check_permissions test" 2>&1');
+echo shell_exec('git commit -m "Optimize font loading to be non-blocking and add cache control headers to prevent dynamic page caching" 2>&1');
 
 echo "\n=== RUNNING GIT PUSH ===\n";
 echo shell_exec("git push origin main 2>&1");
