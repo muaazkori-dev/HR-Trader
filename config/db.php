@@ -4,8 +4,10 @@
 
 ob_start();
 
+// Prevent dynamic page caching on mobile browsers
 if (!headers_sent()) {
-    header("Cache-Control: no-cache, no-store, must-revalidate");
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
     header("Pragma: no-cache");
     header("Expires: 0");
 }
