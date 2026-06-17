@@ -22,30 +22,13 @@ foreach ($files as $file) {
     $orig_size = filesize($file);
     echo "Processing $filename (" . number_format($orig_size / 1024, 1) . " KB)... ";
     
-    // Detect actual image type
-    $img_info = @getimagesize($file);
-    if (!$img_info) {
-        echo "Failed to detect image type.\n";
+    $data = @file_get_contents($file);
+    if ($data === false) {
+        echo "Failed to read file data.\n";
         continue;
     }
     
-    $mime = $img_info['mime'];
-    $im = null;
-    
-    if ($mime === 'image/png') {
-        $im = @imagecreatefrompng($file);
-    } elseif ($mime === 'image/jpeg') {
-        $im = @imagecreatefromjpeg($file);
-    } elseif ($mime === 'image/webp') {
-        $im = @imagecreatefromwebp($file);
-    } elseif ($mime === 'image/gif') {
-        $im = @imagecreatefromgif($file);
-    }
-    
-    if (!$im) {
-        echo "Failed to load image with MIME: $mime.\n";
-        continue;
-    }
+    $im = @imagecreatefromstring($data);
     
     $width = imagesx($im);
     $height = imagesy($im);
