@@ -267,22 +267,22 @@ try {
                         <?php endif; ?>
 
                         <!-- Pricing & Buy -->
-                        <div class="flex items-center justify-between pt-2">
-                            <div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                            <div class="flex items-center justify-between w-full sm:w-auto sm:block">
                                 <span class="text-xs text-slate-500 block">Selling Price</span>
                                 <span class="text-lg font-black text-emerald-600"><?php echo format_price($product['price']); ?></span>
                             </div>
                             
                             <?php if ($is_out_of_stock): ?>
-                                <button disabled class="px-4 py-2.5 bg-slate-100 text-slate-400 rounded-xl font-bold text-xs cursor-not-allowed">
+                                <button disabled class="w-full sm:w-auto px-4 py-2.5 bg-slate-100 text-slate-400 rounded-xl font-bold text-xs cursor-not-allowed text-center">
                                     Out of Stock
                                 </button>
                             <?php else: ?>
-                                <div class="flex items-center gap-1.5 flex-nowrap">
-                                    <button onclick="addToCart(<?php echo $product['id']; ?>)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1">
+                                <div class="flex items-center gap-2 w-full sm:w-auto">
+                                    <button onclick="addToCart(<?php echo $product['id']; ?>)" class="flex-1 sm:flex-none justify-center px-3 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1 cursor-pointer">
                                         <i class="fas fa-plus"></i> Add
                                     </button>
-                                    <button onclick="buyNow(<?php echo $product['id']; ?>)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1">
+                                    <button onclick="buyNow(<?php echo $product['id']; ?>)" class="flex-1 sm:flex-none justify-center px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-emerald-600/10 flex items-center gap-1 cursor-pointer">
                                         Buy Now
                                     </button>
                                 </div>

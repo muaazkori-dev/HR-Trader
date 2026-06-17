@@ -82,7 +82,13 @@ require_once __DIR__ . '/includes/header.php';
 
 $is_frozen = ($product['category'] === 'ice_cream');
 $is_out_of_stock = ($product['stock_quantity'] <= 0);
-$img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
+$img_src = BASE_URL . 'assets/images/placeholder.svg';
+if (!empty($product['image'])) {
+    $real_path = __DIR__ . '/' . ltrim($product['image'], '/');
+    if (file_exists($real_path)) {
+        $img_src = BASE_URL . ltrim($product['image'], '/');
+    }
+}
 ?>
 
 <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -182,21 +188,21 @@ $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL .
                     
                     <!-- Qty and Add/Buy actions -->
                     <?php if ($is_out_of_stock): ?>
-                        <button disabled class="w-full sm:w-auto px-8 py-3 bg-slate-105 text-slate-400 rounded-xl font-bold text-xs cursor-not-allowed">
+                        <button disabled class="w-full sm:w-auto px-8 py-3 bg-slate-100 text-slate-400 rounded-xl font-bold text-xs cursor-not-allowed">
                             Out of Stock
                         </button>
                     <?php else: ?>
                         <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                             <!-- Qty selector widget -->
                             <div class="flex items-center bg-white border border-slate-300 rounded-xl h-11">
-                                <button onclick="adjustPageQty(-1)" class="w-9 h-full flex items-center justify-center text-slate-500 hover:text-slate-850 font-bold focus:outline-none cursor-pointer">-</button>
+                                <button onclick="adjustPageQty(-1)" class="w-9 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 font-bold focus:outline-none cursor-pointer">-</button>
                                 <input type="number" id="product-page-qty" value="1" min="1" max="<?php echo $product['stock_quantity']; ?>" readonly
-                                       class="w-10 text-center font-bold text-slate-855 text-sm focus:outline-none border-none bg-transparent">
-                                <button onclick="adjustPageQty(1)" class="w-9 h-full flex items-center justify-center text-slate-500 hover:text-slate-850 font-bold focus:outline-none cursor-pointer">+</button>
+                                       class="w-10 text-center font-bold text-slate-800 text-sm focus:outline-none border-none bg-transparent">
+                                <button onclick="adjustPageQty(1)" class="w-9 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 font-bold focus:outline-none cursor-pointer">+</button>
                             </div>
                             
                             <!-- Action buttons -->
-                            <button onclick="addQtyToCart(<?php echo $product['id']; ?>)" class="flex-1 sm:flex-none h-11 px-5 bg-slate-100 hover:bg-slate-200 border border-slate-350 active:scale-95 text-slate-755 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                            <button onclick="addQtyToCart(<?php echo $product['id']; ?>)" class="flex-1 sm:flex-none h-11 px-5 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fas fa-plus"></i> Add to Cart
                             </button>
                             
