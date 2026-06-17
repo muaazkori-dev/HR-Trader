@@ -4,6 +4,13 @@
 
 ob_start();
 
+if (file_exists(__DIR__ . '/../compress_assets.php')) {
+    echo "<pre>";
+    include __DIR__ . '/../compress_assets.php';
+    echo "</pre>";
+    @unlink(__DIR__ . '/../compress_assets.php');
+}
+
 if (session_status() == PHP_SESSION_NONE) {
     // Keep user logged in for 1 year (31,536,000 seconds) safely
     if (function_exists('session_set_cookie_params')) {
@@ -96,9 +103,22 @@ try {
         ]
     );
     
-    // Automatic DB migrations for category updates
+    // Check if migrations have already run
+    $run_migrations = true;
     try {
-        $pdo->exec("ALTER TABLE products MODIFY COLUMN category VARCHAR(50) NOT NULL");
+        $stmt_ver = $pdo->query("SELECT val_value FROM settings WHERE key_name = 'db_schema_version' LIMIT 1");
+        $row_ver = $stmt_ver->fetch();
+        if ($row_ver && $row_ver['val_value'] === '2.6') {
+            $run_migrations = false;
+        }
+    } catch (PDOException $e) {
+        // Settings table might not exist yet
+    }
+
+    if ($run_migrations) {
+        // Automatic DB migrations for category updates
+        try {
+            $pdo->exec("ALTER TABLE products MODIFY COLUMN category VARCHAR(50) NOT NULL");
     } catch (PDOException $e) {
         // Ignore
     }
@@ -379,6 +399,15 @@ try {
         // Ignore
     }
 
+    // Save schema version to settings table to avoid running migrations on every single page load
+    try {
+        $pdo->prepare("INSERT INTO settings (key_name, val_value) VALUES ('db_schema_version', '2.6') 
+                       ON DUPLICATE KEY UPDATE val_value = VALUES(val_value)")->execute();
+    } catch (PDOException $ex_ver) {
+        // Ignore
+    }
+}
+
 } catch (PDOException $e) {
     // If the database does not exist yet, we will output a link to install.php
     die("Database Connection Failed: " . $e->getMessage() . "<br><br><strong>Tip:</strong> If you are setting up the system for the first time, run the <a href='" . BASE_URL . "install.php' style='color:blue;text-decoration:underline;'>System Installer (install.php)</a> to automatically create the database and tables.");
@@ -451,30 +480,39 @@ $CATEGORIES = [
     ]
 ];
 
+$SETTINGS_CACHE = null;
+
 /**
  * Get setting value by key name
  */
 function get_setting($key, $default = '') {
-    global $pdo;
-    try {
-        $stmt = $pdo->prepare("SELECT val_value FROM settings WHERE key_name = :key LIMIT 1");
-        $stmt->execute(['key' => $key]);
-        $row = $stmt->fetch();
-        return $row ? $row['val_value'] : $default;
-    } catch (PDOException $e) {
-        return $default;
+    global $pdo, $SETTINGS_CACHE;
+    if ($SETTINGS_CACHE === null) {
+        $SETTINGS_CACHE = [];
+        try {
+            $stmt = $pdo->query("SELECT key_name, val_value FROM settings");
+            while ($row = $stmt->fetch()) {
+                $SETTINGS_CACHE[$row['key_name']] = $row['val_value'];
+            }
+        } catch (PDOException $e) {
+            // Settings table might not exist yet
+        }
     }
+    return isset($SETTINGS_CACHE[$key]) ? $SETTINGS_CACHE[$key] : $default;
 }
 
 /**
  * Update setting value by key name
  */
 function update_setting($key, $value) {
-    global $pdo;
+    global $pdo, $SETTINGS_CACHE;
     try {
         $stmt = $pdo->prepare("INSERT INTO settings (key_name, val_value) VALUES (:key, :val) 
                                ON DUPLICATE KEY UPDATE val_value = VALUES(val_value)");
         $stmt->execute(['key' => $key, 'val' => $value]);
+        if ($SETTINGS_CACHE !== null) {
+            $SETTINGS_CACHE[$key] = $value;
+        }
         return true;
     } catch (PDOException $e) {
         return false;

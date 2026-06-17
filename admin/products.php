@@ -32,6 +32,67 @@ try {
 $success_message = "";
 $error_message = "";
 
+function compressAndSaveUploadedImage($file_tmp, $dest_path, $ext) {
+    if (!extension_loaded('gd')) {
+        return move_uploaded_file($file_tmp, $dest_path);
+    }
+    
+    $im = null;
+    if ($ext === 'png') {
+        $im = @imagecreatefrompng($file_tmp);
+    } elseif ($ext === 'webp') {
+        $im = @imagecreatefromwebp($file_tmp);
+    } elseif (in_array($ext, ['jpg', 'jpeg'])) {
+        $im = @imagecreatefromjpeg($file_tmp);
+    } elseif ($ext === 'gif') {
+        $im = @imagecreatefromgif($file_tmp);
+    }
+    
+    if (!$im) {
+        return move_uploaded_file($file_tmp, $dest_path);
+    }
+    
+    $width = imagesx($im);
+    $height = imagesy($im);
+    
+    $max_dim = 800;
+    if ($width > $max_dim || $height > $max_dim) {
+        if ($width > $height) {
+            $new_width = $max_dim;
+            $new_height = floor($height * ($max_dim / $width));
+        } else {
+            $new_height = $max_dim;
+            $new_width = floor($width * ($max_dim / $height));
+        }
+        
+        $tmp = imagecreatetruecolor($new_width, $new_height);
+        if ($ext === 'png') {
+            imagealphablending($tmp, false);
+            imagesavealpha($tmp, true);
+            $transparent = imagecolorallocatealpha($tmp, 255, 255, 255, 127);
+            imagefill($tmp, 0, 0, $transparent);
+        }
+        
+        imagecopyresampled($tmp, $im, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+        imagedestroy($im);
+        $im = $tmp;
+    }
+    
+    $success = false;
+    if ($ext === 'png') {
+        imagealphablending($im, false);
+        imagesavealpha($im, true);
+        $success = @imagepng($im, $dest_path, 8);
+    } elseif ($ext === 'webp') {
+        $success = @imagewebp($im, $dest_path, 75);
+    } else {
+        $success = @imagejpeg($im, $dest_path, 75);
+    }
+    
+    imagedestroy($im);
+    return $success;
+}
+
 // 1. PROCESS ACTIONS (ADD / EDIT / DELETE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -94,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     mkdir($upload_dir, 0777, true);
                                 }
                                 $dest_path = $upload_dir . $new_file_name;
-                                if (move_uploaded_file($file_tmp, $dest_path)) {
+                                if (compressAndSaveUploadedImage($file_tmp, $dest_path, $file_ext)) {
                                     $image_path = 'assets/images/products/' . $new_file_name;
                                 } else {
                                     $error_message = "Failed to upload product image to folder.";
@@ -195,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     mkdir($upload_dir, 0777, true);
                                 }
                                 $dest_path = $upload_dir . $new_file_name;
-                                if (move_uploaded_file($file_tmp, $dest_path)) {
+                                if (compressAndSaveUploadedImage($file_tmp, $dest_path, $file_ext)) {
                                     // Remove old image file from disk
                                     if ($image_path && file_exists(__DIR__ . '/../' . $image_path)) {
                                         @unlink(__DIR__ . '/../' . $image_path);
