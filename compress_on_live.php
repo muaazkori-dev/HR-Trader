@@ -23,15 +23,20 @@ $targets = [
         'width' => 48,
         'height' => 48,
         'name' => 'Favicon'
-    ],
-    [
-        'src' => __DIR__ . '/assets/images/categories/grocery.png',
-        'dest' => __DIR__ . '/assets/images/categories/grocery.png',
-        'width' => 120,
-        'height' => 120,
-        'name' => 'Grocery Category Icon'
     ]
 ];
+
+// Add all category icons
+$categories = ['anaj', 'bakery', 'cold_drinks', 'cosmetics', 'ice_cream', 'milk', 'sauce', 'snacks', 'grocery'];
+foreach ($categories as $cat) {
+    $targets[] = [
+        'src' => __DIR__ . "/assets/images/categories/{$cat}.png",
+        'dest' => __DIR__ . "/assets/images/categories/{$cat}.png",
+        'width' => 120,
+        'height' => 120,
+        'name' => ucfirst($cat) . " Category Icon"
+    ];
+}
 
 foreach ($targets as $t) {
     echo "Processing {$t['name']}...\n";
@@ -40,7 +45,7 @@ foreach ($targets as $t) {
         continue;
     }
 
-    // Attempt to load as JPEG first since we suspect it's internally a JPEG
+    // Attempt to load as JPEG first
     $srcImg = @imagecreatefromjpeg($t['src']);
     if (!$srcImg) {
         // Fallback to PNG loader
