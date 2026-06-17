@@ -147,7 +147,7 @@ if (isset($_POST['seed_products'])) {
             }
         }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/all.min.css">
     <style>
         body {
             background: radial-gradient(circle at top, #0f172a 0%, #020617 100%);

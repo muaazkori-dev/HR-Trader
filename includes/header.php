@@ -85,8 +85,8 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2.3">
-    <!-- FontAwesome Icons for graphics (Fallback to unicode if slow) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Local FontAwesome Icons (Fast and CDN-independent) -->
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/all.min.css">
     
     <!-- PWA Support -->
     <link rel="manifest" href="<?php echo BASE_URL; ?>manifest.json">
