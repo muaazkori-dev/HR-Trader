@@ -8,6 +8,12 @@ $paths = [
     'assets/webfonts/',
 ];
 
+$products_dir = __DIR__ . '/assets/images/products/';
+if (!is_dir($products_dir)) {
+    $created = @mkdir($products_dir, 0777, true);
+    echo "Attempted creating assets/images/products/: " . ($created ? "SUCCESS" : "FAILED") . "\n";
+}
+
 echo "=== DIRECTORY PERMISSIONS ===\n";
 foreach ($paths as $path) {
     $full = __DIR__ . '/' . $path;
