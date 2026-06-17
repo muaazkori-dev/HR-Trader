@@ -7,6 +7,7 @@ $files = glob($dir . '*');
 foreach ($files as $file) {
     if (is_file($file)) {
         $filename = basename($file);
+        clearstatcache(true, $file);
         $size = filesize($file);
         $handle = fopen($file, 'rb');
         $bytes = fread($handle, 4);

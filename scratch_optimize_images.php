@@ -1,5 +1,7 @@
 <?php
 header('Content-Type: text/plain; charset=utf-8');
+set_time_limit(300); // 5 minutes execution time limit
+ini_set('memory_limit', '256M'); // Increase memory limit
 
 $dir = __DIR__ . '/assets/images/categories/';
 if (!is_dir($dir)) {
@@ -10,12 +12,13 @@ if (!extension_loaded('gd')) {
     die("GD library is not enabled on this PHP installation.");
 }
 
-echo "=== Category Image Optimizer (Signature Aware) ===\n";
+echo "=== Category Image Optimizer (Robust & Timeout Safe) ===\n";
 
 $files = glob($dir . '*.{png,jpg,jpeg}', GLOB_BRACE);
 
 foreach ($files as $file) {
     $filename = basename($file);
+    clearstatcache(true, $file);
     $orig_size = filesize($file);
     echo "Processing $filename (" . number_format($orig_size / 1024, 1) . " KB)... ";
     
@@ -40,7 +43,7 @@ foreach ($files as $file) {
     }
     
     if (!$im) {
-        echo "Failed to load image with MIME type: $mime.\n";
+        echo "Failed to load image with MIME: $mime.\n";
         continue;
     }
     
@@ -60,7 +63,7 @@ foreach ($files as $file) {
         
         $tmp = imagecreatetruecolor($new_width, $new_height);
         
-        // Setup transparency for PNG saving
+        // Setup transparency
         imagealphablending($tmp, false);
         imagesavealpha($tmp, true);
         $transparent = imagecolorallocatealpha($tmp, 255, 255, 255, 127);
@@ -71,12 +74,14 @@ foreach ($files as $file) {
         $im = $tmp;
     }
     
-    // Save back based on file extension to keep path unchanged but convert content to actual extension type
+    // Save back
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     $success = false;
     
+    // Delete original file first to prevent file lock issues on Hostinger
+    @unlink($file);
+    
     if ($ext === 'png') {
-        // Force PNG format
         imagealphablending($im, false);
         imagesavealpha($im, true);
         $success = @imagepng($im, $file, 9); // Max compression
@@ -89,7 +94,7 @@ foreach ($files as $file) {
     imagedestroy($im);
     
     if ($success) {
-        clearstatcache();
+        clearstatcache(true, $file);
         $new_size = filesize($file);
         $saved = $orig_size - $new_size;
         $pct = ($orig_size > 0) ? ($saved / $orig_size) * 100 : 0;
