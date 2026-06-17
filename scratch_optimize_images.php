@@ -10,26 +10,37 @@ if (!extension_loaded('gd')) {
     die("GD library is not enabled on this PHP installation.");
 }
 
-echo "=== Category Image Optimizer ===\n";
+echo "=== Category Image Optimizer (Signature Aware) ===\n";
 
 $files = glob($dir . '*.{png,jpg,jpeg}', GLOB_BRACE);
 
 foreach ($files as $file) {
     $filename = basename($file);
     $orig_size = filesize($file);
-    echo "Processing $filename (Original size: " . number_format($orig_size / 1024, 1) . " KB)... ";
+    echo "Processing $filename (" . number_format($orig_size / 1024, 1) . " KB)... ";
     
-    // Load image
-    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    // Detect actual image type
+    $img_info = @getimagesize($file);
+    if (!$img_info) {
+        echo "Failed to detect image type.\n";
+        continue;
+    }
+    
+    $mime = $img_info['mime'];
     $im = null;
-    if ($ext === 'png') {
+    
+    if ($mime === 'image/png') {
         $im = @imagecreatefrompng($file);
-    } elseif (in_array($ext, ['jpg', 'jpeg'])) {
+    } elseif ($mime === 'image/jpeg') {
         $im = @imagecreatefromjpeg($file);
+    } elseif ($mime === 'image/webp') {
+        $im = @imagecreatefromwebp($file);
+    } elseif ($mime === 'image/gif') {
+        $im = @imagecreatefromgif($file);
     }
     
     if (!$im) {
-        echo "Failed to load image.\n";
+        echo "Failed to load image with MIME type: $mime.\n";
         continue;
     }
     
@@ -49,27 +60,30 @@ foreach ($files as $file) {
         
         $tmp = imagecreatetruecolor($new_width, $new_height);
         
-        // Preserve transparency for PNG
-        if ($ext === 'png') {
-            imagealphablending($tmp, false);
-            imagesavealpha($tmp, true);
-            $transparent = imagecolorallocatealpha($tmp, 255, 255, 255, 127);
-            imagefill($tmp, 0, 0, $transparent);
-        }
+        // Setup transparency for PNG saving
+        imagealphablending($tmp, false);
+        imagesavealpha($tmp, true);
+        $transparent = imagecolorallocatealpha($tmp, 255, 255, 255, 127);
+        imagefill($tmp, 0, 0, $transparent);
         
         imagecopyresampled($tmp, $im, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
         imagedestroy($im);
         $im = $tmp;
     }
     
-    // Save back
+    // Save back based on file extension to keep path unchanged but convert content to actual extension type
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     $success = false;
+    
     if ($ext === 'png') {
+        // Force PNG format
         imagealphablending($im, false);
         imagesavealpha($im, true);
-        $success = @imagepng($im, $file, 9); // Maximum compression for PNG
+        $success = @imagepng($im, $file, 9); // Max compression
+    } elseif ($ext === 'webp') {
+        $success = @imagewebp($im, $file, 75);
     } else {
-        $success = @imagejpeg($im, $file, 80); // 80% quality for JPEG
+        $success = @imagejpeg($im, $file, 75);
     }
     
     imagedestroy($im);
