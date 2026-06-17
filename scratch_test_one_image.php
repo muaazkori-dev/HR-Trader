@@ -12,29 +12,21 @@ if (!file_exists($file)) {
 clearstatcache(true, $file);
 echo "File size: " . filesize($file) . " bytes\n";
 
-$img_info = getimagesize($file);
-if (!$img_info) {
-    die("getimagesize failed!");
+$data = file_get_contents($file);
+if ($data === false) {
+    die("Failed to read file data!");
 }
 
-echo "MIME type: " . $img_info['mime'] . "\n";
-echo "Width: " . $img_info[0] . ", Height: " . $img_info[1] . "\n";
+echo "File data length: " . strlen($data) . " bytes\n";
+echo "First 10 bytes (hex): " . bin2hex(substr($data, 0, 10)) . "\n";
 
-$mime = $img_info['mime'];
-$im = null;
-
-if ($mime === 'image/png') {
-    echo "Loading using imagecreatefrompng...\n";
-    $im = imagecreatefrompng($file);
-} elseif ($mime === 'image/jpeg') {
-    echo "Loading using imagecreatefromjpeg...\n";
-    $im = imagecreatefromjpeg($file);
-}
+echo "Attempting imagecreatefromstring...\n";
+$im = @imagecreatefromstring($data);
 
 if ($im) {
-    echo "Successfully loaded image! Width: " . imagesx($im) . ", Height: " . imagesy($im) . "\n";
+    echo "Successfully loaded image via string! Width: " . imagesx($im) . ", Height: " . imagesy($im) . "\n";
     imagedestroy($im);
 } else {
-    echo "Failed to load image!\n";
+    echo "Failed to load image via string!\n";
 }
 ?>
