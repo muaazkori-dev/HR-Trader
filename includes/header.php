@@ -128,7 +128,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
             </a>
 
             <!-- Search Bar (Live AJAX Search) -->
-            <form action="<?php echo BASE_URL; ?>shop.php" method="GET" class="flex-1 max-w-lg relative hidden md:block">
+            <form action="<?php echo BASE_URL; ?>shop.php" method="GET" class="flex-1 max-w-lg min-w-[200px] md:min-w-[280px] lg:min-w-[320px] relative hidden md:block">
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                         <i class="fas fa-search"></i>
@@ -148,7 +148,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
             <!-- Header Menu Actions -->
             <div class="flex items-center gap-4">
-                <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-655">
+                <nav class="hidden xl:flex items-center gap-6 text-sm font-medium text-slate-655">
                     <a href="<?php echo BASE_URL; ?>" class="hover:text-emerald-600 transition-colors">Home</a>
                     <a href="<?php echo BASE_URL; ?>shop.php" class="hover:text-emerald-600 transition-colors">All Products</a>
                     <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="hover:text-emerald-600 transition-colors">Anaj</a>
