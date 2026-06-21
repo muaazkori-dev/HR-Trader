@@ -1,2 +1,1 @@
-<?php
-// Diagnostic file removed
+<?php // Disabled for security ?>
