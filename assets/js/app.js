@@ -62,10 +62,12 @@ function toggleCartDrawer(open) {
         drawer.classList.remove('translate-x-full');
         backdrop.classList.remove('opacity-0', 'pointer-events-none');
         backdrop.classList.add('opacity-100');
+        document.body.classList.add('overflow-hidden');
     } else {
         drawer.classList.add('translate-x-full');
         backdrop.classList.remove('opacity-100');
         backdrop.classList.add('opacity-0', 'pointer-events-none');
+        document.body.classList.remove('overflow-hidden');
     }
 }
 
