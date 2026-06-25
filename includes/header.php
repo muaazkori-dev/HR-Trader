@@ -33,7 +33,7 @@ $dark_themes = ['midnight_indigo', 'cyberpunk_neon', 'deep_purple', 'forest_dark
 $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="en" class="<?php echo $html_class; ?>">
+<html lang="en" class="<?php echo $html_class; ?> overflow-x-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -205,7 +205,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <?php endif; ?>
 </head>
-<body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-x-hidden">
 
 <!-- PWA Custom Install Banner -->
 <div id="pwa-install-banner" class="hidden fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-[360px] bg-white text-slate-800 p-3.5 rounded-2xl shadow-2xl border border-slate-150 z-[9999] flex items-center justify-between gap-4 transition-all duration-300 transform -translate-y-10 opacity-0">
