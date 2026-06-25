@@ -6,3 +6,10 @@ website.zip.zip
 project.zip.zip
 .tempmediaStorage/
 *.log
+*.tar.gz
+*.zip
+*.rar
+*.sql
+recent_files_log.txt
+
+
