@@ -1,9 +1,34 @@
 <?php
 header('Content-Type: text/plain; charset=utf-8');
-echo "=== SIMULATING SELF-HEALING BACKUP-RESTORE ===\n";
+echo "=== SIMULATING SELF-HEALING BACKUP-RESTORE (RELATIVE PATH) ===\n";
 
-$target_dir = __DIR__ . '/assets/images/products';
-$backup_dir = __DIR__ . '/../product_uploads';
+function getRelativeBackupPath() {
+    $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+    $script = str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME']);
+    
+    // Remove document root from script path to get the relative path
+    $rel = str_replace($doc_root, '', $script);
+    $rel = trim($rel, '/');
+    
+    // Count the number of subdirectories
+    $depth = 0;
+    if (!empty($rel)) {
+        $parts = explode('/', $rel);
+        $depth = count($parts) - 1;
+    }
+    
+    // Build the relative path to parent directory of public_html
+    $path = '../';
+    for ($i = 0; $i < $depth; $i++) {
+        $path .= '../';
+    }
+    return $path . 'product_uploads';
+}
+
+$target_dir = './assets/images/products';
+$backup_dir = getRelativeBackupPath();
+
+echo "Calculated Backup Path: $backup_dir\n";
 
 echo "1. Writing test file to target...\n";
 $test_file = 'test_sync_' . time() . '.txt';
