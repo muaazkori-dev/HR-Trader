@@ -96,6 +96,12 @@ if (isset($_POST['seed_products'])) {
                     
                     if (copy($src_path, $dest_path)) {
                         $image_path = 'assets/images/products/' . $new_file_name;
+                        // Save backup copy outside public_html
+                        $backup_dir = __DIR__ . '/../product_uploads/';
+                        if (!is_dir($backup_dir)) {
+                            @mkdir($backup_dir, 0777, true);
+                        }
+                        @copy($dest_path, $backup_dir . $new_file_name);
                     }
                 }
             }

@@ -352,7 +352,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
 <!-- CART DRAWER (SLIDEOUT PANEL) -->
 <div id="cart-drawer-backdrop" onclick="toggleCartDrawer(false)" class="fixed inset-0 bg-slate-900/40 z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
-<div id="cart-drawer" class="fixed right-0 top-0 bottom-0 h-screen max-h-screen w-full sm:w-[400px] bg-white border-l border-slate-200 z-50 translate-x-full transition-transform duration-300 flex flex-col text-slate-800">
+<div id="cart-drawer" class="fixed right-0 top-0 bottom-0 h-screen max-h-screen w-full sm:w-[400px] bg-white border-l border-slate-200 z-50 translate-x-full transition-transform duration-300 flex flex-col text-slate-800 invisible">
     <!-- Drawer Header -->
     <div class="p-4 border-b border-slate-200 flex items-center justify-between">
         <div class="flex items-center gap-2">

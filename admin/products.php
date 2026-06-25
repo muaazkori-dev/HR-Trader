@@ -166,6 +166,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $dest_path = $upload_dir . $new_file_name;
                                 if (compressAndSaveUploadedImage($file_tmp, $dest_path, $file_ext)) {
                                     $image_path = 'assets/images/products/' . $new_file_name;
+                                    // Save backup copy outside public_html
+                                    $backup_dir = __DIR__ . '/../../product_uploads/';
+                                    if (!is_dir($backup_dir)) {
+                                        @mkdir($backup_dir, 0777, true);
+                                    }
+                                    @copy($dest_path, $backup_dir . $new_file_name);
                                 } else {
                                     $error_message = "Failed to upload product image to folder.";
                                 }
@@ -277,11 +283,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
                                 $dest_path = $upload_dir . $new_file_name;
                                 if (compressAndSaveUploadedImage($file_tmp, $dest_path, $file_ext)) {
-                                    // Remove old image file from disk
-                                    if ($image_path && file_exists(__DIR__ . '/../' . $image_path)) {
+                                    // Remove old image file from disk and backup
+                                    if ($image_path) {
                                         @unlink(__DIR__ . '/../' . $image_path);
+                                        $old_filename = basename($image_path);
+                                        @unlink(__DIR__ . '/../../product_uploads/' . $old_filename);
                                     }
                                     $image_path = 'assets/images/products/' . $new_file_name;
+                                    // Save backup copy outside public_html
+                                    $backup_dir = __DIR__ . '/../../product_uploads/';
+                                    if (!is_dir($backup_dir)) {
+                                        @mkdir($backup_dir, 0777, true);
+                                    }
+                                    @copy($dest_path, $backup_dir . $new_file_name);
                                 } else {
                                     $error_message = "Failed to upload product image to folder.";
                                 }
@@ -342,8 +356,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt_curr = $pdo->prepare("SELECT image FROM products WHERE id = :id");
                     $stmt_curr->execute(['id' => $id]);
                     $prod = $stmt_curr->fetch();
-                    if ($prod && !empty($prod['image']) && file_exists(__DIR__ . '/../' . $prod['image'])) {
+                    if ($prod && !empty($prod['image'])) {
                         @unlink(__DIR__ . '/../' . $prod['image']);
+                        $old_filename = basename($prod['image']);
+                        @unlink(__DIR__ . '/../../product_uploads/' . $old_filename);
                     }
 
                     $stmt = $pdo->prepare("DELETE FROM products WHERE id = :id");

@@ -101,28 +101,36 @@ if ($is_local) {
     define('DB_NAME', 'u622906513_hrtrader');
 }
 
-// Auto-heal products upload folder/symlink to prevent Git deployment deletions
+// Auto-heal products upload folder from backup to prevent Git deployment deletions
 $target_upload_dir = __DIR__ . '/../assets/images/products';
+$backup_upload_dir = __DIR__ . '/../../product_uploads';
+
 if ($is_local) {
     if (!is_dir($target_upload_dir)) {
         @mkdir($target_upload_dir, 0777, true);
         @file_put_contents($target_upload_dir . '/.gitkeep', 'keep');
     }
 } else {
-    // Use domain path to bypass open_basedir restrictions and stay safe from git deployment cleanups
-    $source_upload_dir = '/home/u622906513/domains/thehrtraders.com/product_uploads';
     try {
-        if (!is_dir($source_upload_dir)) {
-            @mkdir($source_upload_dir, 0777, true);
+        if (!is_dir($target_upload_dir)) {
+            @mkdir($target_upload_dir, 0777, true);
         }
-        if (function_exists('symlink')) {
-            // If it is a real directory and NOT a symlink, we remove it (created by Git clone/deploy) to make room for symlink
-            if (is_dir($target_upload_dir) && !is_link($target_upload_dir)) {
-                @unlink($target_upload_dir . '/.gitkeep');
-                @rmdir($target_upload_dir);
-            }
-            if (!file_exists($target_upload_dir)) {
-                @symlink($source_upload_dir, $target_upload_dir);
+        if (!is_dir($backup_upload_dir)) {
+            @mkdir($backup_upload_dir, 0777, true);
+        }
+        
+        // Self-healing sync back files from backup to target if they are missing
+        if (is_dir($backup_upload_dir) && is_dir($target_upload_dir)) {
+            $backup_files = @scandir($backup_upload_dir);
+            if ($backup_files !== false) {
+                foreach ($backup_files as $file) {
+                    if ($file === '.' || $file === '..') continue;
+                    $target_file = $target_upload_dir . '/' . $file;
+                    $backup_file = $backup_upload_dir . '/' . $file;
+                    if (!file_exists($target_file) && is_file($backup_file)) {
+                        @copy($backup_file, $target_file);
+                    }
+                }
             }
         }
     } catch (Throwable $e) {
