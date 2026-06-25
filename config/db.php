@@ -101,40 +101,12 @@ if ($is_local) {
     define('DB_NAME', 'u622906513_hrtrader');
 }
 
-// Auto-heal products upload folder from backup to prevent Git deployment deletions
+// Ensure upload folder exists locally
 $target_upload_dir = __DIR__ . '/../assets/images/products';
-$backup_upload_dir = __DIR__ . '/../../product_uploads';
-
 if ($is_local) {
     if (!is_dir($target_upload_dir)) {
         @mkdir($target_upload_dir, 0777, true);
         @file_put_contents($target_upload_dir . '/.gitkeep', 'keep');
-    }
-} else {
-    try {
-        if (!is_dir($target_upload_dir)) {
-            @mkdir($target_upload_dir, 0777, true);
-        }
-        if (!is_dir($backup_upload_dir)) {
-            @mkdir($backup_upload_dir, 0777, true);
-        }
-        
-        // Self-healing sync back files from backup to target if they are missing
-        if (is_dir($backup_upload_dir) && is_dir($target_upload_dir)) {
-            $backup_files = @scandir($backup_upload_dir);
-            if ($backup_files !== false) {
-                foreach ($backup_files as $file) {
-                    if ($file === '.' || $file === '..') continue;
-                    $target_file = $target_upload_dir . '/' . $file;
-                    $backup_file = $backup_upload_dir . '/' . $file;
-                    if (!file_exists($target_file) && is_file($backup_file)) {
-                        @copy($backup_file, $target_file);
-                    }
-                }
-            }
-        }
-    } catch (Throwable $e) {
-        // Silently catch errors to prevent 500 internal server crash
     }
 }
 try {
@@ -469,6 +441,52 @@ try {
                        ON DUPLICATE KEY UPDATE val_value = VALUES(val_value)")->execute();
     } catch (PDOException $ex_ver) {
         // Ignore
+    }
+    
+    // Live self-healing database-driven product images restore (relative-paths copy logic)
+    if (!$is_local) {
+        try {
+            // Calculate relative path from currently executing script to parent of public_html
+            $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+            $script = str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME']);
+            $rel = str_replace($doc_root, '', $script);
+            $rel = trim($rel, '/');
+            $depth = 0;
+            if (!empty($rel)) {
+                $parts = explode('/', $rel);
+                $depth = count($parts) - 1;
+            }
+            $backup_rel_path = '../';
+            for ($i = 0; $i < $depth; $i++) {
+                $backup_rel_path .= '../';
+            }
+            $backup_upload_dir = $backup_rel_path . 'product_uploads';
+
+            // Ensure directories exist
+            $target_upload_dir_rel = $backup_rel_path . 'public_html/assets/images/products';
+            if (!@is_dir($target_upload_dir_rel)) {
+                @mkdir($target_upload_dir_rel, 0777, true);
+            }
+            if (!@is_dir($backup_upload_dir)) {
+                @mkdir($backup_upload_dir, 0777, true);
+            }
+
+            // Sync missing product images using DB active paths
+            $stmt_sync = $pdo->query("SELECT image FROM products WHERE image IS NOT NULL AND image != ''");
+            while ($row_sync = $stmt_sync->fetch()) {
+                $img_rel_path = $row_sync['image']; // e.g. assets/images/products/prod_xxxx.png
+                $filename = basename($img_rel_path);
+                
+                $t_file = $backup_rel_path . 'public_html/' . $img_rel_path;
+                $b_file = $backup_upload_dir . '/' . $filename;
+                
+                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                    @copy($b_file, $t_file);
+                }
+            }
+        } catch (Throwable $sync_err) {
+            // Silently catch sync errors to prevent crash
+        }
     }
 }
 
