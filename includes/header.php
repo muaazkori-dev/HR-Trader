@@ -112,6 +112,10 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
             const banner = document.getElementById('pwa-install-banner');
             if (banner && localStorage.getItem('pwa_banner_dismissed') !== 'true') {
                 banner.classList.remove('hidden');
+                setTimeout(() => {
+                    banner.classList.remove('opacity-0', '-translate-y-10');
+                    banner.classList.add('opacity-100', 'translate-y-0');
+                }, 100);
             }
         });
 
@@ -187,7 +191,11 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
         function dismissPwaBanner() {
             const banner = document.getElementById('pwa-install-banner');
             if (banner) {
-                banner.classList.add('hidden');
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', '-translate-y-10');
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 300);
             }
             localStorage.setItem('pwa_banner_dismissed', 'true');
         }
@@ -200,19 +208,19 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 <body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
 <!-- PWA Custom Install Banner -->
-<div id="pwa-install-banner" class="hidden bg-emerald-600 text-white px-4 py-3 shadow-md z-[9999] relative flex items-center justify-between gap-4 transition-all duration-300">
+<div id="pwa-install-banner" class="hidden fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-[360px] bg-white text-slate-800 p-3.5 rounded-2xl shadow-2xl border border-slate-150 z-[9999] flex items-center justify-between gap-4 transition-all duration-300 transform -translate-y-10 opacity-0">
     <div class="flex items-center gap-3">
-        <div class="h-10 w-10 bg-white rounded-xl p-1 flex-shrink-0 flex items-center justify-center shadow-sm">
-            <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="HR Traders Logo" class="h-8 w-8 object-contain">
+        <div class="h-11 w-11 bg-slate-50 border border-slate-100 rounded-xl p-1 flex-shrink-0 flex items-center justify-center shadow-sm">
+            <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="HR Traders Logo" class="h-8 w-8 object-contain rounded">
         </div>
-        <div class="text-left">
-            <h4 class="font-bold text-xs sm:text-sm">HR Traders App Install Karein!</h4>
-            <p class="text-[9px] sm:text-xs text-emerald-100 leading-tight">Apne home screen par dynamic shortcuts aur shopping app icon lagayein.</p>
+        <div class="text-left min-w-0">
+            <h4 class="font-black text-sm text-slate-900 leading-tight">Install HR Traders</h4>
+            <p class="text-xs text-slate-400 truncate">thehrtraders.com</p>
         </div>
     </div>
-    <div class="flex items-center gap-2 flex-shrink-0">
-        <button id="pwa-install-btn" class="bg-white text-emerald-700 font-bold text-xs px-3.5 py-1.5 rounded-xl hover:bg-emerald-50 transition-all whitespace-nowrap shadow-sm">Install App</button>
-        <button onclick="dismissPwaBanner()" class="text-white/80 hover:text-white p-1 text-sm focus:outline-none"><i class="fas fa-times"></i></button>
+    <div class="flex items-center gap-3 flex-shrink-0">
+        <button id="pwa-install-btn" class="text-emerald-600 hover:text-emerald-700 font-extrabold text-sm transition-all whitespace-nowrap px-1">Install</button>
+        <button onclick="dismissPwaBanner()" class="text-slate-400 hover:text-slate-650 p-1 text-sm focus:outline-none"><i class="fas fa-times"></i></button>
     </div>
 </div>
 
@@ -344,7 +352,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
 <!-- CART DRAWER (SLIDEOUT PANEL) -->
 <div id="cart-drawer-backdrop" onclick="toggleCartDrawer(false)" class="fixed inset-0 bg-slate-900/40 z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
-<div id="cart-drawer" class="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] bg-white border-l border-slate-200 z-50 translate-x-full transition-transform duration-300 flex flex-col text-slate-800">
+<div id="cart-drawer" class="fixed right-0 top-0 bottom-0 h-screen max-h-screen w-full sm:w-[400px] bg-white border-l border-slate-200 z-50 translate-x-full transition-transform duration-300 flex flex-col text-slate-800">
     <!-- Drawer Header -->
     <div class="p-4 border-b border-slate-200 flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -357,7 +365,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     </div>
 
     <!-- Drawer Contents (AJAX Loaded Items) -->
-    <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div id="cart-items-container" class="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         <!-- Rendered dynamically -->
         <p class="text-slate-400 text-center py-10">Your cart is empty.</p>
     </div>

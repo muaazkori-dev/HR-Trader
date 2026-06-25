@@ -104,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = trim($_POST['description'] ?? '');
         $price = isset($_POST['price']) && $_POST['price'] !== '' ? (float)$_POST['price'] : 0.0;
         $purchase_price = isset($_POST['purchase_price']) && $_POST['purchase_price'] !== '' ? (float)$_POST['purchase_price'] : 0.0;
+        $old_price = isset($_POST['old_price']) && $_POST['old_price'] !== '' ? (float)$_POST['old_price'] : null;
+        $discount_percentage = isset($_POST['discount_percentage']) && $_POST['discount_percentage'] !== '' ? (int)$_POST['discount_percentage'] : 0;
         $stock_quantity = isset($_POST['stock_quantity']) && $_POST['stock_quantity'] !== '' ? (int)$_POST['stock_quantity'] : 0;
         $weight = trim($_POST['weight'] ?? '');
         $unit = trim($_POST['unit'] ?? 'pcs');
@@ -113,6 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $category = trim($_POST['category'] ?? '');
         if (empty($category)) {
             $category = 'anaj';
+        }
+
+        // Auto-calculate missing values
+        if ($old_price !== null && $old_price > $price && $discount_percentage === 0) {
+            $discount_percentage = (int)round((($old_price - $price) / $old_price) * 100);
+        } elseif ($discount_percentage > 0 && ($old_price === null || $old_price == 0.0)) {
+            $old_price = (float)round($price / (1 - ($discount_percentage / 100)), 2);
         }
 
         try {
@@ -167,8 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if (empty($error_message)) {
-                        $stmt = $pdo->prepare("INSERT INTO products (barcode, name, description, price, purchase_price, stock_quantity, weight, unit, category, image) 
-                                               VALUES (:barcode, :name, :description, :price, :purchase_price, :stock, :weight, :unit, :category, :image)");
+                        $stmt = $pdo->prepare("INSERT INTO products (barcode, name, description, price, purchase_price, stock_quantity, weight, unit, category, image, old_price, discount_percentage) 
+                                               VALUES (:barcode, :name, :description, :price, :purchase_price, :stock, :weight, :unit, :category, :image, :old_price, :discount_percentage)");
                         $stmt->execute([
                             'barcode' => $barcode,
                             'name' => $name,
@@ -179,7 +188,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'weight' => $weight,
                             'unit' => $unit,
                             'category' => $category,
-                            'image' => $image_path
+                            'image' => $image_path,
+                            'old_price' => $old_price,
+                            'discount_percentage' => $discount_percentage
                         ]);
                         $success_message = "Product '{$name}' created successfully.";
                     }
@@ -197,6 +208,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = trim($_POST['description'] ?? '');
         $price = isset($_POST['price']) && $_POST['price'] !== '' ? (float)$_POST['price'] : 0.0;
         $purchase_price = isset($_POST['purchase_price']) && $_POST['purchase_price'] !== '' ? (float)$_POST['purchase_price'] : 0.0;
+        $old_price = isset($_POST['old_price']) && $_POST['old_price'] !== '' ? (float)$_POST['old_price'] : null;
+        $discount_percentage = isset($_POST['discount_percentage']) && $_POST['discount_percentage'] !== '' ? (int)$_POST['discount_percentage'] : 0;
         $stock_quantity = isset($_POST['stock_quantity']) && $_POST['stock_quantity'] !== '' ? (int)$_POST['stock_quantity'] : 0;
         $weight = trim($_POST['weight'] ?? '');
         $unit = trim($_POST['unit'] ?? 'pcs');
@@ -206,6 +219,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $category = trim($_POST['category'] ?? '');
         if (empty($category)) {
             $category = 'anaj';
+        }
+
+        // Auto-calculate missing values
+        if ($old_price !== null && $old_price > $price && $discount_percentage === 0) {
+            $discount_percentage = (int)round((($old_price - $price) / $old_price) * 100);
+        } elseif ($discount_percentage > 0 && ($old_price === null || $old_price == 0.0)) {
+            $old_price = (float)round($price / (1 - ($discount_percentage / 100)), 2);
         }
 
         if ($id <= 0) {
@@ -278,6 +298,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 description = :description, 
                                                 price = :price, 
                                                 purchase_price = :purchase_price, 
+                                                old_price = :old_price,
+                                                discount_percentage = :discount_percentage,
                                                 stock_quantity = :stock, 
                                                 weight = :weight, 
                                                 unit = :unit, 
@@ -290,6 +312,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'description' => $description,
                             'price' => $price,
                             'purchase_price' => $purchase_price,
+                            'old_price' => $old_price,
+                            'discount_percentage' => $discount_percentage,
                             'stock' => $stock_quantity,
                             'weight' => $weight,
                             'unit' => $unit,
@@ -600,7 +624,17 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                                     <?php echo $CATEGORIES[$prod['category']]['name'] ?? $prod['category']; ?>
                                 </td>
                                 <td class="p-4 text-right font-mono font-semibold text-slate-605"><?php echo ($prod['purchase_price'] > 0) ? format_price($prod['purchase_price']) : '-'; ?></td>
-                                <td class="p-4 text-right font-mono font-bold text-emerald-600"><?php echo format_price($prod['price']); ?></td>
+                                <td class="p-4 text-right font-mono font-bold text-emerald-600">
+                                    <?php echo format_price($prod['price']); ?>
+                                    <?php if ($prod['old_price'] > $prod['price'] || $prod['discount_percentage'] > 0): ?>
+                                        <?php 
+                                        $old_pr = $prod['old_price'] ?: ($prod['price'] / (1 - ($prod['discount_percentage'] / 100)));
+                                        $pct = $prod['discount_percentage'] ?: (int)round((($old_pr - $prod['price']) / $old_pr) * 100);
+                                        ?>
+                                        <div class="text-[10px] text-slate-400 line-through font-normal"><?php echo format_price($old_pr); ?></div>
+                                        <div class="text-[9px] text-rose-500 font-extrabold uppercase tracking-wide">Flat <?php echo $pct; ?>% OFF</div>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="p-4 text-center font-semibold text-slate-700"><?php echo !empty($prod['weight']) ? sanitize($prod['weight']) . ' (' . sanitize($prod['unit']) . ')' : sanitize($prod['unit']); ?></td>
                                 <td class="p-4 text-center">
                                     <span class="px-2.5 py-1 rounded font-bold font-mono text-[11px] <?php echo $prod['stock_quantity'] <= 10 ? 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse' : 'bg-slate-100 text-slate-700 border border-slate-200'; ?>">
@@ -672,8 +706,20 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Selling Price</label>
-                <input type="number" step="any" name="price" min="0"
+                <input type="number" step="any" name="price" min="0" required
                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-emerald-600 font-bold focus:bg-emerald-50/20">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Original Price (Old Price)</label>
+                <input type="number" step="any" name="old_price" min="0" placeholder="e.g. 1000.00"
+                       class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-slate-600 focus:bg-slate-50/50">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Discount Percentage (%)</label>
+                <input type="number" name="discount_percentage" min="0" max="100" placeholder="e.g. 15"
+                       class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-slate-600 focus:bg-slate-50/50">
             </div>
 
             <div>
@@ -761,8 +807,20 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Selling Price</label>
-                <input type="number" step="any" id="edit-price" name="price" min="0"
+                <input type="number" step="any" id="edit-price" name="price" min="0" required
                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-emerald-600 font-bold focus:bg-emerald-50/20">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Original Price (Old Price)</label>
+                <input type="number" step="any" id="edit-old-price" name="old_price" min="0" placeholder="e.g. 1000.00"
+                       class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-slate-600 focus:bg-slate-50/50">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Discount Percentage (%)</label>
+                <input type="number" id="edit-discount-percentage" name="discount_percentage" min="0" max="100" placeholder="e.g. 15"
+                       class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-slate-600 focus:bg-slate-50/50">
             </div>
 
             <div>
@@ -869,6 +927,8 @@ function openEditModal(product) {
     document.getElementById('edit-description').value = product.description;
     document.getElementById('edit-purchase-price').value = (parseFloat(product.purchase_price) > 0) ? product.purchase_price : '';
     document.getElementById('edit-price').value = product.price;
+    document.getElementById('edit-old-price').value = product.old_price ? product.old_price : '';
+    document.getElementById('edit-discount-percentage').value = product.discount_percentage ? product.discount_percentage : '';
     document.getElementById('edit-stock').value = product.stock_quantity;
     document.getElementById('edit-category').value = product.category;
     document.getElementById('edit-weight').value = product.weight ? product.weight : '';

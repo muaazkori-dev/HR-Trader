@@ -91,7 +91,7 @@ try {
         <!-- Category 1: Anaj -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/anaj.png?v=2.4" alt="Anaj" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('anaj'); ?>" alt="Anaj" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Anaj</h4>
@@ -102,7 +102,7 @@ try {
         <!-- Category 1.5: Grocery -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=grocery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/grocery.png?v=2.4" alt="Grocery" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('grocery'); ?>" alt="Grocery" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Grocery</h4>
@@ -113,7 +113,7 @@ try {
         <!-- Category 2: Ice Cream -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/ice_cream.png?v=2.4" alt="Ice Cream" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('ice_cream'); ?>" alt="Ice Cream" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Ice Cream</h4>
@@ -124,7 +124,7 @@ try {
         <!-- Category 3: Beverages -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cold_drinks.png?v=2.4" alt="Beverages" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('beverages'); ?>" alt="Beverages" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Beverages</h4>
@@ -135,7 +135,7 @@ try {
         <!-- Category 4: Milk -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/milk.png?v=2.4" alt="Milk" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('milk'); ?>" alt="Milk" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Milk</h4>
@@ -146,7 +146,7 @@ try {
         <!-- Category 5: Cosmetics -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/cosmetics.png?v=2.4" alt="Cosmetics" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('cosmetics'); ?>" alt="Cosmetics" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Cosmetics</h4>
@@ -157,7 +157,7 @@ try {
         <!-- Category 6: Snacks -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=snacks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200 bg-white">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/snacks.png?v=2.4" alt="Snacks" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('snacks'); ?>" alt="Snacks" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Snacks</h4>
@@ -168,7 +168,7 @@ try {
         <!-- Category 7: Bakery -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=bakery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-orange-200 bg-white">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/bakery.png?v=2.4" alt="Bakery" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('bakery'); ?>" alt="Bakery" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Bakery</h4>
@@ -179,7 +179,7 @@ try {
         <!-- Category 8: Sauce -->
         <a href="<?php echo BASE_URL; ?>shop.php?category=sauce#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
             <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-red-200 bg-white">
-                <img src="<?php echo BASE_URL; ?>assets/images/categories/sauce.png?v=2.4" alt="Sauces" class="w-full h-full object-cover">
+                <img src="<?php echo get_category_icon_url('sauce'); ?>" alt="Sauces" class="w-full h-full object-cover">
             </div>
             <div>
                 <h4 class="font-bold text-slate-800">Sauces</h4>
@@ -227,6 +227,15 @@ try {
                             <?php echo $CATEGORIES[$product['category']]['name'] ?? $product['category']; ?>
                         </span>
 
+                        <?php if ($product['old_price'] > $product['price'] || $product['discount_percentage'] > 0): ?>
+                            <?php 
+                            $pct = $product['discount_percentage'] ?: (int)round((($product['old_price'] - $product['price']) / $product['old_price']) * 100); 
+                            ?>
+                            <span class="absolute top-10 left-3 px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold bg-rose-600 text-white shadow-md animate-bounce">
+                                Flat <?php echo $pct; ?>% OFF
+                            </span>
+                        <?php endif; ?>
+
                         <!-- Stock Status -->
                         <?php if ($is_out_of_stock): ?>
                             <span class="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold bg-rose-600 text-white shadow-sm">
@@ -270,7 +279,15 @@ try {
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
                             <div class="flex items-center justify-between w-full sm:w-auto sm:block">
                                 <span class="text-xs text-slate-500 block">Selling Price</span>
-                                <span class="text-lg font-black text-emerald-600"><?php echo format_price($product['price']); ?></span>
+                                <div class="flex items-baseline gap-1.5">
+                                    <span class="text-lg font-black text-emerald-600"><?php echo format_price($product['price']); ?></span>
+                                    <?php if ($product['old_price'] > $product['price'] || $product['discount_percentage'] > 0): ?>
+                                        <?php 
+                                        $old_pr = $product['old_price'] ?: ($product['price'] / (1 - ($product['discount_percentage'] / 100))); 
+                                        ?>
+                                        <span class="text-xs font-bold text-slate-400 line-through"><?php echo format_price($old_pr); ?></span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             
                             <?php if ($is_out_of_stock): ?>

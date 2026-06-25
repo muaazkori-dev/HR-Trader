@@ -117,7 +117,7 @@ try {
     try {
         $stmt_ver = $pdo->query("SELECT val_value FROM settings WHERE key_name = 'db_schema_version' LIMIT 1");
         $row_ver = $stmt_ver->fetch();
-        if ($row_ver && $row_ver['val_value'] === '2.6') {
+        if ($row_ver && $row_ver['val_value'] === '2.7') {
             $run_migrations = false;
         }
     } catch (PDOException $e) {
@@ -428,7 +428,7 @@ try {
 
     // Save schema version to settings table to avoid running migrations on every single page load
     try {
-        $pdo->prepare("INSERT INTO settings (key_name, val_value) VALUES ('db_schema_version', '2.6') 
+        $pdo->prepare("INSERT INTO settings (key_name, val_value) VALUES ('db_schema_version', '2.7') 
                        ON DUPLICATE KEY UPDATE val_value = VALUES(val_value)")->execute();
     } catch (PDOException $ex_ver) {
         // Ignore
@@ -550,3 +550,53 @@ function update_setting($key, $value) {
 define('STORE_NAME', get_setting('store_name', 'HR Traders'));
 define('CURRENCY', get_setting('store_currency', 'Rs.'));
 define('WHATSAPP_NUMBER', get_setting('whatsapp_number', '923033943814')); // WhatsApp shop number (international format without +)
+
+/**
+ * Get category icon URL, with clean SVG fallback data URI if file is missing from disk
+ */
+function get_category_icon_url($category) {
+    $mapping = [
+        'beverages' => 'cold_drinks',
+        'shampoo' => 'cosmetics',
+        'soap' => 'cosmetics',
+        'toothpaste' => 'cosmetics',
+        'body_wash' => 'cosmetics',
+        'deodorant' => 'cosmetics'
+    ];
+    $category_key = isset($mapping[$category]) ? $mapping[$category] : $category;
+    
+    $local_path = 'assets/images/categories/' . $category_key . '.png';
+    if ($category_key === 'ice_cream' || $category_key === 'milk') {
+        // Double check jpg extension fallback
+        if (!file_exists(__DIR__ . '/../' . $local_path)) {
+            $local_jpg = 'assets/images/categories/' . $category_key . '.jpg';
+            if (file_exists(__DIR__ . '/../' . $local_jpg)) {
+                return BASE_URL . $local_jpg;
+            }
+        }
+    }
+    
+    if (file_exists(__DIR__ . '/../' . $local_path)) {
+        return BASE_URL . $local_path;
+    }
+
+    // Dynamic, high-quality, lightweight SVG fallbacks keyed by category type
+    $fallbacks = [
+        'anaj' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23ecfdf5" stroke="%2334d399" stroke-width="2"/><path d="M50 22 C55 37, 65 47, 50 82 C35 47, 45 37, 50 22 Z" fill="%23059669"/><path d="M50 32 C53 43, 58 48, 50 72 C42 48, 47 43, 50 32 Z" fill="%2334d399"/></svg>',
+        'grocery' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23f0fdf4" stroke="%2310b981" stroke-width="2"/><path d="M30 32 h40 l-8 30 h-24 Z M34 62 l-4 13 M62 62 l4 13" stroke="%23059669" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="34" cy="75" r="4" fill="%23059669"/><circle cx="66" cy="75" r="4" fill="%23059669"/></svg>',
+        'ice_cream' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23fff5f5" stroke="%23f87171" stroke-width="2"/><path d="M38 52 L50 82 L62 52 Z" fill="%23d97706"/><circle cx="50" cy="42" r="16" fill="%23e11d48"/><circle cx="45" cy="46" r="12" fill="%23f43f5e"/><circle cx="55" cy="46" r="10" fill="%23fb7185"/></svg>',
+        'beverages' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23f0f9ff" stroke="%2338bdf8" stroke-width="2"/><path d="M38 32 L42 76 h16 L62 32 Z" fill="%230284c7"/><path d="M42 22 L50 32 M34 32 h32" stroke="%230284c7" stroke-width="4" stroke-linecap="round"/></svg>',
+        'milk' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23f8fafc" stroke="%2394a3b8" stroke-width="2"/><path d="M42 22 h16 v8 h-16 Z M37 30 h26 v46 H37 Z" fill="%23cbd5e1" stroke="%23475569" stroke-width="3"/><rect x="43" y="42" width="14" height="18" fill="%2338bdf8"/></svg>',
+        'cosmetics' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23fdf2f8" stroke="%23f472b6" stroke-width="2"/><rect x="43" y="48" width="14" height="30" rx="2" fill="%23be185d"/><path d="M45 48 L45 28 C45 23, 55 23, 55 28 L55 48 Z" fill="%23db2777"/></svg>',
+        'snacks' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23fef3c7" stroke="%23fbbf24" stroke-width="2"/><path d="M32 28 L68 28 L72 72 L28 72 Z" fill="%23d97706"/><path d="M32 28 l6 6 l6-6 l6 6 l6-6 l6 6 l6-6 l6 6 l6-6" stroke="%2392400e" stroke-width="3" fill="none"/></svg>',
+        'bakery' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23fffbeb" stroke="%23fbbf24" stroke-width="2"/><path d="M32 62 C32 48, 40 43, 50 43 C60 43, 68 48, 68 62 Z" fill="%23d97706" stroke="%2392400e" stroke-width="3"/><path d="M28 62 h44 v8 h-44 Z" fill="%2392400e"/></svg>',
+        'sauce' => 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="48" fill="%23fff1f2" stroke="%23fda4af" stroke-width="2"/><path d="M44 22 h12 v10 h-12 Z M37 32 L42 44 v30 h16 V44 L63 32 Z" fill="%23be123c"/><path d="M42 52 h16" stroke="%23ffffff" stroke-width="3"/></svg>'
+    ];
+
+    if (isset($fallbacks[$category_key])) {
+        return $fallbacks[$category_key];
+    }
+    
+    // Default dynamic placeholder link fallback if key not matched
+    return 'https://placehold.co/100x100/10b981/ffffff?text=' . urlencode(ucfirst($category_key));
+}
