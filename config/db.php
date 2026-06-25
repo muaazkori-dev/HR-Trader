@@ -443,29 +443,16 @@ try {
         // Ignore
     }
     
-    // Live self-healing database-driven product images restore (relative-paths copy logic)
+    // Live self-healing database-driven product images restore (absolute-paths copy logic)
     if (!$is_local) {
         try {
-            // Calculate relative path from currently executing script to parent of public_html
-            $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
-            $script = str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME']);
-            $rel = str_replace($doc_root, '', $script);
-            $rel = trim($rel, '/');
-            $depth = 0;
-            if (!empty($rel)) {
-                $parts = explode('/', $rel);
-                $depth = count($parts) - 1;
-            }
-            $backup_rel_path = '../';
-            for ($i = 0; $i < $depth; $i++) {
-                $backup_rel_path .= '../';
-            }
-            $backup_upload_dir = $backup_rel_path . 'product_uploads';
+            $public_html_root = dirname(__DIR__);
+            $target_upload_dir = $public_html_root . '/assets/images/products';
+            $backup_upload_dir = dirname($public_html_root) . '/product_uploads';
 
             // Ensure directories exist
-            $target_upload_dir_rel = $backup_rel_path . 'public_html/assets/images/products';
-            if (!@is_dir($target_upload_dir_rel)) {
-                @mkdir($target_upload_dir_rel, 0777, true);
+            if (!@is_dir($target_upload_dir)) {
+                @mkdir($target_upload_dir, 0777, true);
             }
             if (!@is_dir($backup_upload_dir)) {
                 @mkdir($backup_upload_dir, 0777, true);
@@ -477,7 +464,7 @@ try {
                 $img_rel_path = $row_sync['image']; // e.g. assets/images/products/prod_xxxx.png
                 $filename = basename($img_rel_path);
                 
-                $t_file = $backup_rel_path . 'public_html/' . $img_rel_path;
+                $t_file = $target_upload_dir . '/' . $filename;
                 $b_file = $backup_upload_dir . '/' . $filename;
                 
                 if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
