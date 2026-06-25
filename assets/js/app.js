@@ -59,7 +59,8 @@ function toggleCartDrawer(open) {
     if (open) {
         // Refresh items before showing
         refreshCartDrawer();
-        drawer.classList.remove('invisible');
+        drawer.classList.remove('hidden');
+        drawer.classList.add('flex');
         // Let it render before sliding
         setTimeout(() => {
             drawer.classList.remove('translate-x-full');
@@ -75,7 +76,8 @@ function toggleCartDrawer(open) {
         // Hide after transition finishes
         setTimeout(() => {
             if (drawer.classList.contains('translate-x-full')) {
-                drawer.classList.add('invisible');
+                drawer.classList.add('hidden');
+                drawer.classList.remove('flex');
             }
         }, 300);
     }
