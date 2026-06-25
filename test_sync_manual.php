@@ -10,7 +10,7 @@ function log_msg($msg) {
     flush();
 }
 
-log_msg("=== SIMULATING SELF-HEALING BACKUP-RESTORE (STEP-BY-STEP) ===");
+log_msg("=== SIMULATING SELF-HEALING BACKUP-RESTORE (DATABASE-DRIVEN STYLE) ===");
 
 function getRelativeBackupPath() {
     $doc_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
@@ -41,7 +41,7 @@ $backup_dir = getRelativeBackupPath();
 log_msg("Calculated Backup Path: $backup_dir");
 
 log_msg("1. Writing test file to target...");
-$test_file = 'test_sync_' . time() . '.txt';
+$test_file = 'test_sync_db_driven.txt';
 $target_path = $target_dir . '/' . $test_file;
 $backup_path = $backup_dir . '/' . $test_file;
 
@@ -75,34 +75,35 @@ if (!@file_exists($target_path)) {
     log_msg(" - Failed: File still exists in target");
 }
 
-log_msg("4. Running self-healing sync logic...");
+log_msg("4. Running database-driven self-healing sync logic...");
+// Simulate list of product images fetched from DB
+$db_product_images = [
+    'test_sync_db_driven.txt'
+];
+
 $sync_count = 0;
-if (@is_dir($backup_dir) && @is_dir($target_dir)) {
-    $files = @scandir($backup_dir);
-    if ($files !== false) {
-        foreach ($files as $file) {
-            if ($file === '.' || $file === '..') continue;
-            $t_file = $target_dir . '/' . $file;
-            $b_file = $backup_dir . '/' . $file;
-            log_msg(" - Checking backup file: $file");
-            if (!@file_exists($t_file) && @is_file($b_file)) {
-                log_msg("   * File is missing in target. Restoring...");
-                $restored = @copy($b_file, $t_file);
-                if ($restored) {
-                    log_msg("   * Restored successfully");
-                    $sync_count++;
-                } else {
-                    log_msg("   * Restore failed");
-                }
+foreach ($db_product_images as $image_name) {
+    $t_file = $target_dir . '/' . $image_name;
+    $b_file = $backup_dir . '/' . $image_name;
+    
+    log_msg(" - Checking if image is missing: $image_name");
+    if (!@file_exists($t_file)) {
+        log_msg("   * Missing in target. Checking in backup folder...");
+        if (@file_exists($b_file) && @is_file($b_file)) {
+            log_msg("   * Found in backup. Restoring...");
+            $restored = @copy($b_file, $t_file);
+            if ($restored) {
+                log_msg("   * Restored successfully");
+                $sync_count++;
             } else {
-                log_msg("   * File already exists or is not a file");
+                log_msg("   * Restore failed");
             }
+        } else {
+            log_msg("   * Not found in backup");
         }
     } else {
-        log_msg(" - Failed to scandir backup directory");
+        log_msg("   * Already exists in target");
     }
-} else {
-    log_msg(" - Backup or target directory not accessible");
 }
 log_msg(" - Sync completed. Restored $sync_count files.");
 
