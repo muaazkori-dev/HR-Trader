@@ -100,6 +100,28 @@ if ($is_local) {
     define('DB_PASS', 'Haroon124421');
     define('DB_NAME', 'u622906513_hrtrader');
 }
+
+// Auto-heal products upload folder/symlink to prevent Git deployment deletions
+$target_upload_dir = __DIR__ . '/../assets/images/products';
+if ($is_local) {
+    if (!is_dir($target_upload_dir)) {
+        @mkdir($target_upload_dir, 0777, true);
+        @file_put_contents($target_upload_dir . '/.gitkeep', 'keep');
+    }
+} else {
+    $source_upload_dir = '/home/u622906513/product_uploads';
+    if (!is_dir($source_upload_dir)) {
+        @mkdir($source_upload_dir, 0777, true);
+    }
+    // If it is a real directory and NOT a symlink, we remove it (created by Git clone/deploy) to make room for symlink
+    if (is_dir($target_upload_dir) && !is_link($target_upload_dir)) {
+        @unlink($target_upload_dir . '/.gitkeep');
+        @rmdir($target_upload_dir);
+    }
+    if (!file_exists($target_upload_dir)) {
+        @symlink($source_upload_dir, $target_upload_dir);
+    }
+}
 try {
     $pdo = new PDO(
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
