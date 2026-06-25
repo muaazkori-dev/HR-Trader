@@ -1,15 +1,20 @@
 <?php
 header('Content-Type: text/plain; charset=utf-8');
+
+function sanitizePathOutput($str) {
+    return str_replace('/home/u622906513/domains/thehrtraders.com', '[ROOT]', $str);
+}
+
 echo "=== DIRECTORY DIAGNOSTICS ===\n";
 
 $target = __DIR__ . '/assets/images/products';
-echo "Target Path: $target\n";
+echo sanitizePathOutput("Target Path: $target\n");
 if (file_exists($target)) {
     echo "Exists: Yes\n";
     if (is_link($target)) {
         echo "Is Symlink: Yes\n";
         $link_target = @readlink($target);
-        echo "Link Target: " . ($link_target === false ? "FAILED TO READ LINK" : $link_target) . "\n";
+        echo sanitizePathOutput("Link Target: " . ($link_target === false ? "FAILED TO READ LINK" : $link_target) . "\n");
     } else {
         echo "Is Symlink: No (It is a normal directory)\n";
     }
@@ -37,7 +42,7 @@ if (file_exists($target)) {
 
 echo "\n=== SOURCE DIRECTORY ===\n";
 $source = '/home/u622906513/domains/thehrtraders.com/product_uploads';
-echo "Source Path: $source\n";
+echo sanitizePathOutput("Source Path: $source\n");
 if (is_dir($source)) {
     echo "Source Exists: Yes\n";
     $files = @scandir($source);
