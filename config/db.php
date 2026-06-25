@@ -109,17 +109,24 @@ if ($is_local) {
         @file_put_contents($target_upload_dir . '/.gitkeep', 'keep');
     }
 } else {
-    $source_upload_dir = '/home/u622906513/product_uploads';
-    if (!is_dir($source_upload_dir)) {
-        @mkdir($source_upload_dir, 0777, true);
-    }
-    // If it is a real directory and NOT a symlink, we remove it (created by Git clone/deploy) to make room for symlink
-    if (is_dir($target_upload_dir) && !is_link($target_upload_dir)) {
-        @unlink($target_upload_dir . '/.gitkeep');
-        @rmdir($target_upload_dir);
-    }
-    if (!file_exists($target_upload_dir)) {
-        @symlink($source_upload_dir, $target_upload_dir);
+    // Use domain path to bypass open_basedir restrictions and stay safe from git deployment cleanups
+    $source_upload_dir = '/home/u622906513/domains/thehrtraders.com/product_uploads';
+    try {
+        if (!is_dir($source_upload_dir)) {
+            @mkdir($source_upload_dir, 0777, true);
+        }
+        if (function_exists('symlink')) {
+            // If it is a real directory and NOT a symlink, we remove it (created by Git clone/deploy) to make room for symlink
+            if (is_dir($target_upload_dir) && !is_link($target_upload_dir)) {
+                @unlink($target_upload_dir . '/.gitkeep');
+                @rmdir($target_upload_dir);
+            }
+            if (!file_exists($target_upload_dir)) {
+                @symlink($source_upload_dir, $target_upload_dir);
+            }
+        }
+    } catch (Throwable $e) {
+        // Silently catch errors to prevent 500 internal server crash
     }
 }
 try {
