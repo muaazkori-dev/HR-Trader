@@ -164,6 +164,24 @@ try {
         // Ignore
     }
 
+    try {
+        $q = $pdo->query("SHOW COLUMNS FROM products LIKE 'old_price'");
+        if (!$q->fetch()) {
+            $pdo->exec("ALTER TABLE products ADD COLUMN old_price DECIMAL(10,2) NULL DEFAULT NULL");
+        }
+    } catch (PDOException $e) {
+        // Ignore
+    }
+
+    try {
+        $q = $pdo->query("SHOW COLUMNS FROM products LIKE 'discount_percentage'");
+        if (!$q->fetch()) {
+            $pdo->exec("ALTER TABLE products ADD COLUMN discount_percentage INT NOT NULL DEFAULT 0");
+        }
+    } catch (PDOException $e) {
+        // Ignore
+    }
+
     // Automatic orders table migrations (add user_id, payment_method, status if missing)
     try {
         $q = $pdo->query("SHOW COLUMNS FROM orders LIKE 'user_id'");

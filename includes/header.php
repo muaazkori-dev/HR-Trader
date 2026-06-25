@@ -93,12 +93,103 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <link rel="manifest" href="<?php echo BASE_URL; ?>manifest.json">
     <meta name="theme-color" content="#10b981">
     <script>
+        let deferredPrompt;
+        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('<?php echo BASE_URL; ?>sw.js')
                     .then(reg => console.log('Service Worker registered successfully.'))
                     .catch(err => console.log('Service Worker registration failed: ', err));
             });
+        }
+
+        // Handle PWA installation banner prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install banner if it was not dismissed
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner && localStorage.getItem('pwa_banner_dismissed') !== 'true') {
+                banner.classList.remove('hidden');
+            }
+        });
+
+        // Typewriter search placeholder logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const placeholders = [
+                "Search pulses (Daal)...",
+                "Search for Basmati Rice...",
+                "Search fresh Milk...",
+                "Search premium Ghee...",
+                "Search soft drinks...",
+                "Search ice creams...",
+                "Search cosmetics...",
+                "Search bakery items..."
+            ];
+            
+            let currentIdx = 0;
+            let charIdx = 0;
+            let isDeleting = false;
+            let text = '';
+            let typingSpeed = 100;
+            
+            const searchInput = document.getElementById('storefront-search');
+            const searchInputMobile = document.getElementById('storefront-search-mobile');
+            
+            function typeEffect() {
+                const fullPlaceholder = placeholders[currentIdx];
+                
+                if (isDeleting) {
+                    text = fullPlaceholder.substring(0, charIdx - 1);
+                    charIdx--;
+                    typingSpeed = 40;
+                } else {
+                    text = fullPlaceholder.substring(0, charIdx + 1);
+                    charIdx++;
+                    typingSpeed = 80;
+                }
+                
+                if (searchInput) searchInput.setAttribute('placeholder', text);
+                if (searchInputMobile) searchInputMobile.setAttribute('placeholder', text);
+                
+                if (!isDeleting && charIdx === fullPlaceholder.length) {
+                    isDeleting = true;
+                    typingSpeed = 2000; // Pause at end
+                } else if (isDeleting && charIdx === 0) {
+                    isDeleting = false;
+                    currentIdx = (currentIdx + 1) % placeholders.length;
+                    typingSpeed = 400; // Pause before next word
+                }
+                
+                setTimeout(typeEffect, typingSpeed);
+            }
+            
+            if (searchInput || searchInputMobile) {
+                setTimeout(typeEffect, 1000);
+            }
+
+            // Setup install button click listener
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User install choice: ${outcome}`);
+                        deferredPrompt = null;
+                    }
+                    dismissPwaBanner();
+                });
+            }
+        });
+
+        function dismissPwaBanner() {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+            localStorage.setItem('pwa_banner_dismissed', 'true');
         }
     </script>
     <?php if ($google_auth_enabled === '1' && !empty($google_client_id)): ?>
@@ -107,6 +198,23 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <?php endif; ?>
 </head>
 <body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+<!-- PWA Custom Install Banner -->
+<div id="pwa-install-banner" class="hidden bg-emerald-600 text-white px-4 py-3 shadow-md z-[9999] relative flex items-center justify-between gap-4 transition-all duration-300">
+    <div class="flex items-center gap-3">
+        <div class="h-10 w-10 bg-white rounded-xl p-1 flex-shrink-0 flex items-center justify-center shadow-sm">
+            <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="HR Traders Logo" class="h-8 w-8 object-contain">
+        </div>
+        <div class="text-left">
+            <h4 class="font-bold text-xs sm:text-sm">HR Traders App Install Karein!</h4>
+            <p class="text-[9px] sm:text-xs text-emerald-100 leading-tight">Apne home screen par dynamic shortcuts aur shopping app icon lagayein.</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="pwa-install-btn" class="bg-white text-emerald-700 font-bold text-xs px-3.5 py-1.5 rounded-xl hover:bg-emerald-50 transition-all whitespace-nowrap shadow-sm">Install App</button>
+        <button onclick="dismissPwaBanner()" class="text-white/80 hover:text-white p-1 text-sm focus:outline-none"><i class="fas fa-times"></i></button>
+    </div>
+</div>
 
 <!-- STICKY HEADER -->
 <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm text-slate-800">
