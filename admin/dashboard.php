@@ -259,6 +259,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
         $google_auth_enabled_post = isset($_POST['google_auth_enabled']) ? '1' : '0';
         update_setting('google_auth_enabled', $google_auth_enabled_post);
+
+        // 12. Promotional Popup Settings
+        if (isset($_POST['promo_popup_link'])) {
+            update_setting('promo_popup_link', trim($_POST['promo_popup_link']));
+            $success_message = "Store configurations updated successfully.";
+        }
+        $promo_enabled_post = isset($_POST['promo_popup_enabled']) ? '1' : '0';
+        update_setting('promo_popup_enabled', $promo_enabled_post);
+
+        if (isset($_FILES['promo_popup_image']) && $_FILES['promo_popup_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($_FILES['promo_popup_image']['error'] === UPLOAD_ERR_OK) {
+                $file_tmp = $_FILES['promo_popup_image']['tmp_name'];
+                $file_name = $_FILES['promo_popup_image']['name'];
+                $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+                $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                
+                if (in_array($file_ext, $allowed_exts)) {
+                    $new_file_name = 'promo_popup_' . time() . '.' . $file_ext;
+                    $upload_dir = __DIR__ . '/../assets/images/products/';
+                    if (!is_dir($upload_dir)) {
+                        @mkdir($upload_dir, 0777, true);
+                    }
+                    $dest_path = $upload_dir . $new_file_name;
+                    
+                    if (@move_uploaded_file($file_tmp, $dest_path)) {
+                        // Delete old image file from target and backup if exists
+                        $old_promo_img = get_setting('promo_popup_image', '');
+                        if (!empty($old_promo_img)) {
+                            @unlink(__DIR__ . '/../' . $old_promo_img);
+                            @unlink(__DIR__ . '/../../product_uploads/' . basename($old_promo_img));
+                        }
+                        
+                        // Save new image setting
+                        $relative_image_path = 'assets/images/products/' . $new_file_name;
+                        update_setting('promo_popup_image', $relative_image_path);
+                        
+                        // Save backup copy outside public_html
+                        $backup_dir = __DIR__ . '/../../product_uploads/';
+                        if (!is_dir($backup_dir)) {
+                            @mkdir($backup_dir, 0777, true);
+                        }
+                        @copy($dest_path, $backup_dir . $new_file_name);
+                        
+                        $success_message = "Promotional popup configurations updated successfully.";
+                    } else {
+                        $error_message = "Failed to save uploaded promotional image.";
+                    }
+                } else {
+                    $error_message = "Invalid image type. Allowed: " . implode(', ', $allowed_exts);
+                }
+            } else {
+                $error_message = "Image upload failed with error code: " . $_FILES['promo_popup_image']['error'];
+            }
+        }
     }
 }
 
@@ -342,6 +396,11 @@ try {
     $admin_secret_key = get_setting('admin_secret_key', 'hr_secure_desk_99');
     $google_client_id = get_setting('google_client_id', '');
     $google_auth_enabled = get_setting('google_auth_enabled', '0');
+    
+    // Fetch Promotional Popup settings
+    $promo_popup_enabled = get_setting('promo_popup_enabled', '0');
+    $promo_popup_image = get_setting('promo_popup_image', '');
+    $promo_popup_link = get_setting('promo_popup_link', 'shop.php');
 
 } catch (PDOException $e) {
     die("Database query error: " . $e->getMessage());
@@ -1297,6 +1356,80 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                         7. Copy the generated **Client ID** and paste it into the form on the left.
                     </p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Promotional Popup Settings Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <!-- Promo Popup Configurations Form -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-4">
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">Promotional Discount Popup</h3>
+                    <p class="text-[10px] text-slate-505">Configure a floating modal banner to appear when the website is loaded (e.g. flat discount announcements).</p>
+                </div>
+
+                <form action="dashboard.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <input type="hidden" name="action" value="update_settings">
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <div class="space-y-0.5 text-left">
+                            <span class="block text-xs font-bold text-slate-800">Enable Promotional Popup</span>
+                            <span class="block text-[9px] text-slate-400">Show this floating banner card to customers on homepage load</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="promo_popup_enabled" value="1" <?php echo ($promo_popup_enabled === '1') ? 'checked' : ''; ?> class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="text-left space-y-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-650 uppercase mb-1">Popup Banner Image (Avatar/Card)</label>
+                            <input type="file" name="promo_popup_image" accept="image/*"
+                                   class="w-full text-xs text-slate-800 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                            <?php if (!empty($promo_popup_image)): ?>
+                                <div class="mt-2 flex items-center gap-3">
+                                    <span class="text-[9px] text-slate-450">Current Image:</span>
+                                    <img src="<?php echo BASE_URL . $promo_popup_image; ?>" class="h-10 w-16 object-cover rounded border border-slate-200">
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-650 uppercase mb-1">Redirect / Promo Link</label>
+                            <input type="text" name="promo_popup_link" value="<?php echo sanitize($promo_popup_link); ?>" placeholder="e.g. shop.php?category=sauce"
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-mono">
+                            <span class="text-[9px] text-slate-400 block mt-1">URL where customers are taken when they click the banner image.</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest pt-2.5 shadow-md shadow-emerald-600/10">
+                        Save Promo Popup Settings
+                    </button>
+                </form>
+            </div>
+
+            <!-- Promo Instructions/Preview Card -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+                <div class="space-y-3 text-left">
+                    <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-bullhorn text-emerald-600"></i> Promotion Banner Guide
+                    </h3>
+                    <p class="text-[11px] text-slate-505 leading-relaxed">
+                        To announce active discounts (like flat campaigns or seasonal sales):<br><br>
+                        1. **Design a stunning banner image** (recommended ratio: landscape banner).<br>
+                        2. **Upload the banner** in the form on the left.<br>
+                        3. Set the **Redirect Link** to the campaign category or specific product.<br>
+                        4. Toggle **Enable Promotional Popup** ON.<br>
+                        5. The banner will float in front of the storefront when a user first lands on the page. They can close it with a single click.
+                    </p>
+                </div>
+                <?php if (!empty($promo_popup_image) && $promo_popup_enabled === '1'): ?>
+                    <div class="mt-4 p-3 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                        <i class="fas fa-check-circle text-emerald-600 text-lg flex-shrink-0"></i>
+                        <span class="text-xs text-slate-700 font-semibold">Promotion is currently active on your storefront!</span>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 

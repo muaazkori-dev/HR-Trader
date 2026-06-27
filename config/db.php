@@ -471,6 +471,17 @@ try {
                     @copy($b_file, $t_file);
                 }
             }
+
+            // Sync promo popup image if set and missing
+            $promo_img = get_setting('promo_popup_image', '');
+            if (!empty($promo_img)) {
+                $filename = basename($promo_img);
+                $t_file = $target_upload_dir . '/' . $filename;
+                $b_file = $backup_upload_dir . '/' . $filename;
+                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                    @copy($b_file, $t_file);
+                }
+            }
         } catch (Throwable $sync_err) {
             // Silently catch sync errors to prevent crash
         }

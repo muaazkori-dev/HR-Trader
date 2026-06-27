@@ -27,6 +27,12 @@ if (!isset($seo_key)) {
 $google_client_id = get_setting('google_client_id', '');
 $google_auth_enabled = get_setting('google_auth_enabled', '0');
 
+// Promotional Popup Settings
+$promo_popup_enabled = get_setting('promo_popup_enabled', '0');
+$promo_popup_image = get_setting('promo_popup_image', '');
+$promo_popup_link = get_setting('promo_popup_link', 'shop.php');
+
+
 // Set HTML class based on theme type (light or dark)
 $current_theme = get_setting('active_theme', 'emerald_green');
 $dark_themes = ['midnight_indigo', 'cyberpunk_neon', 'deep_purple', 'forest_dark', 'forest_green', 'crimson_dark', 'crimson_rose'];
@@ -206,6 +212,78 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <?php endif; ?>
 </head>
 <body class="theme-<?php echo get_setting('active_theme', 'emerald_green'); ?> bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-x-hidden">
+
+<?php if ($promo_popup_enabled === '1' && !empty($promo_popup_image)): ?>
+<!-- Promotional Floating Popup Modal -->
+<div id="promo-popup-modal" class="fixed inset-0 z-[99999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <!-- Backdrop overlay with blur -->
+    <div onclick="closePromoPopup()" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    
+    <!-- Floating Card Container -->
+    <div class="relative bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl max-w-lg w-[90%] border border-slate-200 dark:border-slate-800 transform scale-95 opacity-0 transition-all duration-300 ease-out" id="promo-popup-card">
+        
+        <!-- Close Button (Top-Right) -->
+        <button onclick="closePromoPopup()" class="absolute top-4 right-4 z-10 h-8 w-8 bg-slate-900/40 hover:bg-slate-900/60 text-white rounded-full flex items-center justify-center transition-all focus:outline-none" title="Close Advertisement">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <!-- Banner Image Link -->
+        <a href="<?php echo BASE_URL . htmlspecialchars($promo_popup_link); ?>" class="block group relative overflow-hidden">
+            <img src="<?php echo BASE_URL . htmlspecialchars($promo_popup_image); ?>" alt="Promotion" class="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-105">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </a>
+        
+        <!-- Footer / Action Row -->
+        <div class="p-4 bg-slate-50 dark:bg-slate-950 flex items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="text-left min-w-0">
+                <span class="block text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest leading-none">Limited Time Deal</span>
+                <span class="block text-xs font-extrabold text-slate-700 dark:text-slate-300 truncate mt-1">Tap banner to shop the offer!</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="closePromoPopup()" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition-all cursor-pointer">Close</button>
+                <a href="<?php echo BASE_URL . htmlspecialchars($promo_popup_link); ?>" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs transition-all uppercase tracking-wider shadow-md shadow-emerald-600/10 whitespace-nowrap">Shop Now</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Show the promotional popup if not dismissed in this session
+        if (sessionStorage.getItem('promo_popup_dismissed') !== 'true') {
+            const modal = document.getElementById('promo-popup-modal');
+            const card = document.getElementById('promo-popup-card');
+            if (modal && card) {
+                // Show modal structure
+                modal.classList.remove('hidden');
+                // Force layout reflow for animation
+                modal.offsetWidth;
+                // Animate opacity and scale
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                card.classList.remove('scale-95', 'opacity-0');
+                card.classList.add('scale-100', 'opacity-100');
+            }
+        }
+    });
+
+    function closePromoPopup() {
+        const modal = document.getElementById('promo-popup-modal');
+        const card = document.getElementById('promo-popup-card');
+        if (modal && card) {
+            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.add('scale-95', 'opacity-0');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        // Save dismissal state in session storage so it doesn't pop up again on page clicks
+        sessionStorage.setItem('promo_popup_dismissed', 'true');
+    }
+</script>
+<?php endif; ?>
 
 <!-- PWA Custom Install Banner -->
 <div id="pwa-install-banner" class="hidden fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-[360px] bg-white text-slate-800 p-3.5 rounded-2xl shadow-2xl border border-slate-150 z-[9999] flex items-center justify-between gap-4 transition-all duration-300 transform -translate-y-10 opacity-0">
