@@ -313,6 +313,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $error_message = "Image upload failed with error code: " . $_FILES['promo_popup_image']['error'];
             }
         }
+
+        // 13. Promo Cards Manager Settings
+        if (isset($_POST['promo_cards_discount']) && is_array($_POST['promo_cards_discount'])) {
+            $promo_cards_json = get_setting('homepage_promo_cards', '');
+            $current_cards = !empty($promo_cards_json) ? json_decode($promo_cards_json, true) : [];
+            $new_cards = [];
+            
+            foreach ($_POST['promo_cards_discount'] as $idx => $discount) {
+                $enabled = isset($_POST['promo_cards_enabled'][$idx]) ? 1 : 0;
+                $link = trim($_POST['promo_cards_link'][$idx] ?? 'shop.php');
+                $image_path = $_POST['promo_cards_old_image'][$idx] ?? '';
+                
+                // Handle file upload for this specific card
+                if (isset($_FILES['promo_cards_image']['name'][$idx]) && $_FILES['promo_cards_image']['error'][$idx] === UPLOAD_ERR_OK) {
+                    $file_tmp = $_FILES['promo_cards_image']['tmp_name'][$idx];
+                    $file_name = $_FILES['promo_cards_image']['name'][$idx];
+                    $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+                    $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    
+                    if (in_array($file_ext, $allowed_exts)) {
+                        $new_file_name = 'promo_card_' . $idx . '_' . time() . '.' . $file_ext;
+                        $upload_dir = __DIR__ . '/../assets/images/products/';
+                        if (!is_dir($upload_dir)) {
+                            @mkdir($upload_dir, 0777, true);
+                        }
+                        $dest_path = $upload_dir . $new_file_name;
+                        
+                        if (@move_uploaded_file($file_tmp, $dest_path)) {
+                            // Delete old custom image to save space
+                            if (!empty($image_path) && strpos($image_path, 'categories/') === false) {
+                                @unlink(__DIR__ . '/../' . $image_path);
+                                @unlink(__DIR__ . '/../../product_uploads/' . basename($image_path));
+                            }
+                            
+                            $image_path = 'assets/images/products/' . $new_file_name;
+                            
+                            // Save backup copy outside public_html
+                            $backup_dir = __DIR__ . '/../../product_uploads/';
+                            if (!is_dir($backup_dir)) {
+                                @mkdir($backup_dir, 0777, true);
+                            }
+                            @copy($dest_path, $backup_dir . $new_file_name);
+                        }
+                    }
+                }
+                
+                $new_cards[] = [
+                    "id" => $idx + 1,
+                    "image" => $image_path,
+                    "discount" => trim($discount),
+                    "link" => $link,
+                    "enabled" => $enabled
+                ];
+            }
+            
+            // If the user wants to add a new card
+            if (isset($_POST['add_new_card'])) {
+                $new_cards[] = [
+                    "id" => count($new_cards) + 1,
+                    "image" => "assets/images/categories/grocery.png",
+                    "discount" => "NEW DEAL",
+                    "link" => "shop.php",
+                    "enabled" => 0
+                ];
+            }
+            
+            // Handle card deletion
+            if (isset($_POST['delete_card_id'])) {
+                $del_id = (int)$_POST['delete_card_id'];
+                $filtered_cards = [];
+                foreach ($new_cards as $c) {
+                    if ($c['id'] !== $del_id) {
+                        $filtered_cards[] = $c;
+                    } else {
+                        // Delete custom image file
+                        if (!empty($c['image']) && strpos($c['image'], 'categories/') === false) {
+                            @unlink(__DIR__ . '/../' . $c['image']);
+                            @unlink(__DIR__ . '/../../product_uploads/' . basename($c['image']));
+                        }
+                    }
+                }
+                // Re-index IDs
+                foreach ($filtered_cards as $k => $c) {
+                    $filtered_cards[$k]['id'] = $k + 1;
+                }
+                $new_cards = $filtered_cards;
+            }
+            
+            update_setting('homepage_promo_cards', json_encode($new_cards));
+            $success_message = "Promo cards configurations updated successfully.";
+        }
     }
 }
 
@@ -401,6 +492,25 @@ try {
     $promo_popup_enabled = get_setting('promo_popup_enabled', '0');
     $promo_popup_image = get_setting('promo_popup_image', '');
     $promo_popup_link = get_setting('promo_popup_link', 'shop.php');
+
+    // Fetch Promotional Cards settings
+    $promo_cards_json = get_setting('homepage_promo_cards', '');
+    if (empty($promo_cards_json)) {
+        $default_cards = [
+            ["id" => 1, "image" => "assets/images/categories/anaj.png", "discount" => "UP TO 15% OFF", "link" => "shop.php?category=anaj", "enabled" => 1],
+            ["id" => 2, "image" => "assets/images/categories/grocery.png", "discount" => "FLAT 10% OFF", "link" => "shop.php?category=grocery", "enabled" => 1],
+            ["id" => 3, "image" => "assets/images/categories/ice_cream.png", "discount" => "UP TO 20% OFF", "link" => "shop.php?category=ice_cream", "enabled" => 1],
+            ["id" => 4, "image" => "assets/images/categories/beverages.png", "discount" => "FLAT 15% OFF", "link" => "shop.php?category=beverages", "enabled" => 1],
+            ["id" => 5, "image" => "assets/images/categories/milk.png", "discount" => "FLAT 5% OFF", "link" => "shop.php?category=milk", "enabled" => 1],
+            ["id" => 6, "image" => "assets/images/categories/cosmetics.png", "discount" => "UP TO 35% OFF", "link" => "shop.php?category=cosmetics", "enabled" => 1],
+            ["id" => 7, "image" => "assets/images/categories/snacks.png", "discount" => "UP TO 25% OFF", "link" => "shop.php?category=snacks", "enabled" => 1],
+            ["id" => 8, "image" => "assets/images/categories/bakery.png", "discount" => "FLAT 20% OFF", "link" => "shop.php?category=bakery", "enabled" => 1],
+            ["id" => 9, "image" => "assets/images/categories/sauce.png", "discount" => "UP TO 30% OFF", "link" => "shop.php?category=sauce", "enabled" => 1]
+        ];
+        $promo_cards = $default_cards;
+    } else {
+        $promo_cards = json_decode($promo_cards_json, true);
+    }
 
 } catch (PDOException $e) {
     die("Database query error: " . $e->getMessage());
@@ -1432,6 +1542,94 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                 <?php endif; ?>
             </div>
         </div>
+
+        <!-- Homepage Promo Cards Manager Panel -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm mt-8 space-y-6">
+            <div>
+                <h3 class="font-bold text-base text-slate-900">Homepage Auto-Scrolling Promo Cards</h3>
+                <p class="text-[10px] text-slate-505">Manage the cards that slide horizontally on the storefront homepage (replaces the old static categories grid).</p>
+            </div>
+
+            <form action="dashboard.php" method="POST" enctype="multipart/form-data" id="promo-cards-form" class="space-y-4">
+                <input type="hidden" name="action" value="update_settings">
+                <input type="hidden" name="delete_card_id" id="delete-card-id" value="">
+                <input type="hidden" name="add_new_card" id="add-new-card" value="">
+
+                <div class="space-y-4 divide-y divide-slate-100">
+                    <?php foreach ($promo_cards as $idx => $card): ?>
+                    <div class="pt-4 first:pt-0 flex flex-col md:flex-row md:items-center gap-4 text-left">
+                        
+                        <!-- Thumbnail and Upload -->
+                        <div class="flex items-center gap-3 md:w-1/3">
+                            <div class="h-12 w-12 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex-shrink-0 flex items-center justify-center">
+                                <img src="<?php echo BASE_URL . htmlspecialchars($card['image']); ?>" alt="Card Preview" class="h-full w-full object-contain">
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <label class="block text-[9px] font-bold text-slate-600 uppercase mb-0.5 font-sans">Change Image</label>
+                                <input type="hidden" name="promo_cards_old_image[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($card['image']); ?>">
+                                <input type="file" name="promo_cards_image[<?php echo $idx; ?>]" accept="image/*"
+                                       class="w-full text-[10px] text-slate-550 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
+                            </div>
+                        </div>
+
+                        <!-- Discount Label -->
+                        <div class="md:w-1/4">
+                            <label class="block text-[9px] font-bold text-slate-600 uppercase mb-1 font-sans">Discount Tag Text</label>
+                            <input type="text" name="promo_cards_discount[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($card['discount']); ?>" required
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805">
+                        </div>
+
+                        <!-- Redirect Link -->
+                        <div class="md:w-1/4">
+                            <label class="block text-[9px] font-bold text-slate-600 uppercase mb-1 font-sans">Redirect URL/Link</label>
+                            <input type="text" name="promo_cards_link[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($card['link']); ?>" required
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805 font-mono">
+                        </div>
+
+                        <!-- Status Toggle & Delete Action -->
+                        <div class="flex items-center justify-between md:justify-end gap-6 md:w-1/6 pt-2 md:pt-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase font-sans">Active</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="promo_cards_enabled[<?php echo $idx; ?>]" value="1" <?php echo ($card['enabled'] == 1) ? 'checked' : ''; ?> class="sr-only peer">
+                                    <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                </label>
+                            </div>
+                            
+                            <button type="button" onclick="deletePromoCard(<?php echo $card['id']; ?>)" 
+                                    class="text-rose-500 hover:text-rose-700 text-sm p-1.5 hover:bg-rose-55 rounded-lg transition-all" title="Delete Card">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <button type="button" onclick="addNewPromoCard()" 
+                            class="px-4 py-2 border border-slate-205 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 font-sans">
+                        <i class="fas fa-plus"></i> Add New Promo Card
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest shadow-md shadow-emerald-600/10 font-sans">
+                        Save Promo Cards Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            function deletePromoCard(id) {
+                if (confirm('Are you sure you want to delete this promo card?')) {
+                    document.getElementById('delete-card-id').value = id;
+                    document.getElementById('promo-cards-form').submit();
+                }
+            }
+            function addNewPromoCard() {
+                document.getElementById('add-new-card').value = '1';
+                document.getElementById('promo-cards-form').submit();
+            }
+        </script>
 
     </div>
     <?php endif; ?>

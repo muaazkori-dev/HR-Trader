@@ -80,114 +80,126 @@ try {
     </div>
 </section>
 
-<!-- CATEGORIES QUICK LOOKUP -->
-<section class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-    <div class="text-center space-y-2 mb-10">
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Browse By Categories</h2>
-        <p class="text-sm text-slate-500">Select a category to filter your grocery requirements</p>
+<?php
+// Fetch Promotional Cards settings
+$promo_cards_json = get_setting('homepage_promo_cards', '');
+if (empty($promo_cards_json)) {
+    $default_cards = [
+        ["id" => 1, "image" => "assets/images/categories/anaj.png", "discount" => "UP TO 15% OFF", "link" => "shop.php?category=anaj", "enabled" => 1],
+        ["id" => 2, "image" => "assets/images/categories/grocery.png", "discount" => "FLAT 10% OFF", "link" => "shop.php?category=grocery", "enabled" => 1],
+        ["id" => 3, "image" => "assets/images/categories/ice_cream.png", "discount" => "UP TO 20% OFF", "link" => "shop.php?category=ice_cream", "enabled" => 1],
+        ["id" => 4, "image" => "assets/images/categories/beverages.png", "discount" => "FLAT 15% OFF", "link" => "shop.php?category=beverages", "enabled" => 1],
+        ["id" => 5, "image" => "assets/images/categories/milk.png", "discount" => "FLAT 5% OFF", "link" => "shop.php?category=milk", "enabled" => 1],
+        ["id" => 6, "image" => "assets/images/categories/cosmetics.png", "discount" => "UP TO 35% OFF", "link" => "shop.php?category=cosmetics", "enabled" => 1],
+        ["id" => 7, "image" => "assets/images/categories/snacks.png", "discount" => "UP TO 25% OFF", "link" => "shop.php?category=snacks", "enabled" => 1],
+        ["id" => 8, "image" => "assets/images/categories/bakery.png", "discount" => "FLAT 20% OFF", "link" => "shop.php?category=bakery", "enabled" => 1],
+        ["id" => 9, "image" => "assets/images/categories/sauce.png", "discount" => "UP TO 30% OFF", "link" => "shop.php?category=sauce", "enabled" => 1]
+    ];
+    $promo_cards = $default_cards;
+} else {
+    $promo_cards = json_decode($promo_cards_json, true);
+}
+$active_promo_cards = array_filter($promo_cards, function($c) { return isset($c['enabled']) && $c['enabled'] == 1; });
+?>
+
+<?php if (!empty($active_promo_cards)): ?>
+<!-- Style for Auto-Scrolling Marquee -->
+<style>
+    @keyframes marqueeScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-50% - 12px)); }
+    }
+    
+    .marquee-container {
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        user-select: none;
+        position: relative;
+    }
+    
+    .marquee-container::before,
+    .marquee-container::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100px;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .marquee-container::before {
+        left: 0;
+        background: linear-gradient(to right, rgb(248, 250, 252) 10%, rgba(248, 250, 252, 0) 100%);
+    }
+    .dark .marquee-container::before {
+        background: linear-gradient(to right, rgb(15, 23, 42) 10%, rgba(15, 23, 42, 0) 100%);
+    }
+    
+    .marquee-container::after {
+        right: 0;
+        background: linear-gradient(to left, rgb(248, 250, 252) 10%, rgba(248, 250, 252, 0) 100%);
+    }
+    .dark .marquee-container::after {
+        background: linear-gradient(to left, rgb(15, 23, 42) 10%, rgba(15, 23, 42, 0) 100%);
+    }
+    
+    .marquee-track {
+        display: flex;
+        width: max-content;
+        gap: 24px;
+        padding: 12px 0;
+        animation: marqueeScroll 30s linear infinite;
+    }
+    
+    .marquee-container:hover .marquee-track {
+        animation-play-state: paused;
+    }
+</style>
+
+<!-- HOT DEALS AUTO-SCROLLING MARQUEE -->
+<section class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 border-t border-slate-200/50">
+    <div class="text-center space-y-2 mb-8">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Active Store Hot Deals</h2>
+        <p class="text-sm text-slate-500">Tap on any card to browse the discount collection directly</p>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
-        <!-- Category 1: Anaj -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo get_category_icon_url('anaj'); ?>" alt="Anaj" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Anaj</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">اناج</p>
-            </div>
-        </a>
-
-        <!-- Category 1.5: Grocery -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=grocery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo get_category_icon_url('grocery'); ?>" alt="Grocery" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Grocery</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">گروسری</p>
-            </div>
-        </a>
-
-        <!-- Category 2: Ice Cream -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
-                <img src="<?php echo get_category_icon_url('ice_cream'); ?>" alt="Ice Cream" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Ice Cream</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">آئس کریم</p>
-            </div>
-        </a>
-
-        <!-- Category 3: Beverages -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
-                <img src="<?php echo get_category_icon_url('beverages'); ?>" alt="Beverages" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Beverages</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">مشروبات</p>
-            </div>
-        </a>
-
-        <!-- Category 4: Milk -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
-                <img src="<?php echo get_category_icon_url('milk'); ?>" alt="Milk" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Milk</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">دودھ</p>
-            </div>
-        </a>
-
-        <!-- Category 5: Cosmetics -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
-                <img src="<?php echo get_category_icon_url('cosmetics'); ?>" alt="Cosmetics" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Cosmetics</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">کاسمیٹکس</p>
-            </div>
-        </a>
-
-        <!-- Category 6: Snacks -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=snacks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200 bg-white">
-                <img src="<?php echo get_category_icon_url('snacks'); ?>" alt="Snacks" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Snacks</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سنیکس</p>
-            </div>
-        </a>
-
-        <!-- Category 7: Bakery -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=bakery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-orange-200 bg-white">
-                <img src="<?php echo get_category_icon_url('bakery'); ?>" alt="Bakery" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Bakery</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">بیکری</p>
-            </div>
-        </a>
-
-        <!-- Category 8: Sauce -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=sauce#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-red-200 bg-white">
-                <img src="<?php echo get_category_icon_url('sauce'); ?>" alt="Sauces" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800">Sauces</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سوس</p>
-            </div>
-        </a>
+    <div class="marquee-container py-2">
+        <div class="marquee-track">
+            <?php 
+            // Loop twice to construct a gapless infinite loop
+            for ($loop = 0; $loop < 2; $loop++):
+                foreach ($active_promo_cards as $card): 
+            ?>
+                <!-- Marquee Card -->
+                <a href="<?php echo BASE_URL . htmlspecialchars($card['link']); ?>" 
+                   class="relative flex-shrink-0 w-44 h-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center justify-between group overflow-hidden">
+                    
+                    <!-- Discount Ribbon/Tag -->
+                    <div class="absolute top-2 left-2 bg-gradient-to-r from-rose-600 to-red-500 text-white font-black text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-10 font-sans">
+                        <?php echo htmlspecialchars($card['discount']); ?>
+                    </div>
+                    
+                    <!-- Product/Brand Image -->
+                    <div class="w-24 h-24 flex items-center justify-center mt-6 transition-transform duration-500 group-hover:scale-110">
+                        <img src="<?php echo BASE_URL . htmlspecialchars($card['image']); ?>" 
+                             alt="Deal Image" class="max-w-full max-h-full object-contain rounded">
+                    </div>
+                    
+                    <!-- Action Link -->
+                    <span class="text-[9px] font-extrabold text-emerald-650 dark:text-emerald-500 group-hover:text-emerald-500 transition-colors uppercase tracking-wider font-sans mb-1 flex items-center gap-1">
+                        Shop Now <i class="fas fa-arrow-right text-[8px] transform group-hover:translate-x-0.5 transition-transform"></i>
+                    </span>
+                </a>
+            <?php 
+                endforeach;
+            endfor; 
+            ?>
+        </div>
     </div>
 </section>
+<?php endif; ?>
 
 
 <!-- FEATURED PRODUCTS GRID -->

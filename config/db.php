@@ -482,6 +482,25 @@ try {
                     @copy($b_file, $t_file);
                 }
             }
+
+            // Sync promo cards images if set and missing
+            $promo_cards_json = get_setting('homepage_promo_cards', '');
+            if (!empty($promo_cards_json)) {
+                $cards = json_decode($promo_cards_json, true);
+                if (is_array($cards)) {
+                    foreach ($cards as $c) {
+                        $img = $c['image'] ?? '';
+                        if (!empty($img) && strpos($img, 'categories/') === false) {
+                            $filename = basename($img);
+                            $t_file = $target_upload_dir . '/' . $filename;
+                            $b_file = $backup_upload_dir . '/' . $filename;
+                            if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                                @copy($b_file, $t_file);
+                            }
+                        }
+                    }
+                }
+            }
         } catch (Throwable $sync_err) {
             // Silently catch sync errors to prevent crash
         }
