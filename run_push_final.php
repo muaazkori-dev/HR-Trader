@@ -1,4 +1,6 @@
 <?php
-http_response_code(404);
-echo "404 Not Found";
+header('Content-Type: text/plain; charset=utf-8');
+echo "=== RUNNING FINAL PUSH ===\n";
+$output = shell_exec("cmd /c \"d:\\xampp orginal\\htdocs\\HR Traders\\git_push.bat\" 2>&1");
+echo $output;
 ?>
