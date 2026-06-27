@@ -501,6 +501,20 @@ try {
                     }
                 }
             }
+
+            // Sync category custom icons if missing from disk
+            $categories_keys = ['anaj', 'grocery', 'ice_cream', 'beverages', 'milk', 'cosmetics', 'snacks', 'bakery', 'sauce'];
+            foreach ($categories_keys as $cat_k) {
+                $t_file = __DIR__ . '/../assets/images/categories/' . $cat_k . '.png';
+                $b_file = __DIR__ . '/../product_uploads/categories/' . $cat_k . '.png';
+                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                    $cat_dir = dirname($t_file);
+                    if (!@is_dir($cat_dir)) {
+                        @mkdir($cat_dir, 0777, true);
+                    }
+                    @copy($b_file, $t_file);
+                }
+            }
         } catch (Throwable $sync_err) {
             // Silently catch sync errors to prevent crash
         }

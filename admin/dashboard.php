@@ -252,6 +252,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
         
+        // Category Icons Upload
+        if (isset($_FILES['category_icon']) && is_array($_FILES['category_icon']['name'])) {
+            $cat_icons_updated = false;
+            foreach ($_FILES['category_icon']['name'] as $cat_key => $filename) {
+                if (empty($filename)) continue;
+                
+                $tmp_name = $_FILES['category_icon']['tmp_name'][$cat_key];
+                $error = $_FILES['category_icon']['error'][$cat_key];
+                
+                if ($error === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg'])) {
+                        $target_name = $cat_key . '.png';
+                        $target_path = __DIR__ . '/../assets/images/categories/' . $target_name;
+                        
+                        $cat_dir = dirname($target_path);
+                        if (!is_dir($cat_dir)) {
+                            mkdir($cat_dir, 0777, true);
+                        }
+                        
+                        if (move_uploaded_file($tmp_name, $target_path)) {
+                            // Backup copy for self-healing
+                            $backup_dir = __DIR__ . '/../product_uploads/categories';
+                            if (!is_dir($backup_dir)) {
+                                mkdir($backup_dir, 0777, true);
+                            }
+                            copy($target_path, $backup_dir . '/' . $target_name);
+                            $cat_icons_updated = true;
+                        }
+                    }
+                }
+            }
+            if ($cat_icons_updated) {
+                $success_message = "Category icons updated successfully.";
+            }
+        }
+        
         // 11. Google Auth Settings
         if (isset($_POST['google_client_id'])) {
             update_setting('google_client_id', trim($_POST['google_client_id']));
@@ -1613,6 +1650,53 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                     </button>
                     <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest shadow-md shadow-emerald-600/10 font-sans">
                         Save Promo Cards Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Store Category Icons Manager Panel -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm mt-8 space-y-6">
+            <div>
+                <h3 class="font-bold text-base text-slate-900">Store Category Icons Manager</h3>
+                <p class="text-[10px] text-slate-505">Upload custom images/icons for each storefront department category (overrides standard SVG defaults).</p>
+            </div>
+
+            <form action="dashboard.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <input type="hidden" name="action" value="update_settings">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <?php
+                    $categories_list = [
+                        'anaj' => 'Anaj (Grains & Pulses)',
+                        'grocery' => 'Grocery',
+                        'ice_cream' => 'Ice Cream',
+                        'beverages' => 'Beverages',
+                        'milk' => 'Milk',
+                        'cosmetics' => 'Cosmetics',
+                        'snacks' => 'Snacks',
+                        'bakery' => 'Bakery',
+                        'sauce' => 'Sauces'
+                    ];
+                    foreach ($categories_list as $cat_key => $cat_name):
+                        $current_icon = get_category_icon_url($cat_key);
+                    ?>
+                    <div class="p-4 border border-slate-100 rounded-2xl flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex-shrink-0 flex items-center justify-center">
+                            <img src="<?php echo htmlspecialchars($current_icon); ?>" alt="Icon Preview" class="h-full w-full object-contain">
+                        </div>
+                        <div class="min-w-0 flex-1 space-y-1">
+                            <span class="block text-xs font-bold text-slate-800 truncate"><?php echo $cat_name; ?></span>
+                            <input type="file" name="category_icon[<?php echo $cat_key; ?>]" accept="image/*"
+                                   class="w-full text-[9px] text-slate-550 file:mr-2 file:py-0.5 file:px-1.5 file:rounded-md file:border-0 file:text-[8px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 text-right">
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest shadow-md shadow-emerald-600/10 font-sans">
+                        Save Category Icons
                     </button>
                 </div>
             </form>

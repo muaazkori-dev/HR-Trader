@@ -35,17 +35,18 @@ try {
     <div class="slider-container max-w-7xl mx-auto relative px-4 overflow-visible">
         <div class="slider-track flex gap-4 md:gap-6 transition-transform duration-500 ease-out" style="width: max-content;">
             
-            <!-- Slide 1 -->
-            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-200 via-slate-100 to-emerald-100/30 flex items-center justify-between px-6 sm:px-12 border border-slate-200/60 dark:border-slate-800 transition-all duration-500">
-                <div class="max-w-md space-y-2 sm:space-y-3 text-left">
-                    <span class="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Organic Crops</span>
-                    <h1 class="text-xl sm:text-4xl font-black text-slate-900 leading-tight">Fresh Pulses & Grains</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-550 leading-relaxed font-sans">Directly sourced from premium farms. Pure, machine-cleaned, and packed under strict hygiene conditions.</p>
-                    <a href="<?php echo BASE_URL; ?>shop.php?category=anaj" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
-                        Explore Pulses <i class="fas fa-arrow-right text-[10px]"></i>
-                    </a>
+            <!-- Slide 1 (Dynamic Premium Banner) -->
+            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-cover bg-center relative border border-slate-200/60 dark:border-slate-800 transition-all duration-500" style="background-image: url('<?php echo BASE_URL; ?>assets/images/hero_grocery_banner.png');">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/35 to-transparent flex items-center px-6 sm:px-12">
+                    <div class="max-w-md space-y-2 sm:space-y-3 text-left text-white">
+                        <span class="inline-block bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Premium Choice</span>
+                        <h1 class="text-xl sm:text-4xl font-black leading-tight text-white">Your Premium Grocery Partner</h1>
+                        <p class="text-[10px] sm:text-xs text-slate-200 leading-relaxed font-sans">Fresh organic crops, pulses, groceries, and premium household brands delivered straight to your home.</p>
+                        <a href="<?php echo BASE_URL; ?>shop.php" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
+                            Shop Now <i class="fas fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="hidden sm:block text-emerald-600/10 text-9xl pr-4"><i class="fas fa-seedling"></i></div>
             </div>
 
             <!-- Slide 2 -->
