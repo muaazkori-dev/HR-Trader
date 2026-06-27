@@ -189,7 +189,17 @@ $active_promo_cards = array_filter($promo_cards, function($c) { return isset($c[
                     
                     <!-- Product/Brand Image -->
                     <div class="w-24 h-24 flex items-center justify-center mt-6 transition-transform duration-500 group-hover:scale-110">
-                        <img src="<?php echo BASE_URL . htmlspecialchars($card['image']); ?>" 
+                        <?php
+                        $card_img = $card['image'];
+                        if (strpos($card_img, 'categories/') !== false) {
+                            $filename = basename($card_img);
+                            $cat_key = pathinfo($filename, PATHINFO_FILENAME);
+                            $card_img_url = get_category_icon_url($cat_key);
+                        } else {
+                            $card_img_url = BASE_URL . $card_img;
+                        }
+                        ?>
+                        <img src="<?php echo htmlspecialchars($card_img_url); ?>" 
                              alt="Deal Image" class="max-w-full max-h-full object-contain rounded">
                     </div>
                     
