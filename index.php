@@ -31,38 +31,57 @@ try {
 ?>
 
 <!-- DYNAMIC SLIDING BANNER (DEAL SLIDER) -->
-<section class="relative bg-slate-100 border-b border-slate-200 h-[280px] sm:h-[400px] slider-container">
-    
-    <!-- Slide 1 -->
-    <div class="slide active bg-gradient-to-r from-slate-200 via-slate-100 to-emerald-100/30 flex items-center justify-between px-6 sm:px-12 lg:px-24">
-        <div class="max-w-xl space-y-3 sm:space-y-4">
-            <span class="inline-block bg-emerald-100 text-emerald-700 border border-emerald-200/50 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Organic Crops</span>
-            <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 leading-tight">Fresh Pulses & Grains</h1>
-            <p class="text-xs sm:text-sm text-slate-600">Directly sourced from premium farms. Pure, machine-cleaned, and packed under strict hygiene conditions for your health.</p>
-            <a href="<?php echo BASE_URL; ?>shop.php?category=anaj" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/10">
-                Explore Pulses <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div class="hidden md:block text-emerald-600/5 text-[180px] pr-12"><i class="fas fa-seedling"></i></div>
-    </div>
+<section class="relative bg-slate-50 dark:bg-slate-950 py-8 overflow-hidden border-b border-slate-200/50">
+    <div class="slider-container max-w-7xl mx-auto relative px-4 overflow-visible">
+        <div class="slider-track flex gap-4 md:gap-6 transition-transform duration-500 ease-out" style="width: max-content;">
+            
+            <!-- Slide 1 -->
+            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-200 via-slate-100 to-emerald-100/30 flex items-center justify-between px-6 sm:px-12 border border-slate-200/60 dark:border-slate-800 transition-all duration-500">
+                <div class="max-w-md space-y-2 sm:space-y-3 text-left">
+                    <span class="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Organic Crops</span>
+                    <h1 class="text-xl sm:text-4xl font-black text-slate-900 leading-tight">Fresh Pulses & Grains</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-550 leading-relaxed font-sans">Directly sourced from premium farms. Pure, machine-cleaned, and packed under strict hygiene conditions.</p>
+                    <a href="<?php echo BASE_URL; ?>shop.php?category=anaj" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
+                        Explore Pulses <i class="fas fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+                <div class="hidden sm:block text-emerald-600/10 text-9xl pr-4"><i class="fas fa-seedling"></i></div>
+            </div>
 
-    <!-- Slide 2 -->
-    <div class="slide bg-gradient-to-r from-slate-200 via-slate-100 to-teal-100/30 flex items-center justify-between px-6 sm:px-12 lg:px-24">
-        <div class="max-w-xl space-y-3 sm:space-y-4">
-            <span class="inline-block bg-teal-100 text-teal-700 border border-teal-200/50 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Beat The Heat</span>
-            <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 leading-tight">Quench Your Thirst</h1>
-            <p class="text-xs sm:text-sm text-slate-600">Carbonated soft drinks, juices, mineral water bottles, and energy drinks delivered straight to your doorstep ice cold.</p>
-            <a href="<?php echo BASE_URL; ?>shop.php?category=beverages" class="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-teal-600/10">
-                Shop Beverages <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div class="hidden md:block text-teal-600/5 text-[180px] pr-12"><i class="fas fa-glass-water"></i></div>
-    </div>
+            <!-- Slide 2 -->
+            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-200 via-slate-100 to-teal-100/30 flex items-center justify-between px-6 sm:px-12 border border-slate-200/60 dark:border-slate-800 transition-all duration-500">
+                <div class="max-w-md space-y-2 sm:space-y-3 text-left">
+                    <span class="inline-block bg-teal-100 text-teal-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Beat The Heat</span>
+                    <h1 class="text-xl sm:text-4xl font-black text-slate-900 leading-tight">Quench Your Thirst</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-550 leading-relaxed font-sans">Carbonated soft drinks, juices, mineral water bottles, and energy drinks delivered straight to your doorstep ice cold.</p>
+                    <a href="<?php echo BASE_URL; ?>shop.php?category=beverages" class="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
+                        Shop Beverages <i class="fas fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+                <div class="hidden sm:block text-teal-600/10 text-9xl pr-4"><i class="fas fa-glass-water"></i></div>
+            </div>
 
-    <!-- Slide Dot Indicators -->
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-        <button onclick="setSlide(0)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
-        <button onclick="setSlide(1)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
+            <!-- Slide 3 -->
+            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-200 via-slate-100 to-cyan-100/30 flex items-center justify-between px-6 sm:px-12 border border-slate-200/60 dark:border-slate-800 transition-all duration-500">
+                <div class="max-w-md space-y-2 sm:space-y-3 text-left">
+                    <span class="inline-block bg-cyan-100 text-cyan-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Frozen Delights</span>
+                    <h1 class="text-xl sm:text-4xl font-black text-slate-900 leading-tight">Frozen Ice Creams</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-550 leading-relaxed font-sans">Family pack ice creams and chicken frozen snacks. *Available for nearby Lahore locations only to maintain cold-chain storage.</p>
+                    <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream" class="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
+                        Browse Frozen Items <i class="fas fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+                <div class="hidden sm:block text-cyan-600/10 text-9xl pr-4"><i class="fas fa-ice-cream"></i></div>
+            </div>
+
+        </div>
+        
+        <!-- Slide Dot Indicators -->
+        <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+            <button onclick="setSlide(0)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
+            <button onclick="setSlide(1)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
+            <button onclick="setSlide(2)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
+        </div>
     </div>
 </section>
 
@@ -421,36 +440,75 @@ $active_promo_cards = array_filter($promo_cards, function($c) { return isset($c[
 <!-- JAVASCRIPT FOR DEAL SLIDER -->
 <script>
 let activeSlideIndex = 0;
-const slides = document.querySelectorAll('.slide');
-const dots = document.querySelectorAll('.slide-dot');
 
 function showSlide(index) {
+    const container = document.querySelector('.slider-container');
+    const track = document.querySelector('.slider-track');
+    const slides = document.querySelectorAll('.slide-card');
+    const dots = document.querySelectorAll('.slide-dot');
+    
+    if (!container || !track || slides.length === 0) return;
+    
+    activeSlideIndex = index;
+    
     slides.forEach((slide, i) => {
         if (i === index) {
-            slide.classList.add('active');
-            dots[i].classList.remove('bg-slate-300');
-            dots[i].classList.add('bg-emerald-600', 'w-6'); // active dot style
+            slide.classList.add('scale-100', 'opacity-100', 'shadow-xl');
+            slide.classList.remove('scale-90', 'opacity-50');
+            if (dots[i]) {
+                dots[i].classList.remove('bg-slate-300');
+                dots[i].classList.add('bg-emerald-600', 'w-6');
+            }
         } else {
-            slide.classList.remove('active');
-            dots[i].classList.add('bg-slate-300');
-            dots[i].classList.remove('bg-emerald-600', 'w-6');
+            slide.classList.remove('scale-100', 'opacity-100', 'shadow-xl');
+            slide.classList.add('scale-90', 'opacity-50');
+            if (dots[i]) {
+                dots[i].classList.add('bg-slate-300');
+                dots[i].classList.remove('bg-emerald-600', 'w-6');
+            }
         }
     });
-    activeSlideIndex = index;
+    
+    // Calculate translate offset to center the active slide dynamically
+    const activeSlide = slides[index];
+    const containerWidth = container.offsetWidth;
+    const slideWidth = activeSlide.offsetWidth;
+    const slideLeft = activeSlide.offsetLeft;
+    
+    const translateX = (containerWidth / 2) - (slideLeft + (slideWidth / 2));
+    track.style.transform = `translateX(${translateX}px)`;
 }
 
 function setSlide(index) {
     showSlide(index);
+    resetInterval();
 }
 
-// Auto slider rotation
-let slideInterval = setInterval(() => {
-    let next = (activeSlideIndex + 1) % slides.length;
-    showSlide(next);
-}, 5000);
+let slideInterval;
+function startInterval() {
+    slideInterval = setInterval(() => {
+        const slides = document.querySelectorAll('.slide-card');
+        if (slides.length > 0) {
+            let next = (activeSlideIndex + 1) % slides.length;
+            showSlide(next);
+        }
+    }, 5000);
+}
+function resetInterval() {
+    clearInterval(slideInterval);
+    startInterval();
+}
 
-// Initialize slide dots
-showSlide(0);
+window.addEventListener('load', () => {
+    showSlide(0);
+    startInterval();
+});
+window.addEventListener('resize', () => {
+    showSlide(activeSlideIndex);
+});
+document.addEventListener('DOMContentLoaded', () => {
+    showSlide(0);
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
