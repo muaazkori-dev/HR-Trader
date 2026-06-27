@@ -59,24 +59,10 @@ try {
         <div class="hidden md:block text-teal-600/5 text-[180px] pr-12"><i class="fas fa-glass-water"></i></div>
     </div>
 
-    <!-- Slide 3 -->
-    <div class="slide bg-gradient-to-r from-slate-200 via-slate-100 to-cyan-100/30 flex items-center justify-between px-6 sm:px-12 lg:px-24">
-        <div class="max-w-xl space-y-3 sm:space-y-4">
-            <span class="inline-block bg-cyan-100 text-cyan-700 border border-cyan-200/50 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Frozen Delights</span>
-            <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 leading-tight">Frozen Ice Creams</h1>
-            <p class="text-xs sm:text-sm text-slate-600">Family pack ice creams and chicken frozen snacks. *Available for nearby Lahore locations only to maintain cold-chain storage.</p>
-            <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream" class="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-cyan-600/10">
-                Browse Frozen Items <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div class="hidden md:block text-cyan-600/5 text-[180px] pr-12"><i class="fas fa-ice-cream"></i></div>
-    </div>
-
     <!-- Slide Dot Indicators -->
     <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
         <button onclick="setSlide(0)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
         <button onclick="setSlide(1)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
-        <button onclick="setSlide(2)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
     </div>
 </section>
 
@@ -201,6 +187,114 @@ $active_promo_cards = array_filter($promo_cards, function($c) { return isset($c[
 </section>
 <?php endif; ?>
 
+<!-- CATEGORIES QUICK LOOKUP -->
+<section class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 border-t border-slate-200/50">
+    <div class="text-center space-y-2 mb-10">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Browse By Categories</h2>
+        <p class="text-sm text-slate-500">Select a category to filter your grocery requirements</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
+        <!-- Category 1: Anaj -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
+                <img src="<?php echo get_category_icon_url('anaj'); ?>" alt="Anaj" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Anaj</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">اناج</p>
+            </div>
+        </a>
+
+        <!-- Category 1.5: Grocery -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=grocery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
+                <img src="<?php echo get_category_icon_url('grocery'); ?>" alt="Grocery" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Grocery</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">گروسری</p>
+            </div>
+        </a>
+
+        <!-- Category 2: Ice Cream -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
+                <img src="<?php echo get_category_icon_url('ice_cream'); ?>" alt="Ice Cream" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Ice Cream</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">آئس کریم</p>
+            </div>
+        </a>
+
+        <!-- Category 3: Beverages -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
+                <img src="<?php echo get_category_icon_url('beverages'); ?>" alt="Beverages" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Beverages</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">مشروبات</p>
+            </div>
+        </a>
+
+        <!-- Category 4: Milk -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
+                <img src="<?php echo get_category_icon_url('milk'); ?>" alt="Milk" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Milk</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">دودھ</p>
+            </div>
+        </a>
+
+        <!-- Category 5: Cosmetics -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
+                <img src="<?php echo get_category_icon_url('cosmetics'); ?>" alt="Cosmetics" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Cosmetics</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">کاسمیٹکس</p>
+            </div>
+        </a>
+
+        <!-- Category 6: Snacks -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=snacks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200 bg-white">
+                <img src="<?php echo get_category_icon_url('snacks'); ?>" alt="Snacks" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Snacks</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سنیکس</p>
+            </div>
+        </a>
+
+        <!-- Category 7: Bakery -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=bakery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-orange-200 bg-white">
+                <img src="<?php echo get_category_icon_url('bakery'); ?>" alt="Bakery" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Bakery</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">بیکری</p>
+            </div>
+        </a>
+
+        <!-- Category 8: Sauce -->
+        <a href="<?php echo BASE_URL; ?>shop.php?category=sauce#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-red-200 bg-white">
+                <img src="<?php echo get_category_icon_url('sauce'); ?>" alt="Sauces" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205">Sauces</h4>
+                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سوس</p>
+            </div>
+        </a>
+    </div>
+</section>
 
 <!-- FEATURED PRODUCTS GRID -->
 <section class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 border-t border-slate-200">
