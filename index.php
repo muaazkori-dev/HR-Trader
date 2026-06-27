@@ -86,8 +86,6 @@ try {
     </div>
 </section>
 
-<?php
-
 <!-- CATEGORIES QUICK LOOKUP -->
 <section class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 border-t border-slate-200/50">
     <div class="text-center space-y-2 mb-10">
