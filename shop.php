@@ -105,6 +105,9 @@ try {
                 <button onclick="openDemandModal()" class="text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2 rounded-xl border border-amber-250 transition-all flex items-center gap-1.5 shadow-sm">
                     <i class="fas fa-clipboard-list text-sm"></i> Apni Demand Likhein (Request Item)
                 </button>
+            </div>
+        </div>
+    <?php else: ?>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
             <?php foreach ($products as $product): ?>
                 <?php 
