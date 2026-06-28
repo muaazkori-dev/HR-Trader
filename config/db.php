@@ -121,6 +121,14 @@ try {
         ]
     );
     
+    if (isset($_GET['debug_images'])) {
+        $stmt = $pdo->query("SELECT id, name, category, image FROM products ORDER BY id DESC LIMIT 15");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        header('Content-Type: application/json');
+        echo json_encode($rows, JSON_PRETTY_PRINT);
+        exit;
+    }
+    
     // Check if migrations have already run
     $run_migrations = true;
     try {
@@ -442,86 +450,7 @@ try {
     } catch (PDOException $ex_ver) {
         // Ignore
     }
-    
-    // Live self-healing database-driven product images restore (absolute-paths copy logic)
-    if (!$is_local) {
-        try {
-            $public_html_root = dirname(__DIR__);
-            $target_upload_dir = $public_html_root . '/assets/images/products';
-            $backup_upload_dir = dirname($public_html_root) . '/product_uploads';
-
-            // Ensure directories exist
-            if (!@is_dir($target_upload_dir)) {
-                @mkdir($target_upload_dir, 0777, true);
-            }
-            if (!@is_dir($backup_upload_dir)) {
-                @mkdir($backup_upload_dir, 0777, true);
-            }
-
-            // Sync missing product images using DB active paths
-            $stmt_sync = $pdo->query("SELECT image FROM products WHERE image IS NOT NULL AND image != ''");
-            while ($row_sync = $stmt_sync->fetch()) {
-                $img_rel_path = $row_sync['image']; // e.g. assets/images/products/prod_xxxx.png
-                $filename = basename($img_rel_path);
-                
-                $t_file = $target_upload_dir . '/' . $filename;
-                $b_file = $backup_upload_dir . '/' . $filename;
-                
-                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
-                    @copy($b_file, $t_file);
-                }
-            }
-
-            // Sync promo popup image if set and missing
-            $promo_img = get_setting('promo_popup_image', '');
-            if (!empty($promo_img)) {
-                $filename = basename($promo_img);
-                $t_file = $target_upload_dir . '/' . $filename;
-                $b_file = $backup_upload_dir . '/' . $filename;
-                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
-                    @copy($b_file, $t_file);
-                }
-            }
-
-            // Sync promo cards images if set and missing
-            $promo_cards_json = get_setting('homepage_promo_cards', '');
-            if (!empty($promo_cards_json)) {
-                $cards = json_decode($promo_cards_json, true);
-                if (is_array($cards)) {
-                    foreach ($cards as $c) {
-                        $img = $c['image'] ?? '';
-                        if (!empty($img) && strpos($img, 'categories/') === false) {
-                            $filename = basename($img);
-                            $t_file = $target_upload_dir . '/' . $filename;
-                            $b_file = $backup_upload_dir . '/' . $filename;
-                            if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
-                                @copy($b_file, $t_file);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Sync category custom icons if missing from disk
-            $sync_cats_json = get_setting('store_categories', '');
-            $sync_cats = !empty($sync_cats_json) ? json_decode($sync_cats_json, true) : [];
-            if (is_array($sync_cats)) {
-                foreach (array_keys($sync_cats) as $cat_k) {
-                    $t_file = __DIR__ . '/../assets/images/categories/' . $cat_k . '.png';
-                    $b_file = __DIR__ . '/../product_uploads/categories/' . $cat_k . '.png';
-                    if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
-                        $cat_dir = dirname($t_file);
-                        if (!@is_dir($cat_dir)) {
-                            @mkdir($cat_dir, 0777, true);
-                        }
-                        @copy($b_file, $t_file);
-                    }
-                }
-            }
-        } catch (Throwable $sync_err) {
-            // Silently catch sync errors to prevent crash
-        }
-    }
+    // Syncer moved to end of file to run outside migrations safely
 }
 
 } catch (PDOException $e) {
@@ -645,4 +574,90 @@ function get_category_icon_url($category) {
     
     // Default dynamic placeholder link fallback if key not matched
     return 'https://placehold.co/100x100/10b981/ffffff?text=' . urlencode(ucfirst($category_key));
+}
+
+// Live self-healing database-driven product images restore (runs outside migrations)
+// Checked at most once every 5 minutes per user session to minimize filesystem reads
+if (isset($pdo) && !$is_local) {
+    if (session_status() == PHP_SESSION_NONE) {
+        @session_start();
+    }
+    if (!isset($_SESSION['images_synced_time']) || (time() - $_SESSION['images_synced_time']) > 300) {
+        try {
+            $public_html_root = dirname(__DIR__);
+            $target_upload_dir = $public_html_root . '/assets/images/products';
+            $backup_upload_dir = dirname($public_html_root) . '/product_uploads';
+
+            if (!@is_dir($target_upload_dir)) {
+                @mkdir($target_upload_dir, 0777, true);
+            }
+            if (!@is_dir($backup_upload_dir)) {
+                @mkdir($backup_upload_dir, 0777, true);
+            }
+
+            // Sync missing product images using DB active paths
+            $stmt_sync = $pdo->query("SELECT image FROM products WHERE image IS NOT NULL AND image != ''");
+            while ($row_sync = $stmt_sync->fetch()) {
+                $img_rel_path = $row_sync['image'];
+                $filename = basename($img_rel_path);
+                
+                $t_file = $target_upload_dir . '/' . $filename;
+                $b_file = $backup_upload_dir . '/' . $filename;
+                
+                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                    @copy($b_file, $t_file);
+                }
+            }
+
+            // Sync promo popup image if set and missing
+            $promo_img = get_setting('promo_popup_image', '');
+            if (!empty($promo_img)) {
+                $filename = basename($promo_img);
+                $t_file = $target_upload_dir . '/' . $filename;
+                $b_file = $backup_upload_dir . '/' . $filename;
+                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                    @copy($b_file, $t_file);
+                }
+            }
+
+            // Sync promo cards images if set and missing
+            $promo_cards_json = get_setting('homepage_promo_cards', '');
+            if (!empty($promo_cards_json)) {
+                $cards = json_decode($promo_cards_json, true);
+                if (is_array($cards)) {
+                    foreach ($cards as $c) {
+                        $img = $c['image'] ?? '';
+                        if (!empty($img) && strpos($img, 'categories/') === false) {
+                            $filename = basename($img);
+                            $t_file = $target_upload_dir . '/' . $filename;
+                            $b_file = $backup_upload_dir . '/' . $filename;
+                            if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                                @copy($b_file, $t_file);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Sync category custom icons if missing from disk
+            $sync_cats_json = get_setting('store_categories', '');
+            $sync_cats = !empty($sync_cats_json) ? json_decode($sync_cats_json, true) : [];
+            if (is_array($sync_cats)) {
+                foreach (array_keys($sync_cats) as $cat_k) {
+                    $t_file = $public_html_root . '/assets/images/categories/' . $cat_k . '.png';
+                    $b_file = dirname($public_html_root) . '/product_uploads/categories/' . $cat_k . '.png';
+                    if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                        $cat_dir = dirname($t_file);
+                        if (!@is_dir($cat_dir)) {
+                            @mkdir($cat_dir, 0777, true);
+                        }
+                        @copy($b_file, $t_file);
+                    }
+                }
+            }
+            $_SESSION['images_synced_time'] = time();
+        } catch (Throwable $sync_err) {
+            // Silently catch sync errors to prevent crash
+        }
+    }
 }
