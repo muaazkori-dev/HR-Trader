@@ -31,57 +31,119 @@ try {
 ?>
 
 <!-- DYNAMIC SLIDING BANNER (DEAL SLIDER) -->
+<?php
+$hero_banners_json = get_setting('store_hero_banners', '');
+if (empty($hero_banners_json)) {
+    $default_banners = [
+        [
+            'image' => 'assets/images/hero_grocery_banner.png',
+            'tag' => 'Premium Choice',
+            'title' => 'Your Premium Grocery Partner',
+            'subtitle' => 'Fresh organic crops, groceries, and premium household brands delivered straight to your home.',
+            'link' => 'shop.php',
+            'color_theme' => 'emerald'
+        ],
+        [
+            'image' => '',
+            'tag' => 'Beat The Heat',
+            'title' => 'Quench Your Thirst',
+            'subtitle' => 'Soft drinks, juices, mineral water bottles, and energy drinks delivered straight to your doorstep ice cold.',
+            'link' => 'shop.php?category=beverages',
+            'color_theme' => 'teal'
+        ],
+        [
+            'image' => '',
+            'tag' => 'Frozen Delights',
+            'title' => 'Frozen Ice Creams',
+            'subtitle' => 'Family pack ice creams and chicken frozen snacks. *Available for nearby locations to maintain cold chain.',
+            'link' => 'shop.php?category=ice_cream',
+            'color_theme' => 'cyan'
+        ]
+    ];
+    $hero_banners = $default_banners;
+    update_setting('store_hero_banners', json_encode($hero_banners));
+} else {
+    $hero_banners = json_decode($hero_banners_json, true);
+}
+?>
 <section class="relative bg-slate-50 dark:bg-slate-950 py-8 overflow-hidden border-b border-slate-200/50">
     <div class="slider-container max-w-7xl mx-auto relative px-4 overflow-visible">
         <div class="slider-track flex gap-4 md:gap-6 transition-transform duration-500 ease-out" style="width: max-content;">
             
-            <!-- Slide 1 (Dynamic Premium Banner) -->
-            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-cover bg-center relative border border-slate-200/60 dark:border-slate-800 transition-all duration-500" style="background-image: url('<?php echo BASE_URL; ?>assets/images/hero_grocery_banner.png');">
-                <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/35 to-transparent flex items-center px-6 sm:px-12">
-                    <div class="max-w-md space-y-2 sm:space-y-3 text-left text-white">
-                        <span class="inline-block bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Premium Choice</span>
-                        <h1 class="text-xl sm:text-4xl font-black leading-tight text-white">Your Premium Grocery Partner</h1>
-                        <p class="text-[10px] sm:text-xs text-slate-200 leading-relaxed font-sans">Fresh organic crops, pulses, groceries, and premium household brands delivered straight to your home.</p>
-                        <a href="<?php echo BASE_URL; ?>shop.php" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
+            <?php foreach ($hero_banners as $idx => $banner): 
+                $has_image = !empty($banner['image']) && file_exists(__DIR__ . '/' . $banner['image']);
+                $bg_style = $has_image ? "background-image: url('" . BASE_URL . htmlspecialchars($banner['image']) . "');" : "";
+                
+                $theme = $banner['color_theme'] ?? 'emerald';
+                $tag_class = "bg-emerald-600 text-white";
+                $btn_class = "bg-emerald-600 hover:bg-emerald-500 text-white";
+                $icon_class = "text-emerald-600/10";
+                $card_class = "bg-cover bg-center relative";
+                
+                if (!$has_image) {
+                    if ($theme === 'teal') {
+                        $card_class = "bg-gradient-to-r from-slate-200 via-slate-100 to-teal-100/30 flex items-center justify-between px-6 sm:px-12";
+                        $tag_class = "bg-teal-100 text-teal-700";
+                        $btn_class = "bg-teal-600 hover:bg-teal-500 text-white";
+                        $icon_class = "text-teal-600/10";
+                    } elseif ($theme === 'cyan') {
+                        $card_class = "bg-gradient-to-r from-slate-200 via-slate-100 to-cyan-100/30 flex items-center justify-between px-6 sm:px-12";
+                        $tag_class = "bg-cyan-100 text-cyan-700";
+                        $btn_class = "bg-cyan-600 hover:bg-cyan-500 text-white";
+                        $icon_class = "text-cyan-600/10";
+                    } else {
+                        $card_class = "bg-gradient-to-r from-slate-200 via-slate-100 to-emerald-100/30 flex items-center justify-between px-6 sm:px-12";
+                        $tag_class = "bg-emerald-100 text-emerald-700";
+                        $btn_class = "bg-emerald-600 hover:bg-emerald-500 text-white";
+                        $icon_class = "text-emerald-600/10";
+                    }
+                } else {
+                    $tag_class = "bg-emerald-600 text-white";
+                    $btn_class = "bg-emerald-600 hover:bg-emerald-500 text-white";
+                }
+            ?>
+            <!-- Dynamic Slide Card -->
+            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden border border-slate-200/60 dark:border-slate-800 transition-all duration-500 <?php echo $card_class; ?>" style="<?php echo $bg_style; ?>">
+                <?php if ($has_image): ?>
+                    <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/35 to-transparent flex items-center px-6 sm:px-12">
+                        <div class="max-w-md space-y-2 sm:space-y-3 text-left text-white">
+                            <span class="inline-block <?php echo $tag_class; ?> text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans"><?php echo htmlspecialchars($banner['tag']); ?></span>
+                            <h1 class="text-xl sm:text-4xl font-black leading-tight text-white"><?php echo htmlspecialchars($banner['title']); ?></h1>
+                            <p class="text-[10px] sm:text-xs text-slate-200 leading-relaxed font-sans"><?php echo htmlspecialchars($banner['subtitle']); ?></p>
+                            <a href="<?php echo BASE_URL . htmlspecialchars($banner['link']); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 <?php echo $btn_class; ?> font-bold rounded-xl text-xs transition-all shadow-md font-sans">
+                                Shop Now <i class="fas fa-arrow-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="max-w-md space-y-2 sm:space-y-3 text-left">
+                        <span class="inline-block <?php echo $tag_class; ?> text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans"><?php echo htmlspecialchars($banner['tag']); ?></span>
+                        <h1 class="text-xl sm:text-4xl font-black text-slate-900 dark:text-white leading-tight"><?php echo htmlspecialchars($banner['title']); ?></h1>
+                        <p class="text-[10px] sm:text-xs text-slate-550 dark:text-slate-400 leading-relaxed font-sans"><?php echo htmlspecialchars($banner['subtitle']); ?></p>
+                        <a href="<?php echo BASE_URL . htmlspecialchars($banner['link']); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 <?php echo $btn_class; ?> font-bold rounded-xl text-xs transition-all shadow-md font-sans">
                             Shop Now <i class="fas fa-arrow-right text-[10px]"></i>
                         </a>
                     </div>
-                </div>
+                    <div class="hidden sm:block <?php echo $icon_class; ?> text-9xl pr-4">
+                        <?php if ($theme === 'teal'): ?>
+                            <i class="fas fa-glass-water"></i>
+                        <?php elseif ($theme === 'cyan'): ?>
+                            <i class="fas fa-ice-cream"></i>
+                        <?php else: ?>
+                            <i class="fas fa-basket-shopping"></i>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
-
-            <!-- Slide 2 -->
-            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-200 via-slate-100 to-teal-100/30 flex items-center justify-between px-6 sm:px-12 border border-slate-200/60 dark:border-slate-800 transition-all duration-500">
-                <div class="max-w-md space-y-2 sm:space-y-3 text-left">
-                    <span class="inline-block bg-teal-100 text-teal-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Beat The Heat</span>
-                    <h1 class="text-xl sm:text-4xl font-black text-slate-900 leading-tight">Quench Your Thirst</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-550 leading-relaxed font-sans">Carbonated soft drinks, juices, mineral water bottles, and energy drinks delivered straight to your doorstep ice cold.</p>
-                    <a href="<?php echo BASE_URL; ?>shop.php?category=beverages" class="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
-                        Shop Beverages <i class="fas fa-arrow-right text-[10px]"></i>
-                    </a>
-                </div>
-                <div class="hidden sm:block text-teal-600/10 text-9xl pr-4"><i class="fas fa-glass-water"></i></div>
-            </div>
-
-            <!-- Slide 3 -->
-            <div class="slide-card flex-shrink-0 w-[82vw] sm:w-[65vw] lg:w-[55vw] h-[240px] sm:h-[350px] rounded-[32px] overflow-hidden bg-gradient-to-r from-slate-200 via-slate-100 to-cyan-100/30 flex items-center justify-between px-6 sm:px-12 border border-slate-200/60 dark:border-slate-800 transition-all duration-500">
-                <div class="max-w-md space-y-2 sm:space-y-3 text-left">
-                    <span class="inline-block bg-cyan-100 text-cyan-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">Frozen Delights</span>
-                    <h1 class="text-xl sm:text-4xl font-black text-slate-900 leading-tight">Frozen Ice Creams</h1>
-                    <p class="text-[10px] sm:text-xs text-slate-550 leading-relaxed font-sans">Family pack ice creams and chicken frozen snacks. *Available for nearby Lahore locations only to maintain cold-chain storage.</p>
-                    <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream" class="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition-all shadow-md font-sans">
-                        Browse Frozen Items <i class="fas fa-arrow-right text-[10px]"></i>
-                    </a>
-                </div>
-                <div class="hidden sm:block text-cyan-600/10 text-9xl pr-4"><i class="fas fa-ice-cream"></i></div>
-            </div>
+            <?php endforeach; ?>
 
         </div>
         
         <!-- Slide Dot Indicators -->
         <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-            <button onclick="setSlide(0)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
-            <button onclick="setSlide(1)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
-            <button onclick="setSlide(2)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
+            <?php foreach ($hero_banners as $idx => $banner): ?>
+                <button onclick="setSlide(<?php echo $idx; ?>)" class="w-3 h-3 rounded-full bg-slate-300 slide-dot transition-all"></button>
+            <?php endforeach; ?>
         </div>
     </div>
 </section>
@@ -93,105 +155,24 @@ try {
         <p class="text-sm text-slate-500">Select a category to filter your grocery requirements</p>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
-        <!-- Category 1: Anaj -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=anaj#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo get_category_icon_url('anaj'); ?>" alt="Anaj" class="w-full h-full object-cover">
+    <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <?php 
+        foreach ($CATEGORIES as $cat_key => $cat): 
+            if (isset($cat['parent'])) continue; // Skip subcategories
+        ?>
+        <a href="<?php echo BASE_URL; ?>shop.php?category=<?php echo urlencode($cat_key); ?>#shop-container" 
+           class="glass-card p-4 sm:p-5 rounded-2xl flex flex-col items-center justify-center text-center gap-2.5 w-[105px] sm:w-[120px] flex-shrink-0 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden flex items-center justify-center border border-slate-200/60 bg-white">
+                <img src="<?php echo get_category_icon_url($cat_key); ?>" alt="<?php echo htmlspecialchars($cat['name']); ?>" class="w-full h-full object-cover">
             </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Anaj</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">اناج</p>
-            </div>
-        </a>
-
-        <!-- Category 1.5: Grocery -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=grocery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200">
-                <img src="<?php echo get_category_icon_url('grocery'); ?>" alt="Grocery" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Grocery</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">گروسری</p>
+            <div class="min-w-0 w-full">
+                <h4 class="font-bold text-slate-800 dark:text-slate-205 text-xs sm:text-sm truncate"><?php echo htmlspecialchars($cat['name']); ?></h4>
+                <?php if (!empty($cat['urdu'])): ?>
+                    <p class="text-[9px] sm:text-[10px] text-slate-550 urdu-text tracking-wider truncate"><?php echo htmlspecialchars($cat['urdu']); ?></p>
+                <?php endif; ?>
             </div>
         </a>
-
-        <!-- Category 2: Ice Cream -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=ice_cream#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-cyan-200">
-                <img src="<?php echo get_category_icon_url('ice_cream'); ?>" alt="Ice Cream" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Ice Cream</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">آئس کریم</p>
-            </div>
-        </a>
-
-        <!-- Category 3: Beverages -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=beverages#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-teal-200">
-                <img src="<?php echo get_category_icon_url('beverages'); ?>" alt="Beverages" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Beverages</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">مشروبات</p>
-            </div>
-        </a>
-
-        <!-- Category 4: Milk -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=milk#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-amber-200">
-                <img src="<?php echo get_category_icon_url('milk'); ?>" alt="Milk" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Milk</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">دودھ</p>
-            </div>
-        </a>
-
-        <!-- Category 5: Cosmetics -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=cosmetics#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-rose-200">
-                <img src="<?php echo get_category_icon_url('cosmetics'); ?>" alt="Cosmetics" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Cosmetics</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">کاسمیٹکس</p>
-            </div>
-        </a>
-
-        <!-- Category 6: Snacks -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=snacks#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-emerald-200 bg-white">
-                <img src="<?php echo get_category_icon_url('snacks'); ?>" alt="Snacks" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Snacks</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سنیکس</p>
-            </div>
-        </a>
-
-        <!-- Category 7: Bakery -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=bakery#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-orange-200 bg-white">
-                <img src="<?php echo get_category_icon_url('bakery'); ?>" alt="Bakery" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Bakery</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">بیکری</p>
-            </div>
-        </a>
-
-        <!-- Category 8: Sauce -->
-        <a href="<?php echo BASE_URL; ?>shop.php?category=sauce#shop-container" class="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-            <div class="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center border border-red-200 bg-white">
-                <img src="<?php echo get_category_icon_url('sauce'); ?>" alt="Sauces" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h4 class="font-bold text-slate-800 dark:text-slate-205">Sauces</h4>
-                <p class="text-[10px] text-slate-550 urdu-text tracking-wider">سوس</p>
-            </div>
-        </a>
+        <?php endforeach; ?>
     </div>
 </section>
 
@@ -357,6 +338,37 @@ function showSlide(index) {
     
     const translateX = (containerWidth / 2) - (slideLeft + (slideWidth / 2));
     track.style.transform = `translateX(${translateX}px)`;
+    // Mobile Swipe/Touch Control
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    
+    container.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+        clearInterval(slideInterval);
+    }, {passive: true});
+    
+    container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+    }, {passive: true});
+    
+    container.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        const diffX = startX - currentX;
+        if (Math.abs(diffX) > 50) {
+            if (diffX > 0) {
+                let next = (activeSlideIndex + 1) % slides.length;
+                showSlide(next);
+            } else {
+                let prev = (activeSlideIndex - 1 + slides.length) % slides.length;
+                showSlide(prev);
+            }
+        }
+        startInterval();
+    });
 }
 
 function setSlide(index) {

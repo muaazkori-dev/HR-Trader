@@ -252,41 +252,182 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
         
-        // Category Icons Upload
-        if (isset($_FILES['category_icon']) && is_array($_FILES['category_icon']['name'])) {
-            $cat_icons_updated = false;
-            foreach ($_FILES['category_icon']['name'] as $cat_key => $filename) {
-                if (empty($filename)) continue;
+        // Dynamic Category Management Save Handler
+        if (isset($_POST['category_name']) && is_array($_POST['category_name'])) {
+            $categories_json = get_setting('store_categories', '');
+            $cats = !empty($categories_json) ? json_decode($categories_json, true) : [];
+            
+            // 1. Handle deletion first
+            if (isset($_POST['delete_category_key']) && !empty($_POST['delete_category_key'])) {
+                $del_key = trim($_POST['delete_category_key']);
+                if (isset($cats[$del_key])) {
+                    unset($cats[$del_key]);
+                    // Delete files
+                    @unlink(__DIR__ . '/../assets/images/categories/' . $del_key . '.png');
+                    @unlink(__DIR__ . '/../product_uploads/categories/' . $del_key . '.png');
+                    $success_message = "Category deleted successfully.";
+                }
+            }
+            
+            // 2. Handle additions
+            if (isset($_POST['add_category_name']) && !empty($_POST['add_category_name'])) {
+                $add_name = trim($_POST['add_category_name']);
+                $add_urdu = trim($_POST['add_category_urdu'] ?? '');
                 
-                $tmp_name = $_FILES['category_icon']['tmp_name'][$cat_key];
-                $error = $_FILES['category_icon']['error'][$cat_key];
+                // Generate clean key
+                $add_key = preg_replace('/[^a-z0-9]/', '_', strtolower($add_name));
+                $add_key = trim(preg_replace('/_+/', '_', $add_key), '_');
                 
-                if ($error === UPLOAD_ERR_OK) {
+                if (empty($add_key)) {
+                    $add_key = 'cat_' . time();
+                }
+                
+                if (isset($cats[$add_key])) {
+                    $add_key .= '_' . time();
+                }
+                
+                $cats[$add_key] = [
+                    'name' => $add_name,
+                    'urdu' => $add_urdu
+                ];
+                
+                // Handle new category icon upload
+                if (isset($_FILES['add_category_icon']) && $_FILES['add_category_icon']['error'] === UPLOAD_ERR_OK) {
+                    $tmp_name = $_FILES['add_category_icon']['tmp_name'];
+                    $filename = $_FILES['add_category_icon']['name'];
                     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                     if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg'])) {
-                        $target_name = $cat_key . '.png';
-                        $target_path = __DIR__ . '/../assets/images/categories/' . $target_name;
-                        
-                        $cat_dir = dirname($target_path);
-                        if (!is_dir($cat_dir)) {
-                            mkdir($cat_dir, 0777, true);
-                        }
-                        
+                        $target_path = __DIR__ . '/../assets/images/categories/' . $add_key . '.png';
                         if (move_uploaded_file($tmp_name, $target_path)) {
-                            // Backup copy for self-healing
                             $backup_dir = __DIR__ . '/../product_uploads/categories';
                             if (!is_dir($backup_dir)) {
                                 mkdir($backup_dir, 0777, true);
                             }
-                            copy($target_path, $backup_dir . '/' . $target_name);
-                            $cat_icons_updated = true;
+                            copy($target_path, $backup_dir . '/' . $add_key . '.png');
+                        }
+                    }
+                }
+                $success_message = "New category added successfully.";
+            }
+            
+            // 3. Handle updates to existing ones
+            foreach ($_POST['category_name'] as $cat_key => $name) {
+                if (isset($cats[$cat_key])) {
+                    $cats[$cat_key]['name'] = trim($name);
+                    $cats[$cat_key]['urdu'] = trim($_POST['category_urdu'][$cat_key] ?? '');
+                }
+            }
+            
+            // Handle file uploads for existing categories
+            if (isset($_FILES['category_icon']) && is_array($_FILES['category_icon']['name'])) {
+                foreach ($_FILES['category_icon']['name'] as $cat_key => $filename) {
+                    if (empty($filename)) continue;
+                    
+                    $tmp_name = $_FILES['category_icon']['tmp_name'][$cat_key];
+                    $error = $_FILES['category_icon']['error'][$cat_key];
+                    
+                    if ($error === UPLOAD_ERR_OK) {
+                        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                        if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg'])) {
+                            $target_name = $cat_key . '.png';
+                            $target_path = __DIR__ . '/../assets/images/categories/' . $target_name;
+                            
+                            $cat_dir = dirname($target_path);
+                            if (!is_dir($cat_dir)) {
+                                mkdir($cat_dir, 0777, true);
+                            }
+                            
+                            if (move_uploaded_file($tmp_name, $target_path)) {
+                                $backup_dir = __DIR__ . '/../product_uploads/categories';
+                                if (!is_dir($backup_dir)) {
+                                    mkdir($backup_dir, 0777, true);
+                                }
+                                copy($target_path, $backup_dir . '/' . $target_name);
+                            }
                         }
                     }
                 }
             }
-            if ($cat_icons_updated) {
-                $success_message = "Category icons updated successfully.";
+            
+            // Save to DB
+            update_setting('store_categories', json_encode($cats));
+            // Reload global $CATEGORIES
+            $CATEGORIES = $cats;
+            $success_message = "Category configurations updated successfully.";
+        }
+        
+        // Dynamic Hero Banners Manager Save Handler
+        if (isset($_POST['banner_title']) && is_array($_POST['banner_title'])) {
+            $hero_banners_json = get_setting('store_hero_banners', '');
+            $banners = !empty($hero_banners_json) ? json_decode($hero_banners_json, true) : [];
+            
+            $new_banners = [];
+            $delete_idx = isset($_POST['delete_banner_idx']) && $_POST['delete_banner_idx'] !== '' ? (int)$_POST['delete_banner_idx'] : -1;
+            
+            foreach ($_POST['banner_title'] as $idx => $title) {
+                if ($idx === $delete_idx) {
+                    $old_img = $_POST['banner_old_image'][$idx] ?? '';
+                    if (!empty($old_img) && strpos($old_img, 'hero_grocery_banner') === false) {
+                        @unlink(__DIR__ . '/../' . $old_img);
+                        @unlink(__DIR__ . '/../product_uploads/' . basename($old_img));
+                    }
+                    continue;
+                }
+                
+                $image_path = $_POST['banner_old_image'][$idx] ?? '';
+                
+                if (isset($_FILES['banner_image']['name'][$idx]) && $_FILES['banner_image']['error'][$idx] === UPLOAD_ERR_OK) {
+                    $tmp_name = $_FILES['banner_image']['tmp_name'][$idx];
+                    $filename = $_FILES['banner_image']['name'][$idx];
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    
+                    if (in_array($ext, ['png', 'jpg', 'jpeg', 'webp'])) {
+                        $new_name = 'hero_banner_' . $idx . '_' . time() . '.' . $ext;
+                        $dest_dir = __DIR__ . '/../assets/images/products/';
+                        if (!is_dir($dest_dir)) {
+                            @mkdir($dest_dir, 0777, true);
+                        }
+                        $dest_path = $dest_dir . $new_name;
+                        
+                        if (@move_uploaded_file($tmp_name, $dest_path)) {
+                            if (!empty($image_path) && strpos($image_path, 'hero_grocery_banner') === false) {
+                                @unlink(__DIR__ . '/../' . $image_path);
+                                @unlink(__DIR__ . '/../product_uploads/' . basename($image_path));
+                            }
+                            $image_path = 'assets/images/products/' . $new_name;
+                            
+                            $backup_dir = __DIR__ . '/../product_uploads/';
+                            if (!is_dir($backup_dir)) {
+                                @mkdir($backup_dir, 0777, true);
+                            }
+                            @copy($dest_path, $backup_dir . $new_name);
+                        }
+                    }
+                }
+                
+                $new_banners[] = [
+                    'image' => $image_path,
+                    'tag' => trim($_POST['banner_tag'][$idx] ?? ''),
+                    'title' => trim($title),
+                    'subtitle' => trim($_POST['banner_subtitle'][$idx] ?? ''),
+                    'link' => trim($_POST['banner_link'][$idx] ?? 'shop.php'),
+                    'color_theme' => trim($_POST['banner_theme'][$idx] ?? 'emerald')
+                ];
             }
+            
+            if (isset($_POST['add_banner']) && $_POST['add_banner'] === '1') {
+                $new_banners[] = [
+                    'image' => '',
+                    'tag' => 'New Tag',
+                    'title' => 'New Banner Title',
+                    'subtitle' => 'Description for the new banner slide.',
+                    'link' => 'shop.php',
+                    'color_theme' => 'emerald'
+                ];
+            }
+            
+            update_setting('store_hero_banners', json_encode($new_banners));
+            $success_message = "Hero banner configurations updated successfully.";
         }
         
         // 11. Google Auth Settings
@@ -351,96 +492,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
 
-        // 13. Promo Cards Manager Settings
-        if (isset($_POST['promo_cards_discount']) && is_array($_POST['promo_cards_discount'])) {
-            $promo_cards_json = get_setting('homepage_promo_cards', '');
-            $current_cards = !empty($promo_cards_json) ? json_decode($promo_cards_json, true) : [];
-            $new_cards = [];
-            
-            foreach ($_POST['promo_cards_discount'] as $idx => $discount) {
-                $enabled = isset($_POST['promo_cards_enabled'][$idx]) ? 1 : 0;
-                $link = trim($_POST['promo_cards_link'][$idx] ?? 'shop.php');
-                $image_path = $_POST['promo_cards_old_image'][$idx] ?? '';
-                
-                // Handle file upload for this specific card
-                if (isset($_FILES['promo_cards_image']['name'][$idx]) && $_FILES['promo_cards_image']['error'][$idx] === UPLOAD_ERR_OK) {
-                    $file_tmp = $_FILES['promo_cards_image']['tmp_name'][$idx];
-                    $file_name = $_FILES['promo_cards_image']['name'][$idx];
-                    $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-                    $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                    
-                    if (in_array($file_ext, $allowed_exts)) {
-                        $new_file_name = 'promo_card_' . $idx . '_' . time() . '.' . $file_ext;
-                        $upload_dir = __DIR__ . '/../assets/images/products/';
-                        if (!is_dir($upload_dir)) {
-                            @mkdir($upload_dir, 0777, true);
-                        }
-                        $dest_path = $upload_dir . $new_file_name;
-                        
-                        if (@move_uploaded_file($file_tmp, $dest_path)) {
-                            // Delete old custom image to save space
-                            if (!empty($image_path) && strpos($image_path, 'categories/') === false) {
-                                @unlink(__DIR__ . '/../' . $image_path);
-                                @unlink(__DIR__ . '/../../product_uploads/' . basename($image_path));
-                            }
-                            
-                            $image_path = 'assets/images/products/' . $new_file_name;
-                            
-                            // Save backup copy outside public_html
-                            $backup_dir = __DIR__ . '/../../product_uploads/';
-                            if (!is_dir($backup_dir)) {
-                                @mkdir($backup_dir, 0777, true);
-                            }
-                            @copy($dest_path, $backup_dir . $new_file_name);
-                        }
-                    }
-                }
-                
-                $new_cards[] = [
-                    "id" => $idx + 1,
-                    "image" => $image_path,
-                    "discount" => trim($discount),
-                    "link" => $link,
-                    "enabled" => $enabled
-                ];
-            }
-            
-            // If the user wants to add a new card
-            if (isset($_POST['add_new_card'])) {
-                $new_cards[] = [
-                    "id" => count($new_cards) + 1,
-                    "image" => "assets/images/categories/grocery.png",
-                    "discount" => "NEW DEAL",
-                    "link" => "shop.php",
-                    "enabled" => 0
-                ];
-            }
-            
-            // Handle card deletion
-            if (isset($_POST['delete_card_id'])) {
-                $del_id = (int)$_POST['delete_card_id'];
-                $filtered_cards = [];
-                foreach ($new_cards as $c) {
-                    if ($c['id'] !== $del_id) {
-                        $filtered_cards[] = $c;
-                    } else {
-                        // Delete custom image file
-                        if (!empty($c['image']) && strpos($c['image'], 'categories/') === false) {
-                            @unlink(__DIR__ . '/../' . $c['image']);
-                            @unlink(__DIR__ . '/../../product_uploads/' . basename($c['image']));
-                        }
-                    }
-                }
-                // Re-index IDs
-                foreach ($filtered_cards as $k => $c) {
-                    $filtered_cards[$k]['id'] = $k + 1;
-                }
-                $new_cards = $filtered_cards;
-            }
-            
-            update_setting('homepage_promo_cards', json_encode($new_cards));
-            $success_message = "Promo cards configurations updated successfully.";
-        }
+
     }
 }
 
@@ -530,24 +582,40 @@ try {
     $promo_popup_image = get_setting('promo_popup_image', '');
     $promo_popup_link = get_setting('promo_popup_link', 'shop.php');
 
-    // Fetch Promotional Cards settings
-    $promo_cards_json = get_setting('homepage_promo_cards', '');
-    if (empty($promo_cards_json)) {
-        $default_cards = [
-            ["id" => 1, "image" => "assets/images/categories/anaj.png", "discount" => "UP TO 15% OFF", "link" => "shop.php?category=anaj", "enabled" => 1],
-            ["id" => 2, "image" => "assets/images/categories/grocery.png", "discount" => "FLAT 10% OFF", "link" => "shop.php?category=grocery", "enabled" => 1],
-            ["id" => 3, "image" => "assets/images/categories/ice_cream.png", "discount" => "UP TO 20% OFF", "link" => "shop.php?category=ice_cream", "enabled" => 1],
-            ["id" => 4, "image" => "assets/images/categories/beverages.png", "discount" => "FLAT 15% OFF", "link" => "shop.php?category=beverages", "enabled" => 1],
-            ["id" => 5, "image" => "assets/images/categories/milk.png", "discount" => "FLAT 5% OFF", "link" => "shop.php?category=milk", "enabled" => 1],
-            ["id" => 6, "image" => "assets/images/categories/cosmetics.png", "discount" => "UP TO 35% OFF", "link" => "shop.php?category=cosmetics", "enabled" => 1],
-            ["id" => 7, "image" => "assets/images/categories/snacks.png", "discount" => "UP TO 25% OFF", "link" => "shop.php?category=snacks", "enabled" => 1],
-            ["id" => 8, "image" => "assets/images/categories/bakery.png", "discount" => "FLAT 20% OFF", "link" => "shop.php?category=bakery", "enabled" => 1],
-            ["id" => 9, "image" => "assets/images/categories/sauce.png", "discount" => "UP TO 30% OFF", "link" => "shop.php?category=sauce", "enabled" => 1]
+    // Fetch Dynamic Hero Banners settings
+    $hero_banners_json = get_setting('store_hero_banners', '');
+    if (empty($hero_banners_json)) {
+        $hero_banners = [
+            [
+                'image' => 'assets/images/hero_grocery_banner.png',
+                'tag' => 'Premium Choice',
+                'title' => 'Your Premium Grocery Partner',
+                'subtitle' => 'Fresh organic crops, groceries, and premium household brands delivered straight to your home.',
+                'link' => 'shop.php',
+                'color_theme' => 'emerald'
+            ],
+            [
+                'image' => '',
+                'tag' => 'Beat The Heat',
+                'title' => 'Quench Your Thirst',
+                'subtitle' => 'Soft drinks, juices, mineral water bottles, and energy drinks delivered straight to your doorstep ice cold.',
+                'link' => 'shop.php?category=beverages',
+                'color_theme' => 'teal'
+            ],
+            [
+                'image' => '',
+                'tag' => 'Frozen Delights',
+                'title' => 'Frozen Ice Creams',
+                'subtitle' => 'Family pack ice creams and chicken frozen snacks. *Available for nearby locations to maintain cold chain.',
+                'link' => 'shop.php?category=ice_cream',
+                'color_theme' => 'cyan'
+            ]
         ];
-        $promo_cards = $default_cards;
+        update_setting('store_hero_banners', json_encode($hero_banners));
     } else {
-        $promo_cards = json_decode($promo_cards_json, true);
+        $hero_banners = json_decode($hero_banners_json, true);
     }
+
 
 } catch (PDOException $e) {
     die("Database query error: " . $e->getMessage());
@@ -1579,142 +1647,220 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                 <?php endif; ?>
             </div>
         </div>
-
-        <!-- Homepage Promo Cards Manager Panel -->
+        <!-- Store Categories Manager Panel -->
         <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm mt-8 space-y-6">
             <div>
-                <h3 class="font-bold text-base text-slate-900">Homepage Auto-Scrolling Promo Cards</h3>
-                <p class="text-[10px] text-slate-505">Manage the cards that slide horizontally on the storefront homepage (replaces the old static categories grid).</p>
+                <h3 class="font-bold text-base text-slate-900">Store Categories Manager</h3>
+                <p class="text-[10px] text-slate-505">Add, edit names, upload custom icons, or delete categories dynamically for the storefront.</p>
             </div>
 
-            <form action="dashboard.php" method="POST" enctype="multipart/form-data" id="promo-cards-form" class="space-y-4">
+            <form action="dashboard.php" method="POST" enctype="multipart/form-data" id="categories-manager-form" class="space-y-6">
                 <input type="hidden" name="action" value="update_settings">
-                <input type="hidden" name="delete_card_id" id="delete-card-id" value="">
-                <input type="hidden" name="add_new_card" id="add-new-card" value="">
-
+                <input type="hidden" name="delete_category_key" id="delete-category-key" value="">
+                
                 <div class="space-y-4 divide-y divide-slate-100">
-                    <?php foreach ($promo_cards as $idx => $card): ?>
+                    <?php 
+                    foreach ($CATEGORIES as $cat_key => $cat): 
+                        if (isset($cat['parent'])) continue; // Only manage top-level categories in dashboard
+                        $current_icon = get_category_icon_url($cat_key);
+                    ?>
                     <div class="pt-4 first:pt-0 flex flex-col md:flex-row md:items-center gap-4 text-left">
-                        
-                        <!-- Thumbnail and Upload -->
+                        <!-- Icon Preview & Upload -->
                         <div class="flex items-center gap-3 md:w-1/3">
-                            <div class="h-12 w-12 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex-shrink-0 flex items-center justify-center">
-                                <img src="<?php echo BASE_URL . htmlspecialchars($card['image']); ?>" alt="Card Preview" class="h-full w-full object-contain">
+                            <div class="h-10 w-10 rounded-full border border-slate-200 overflow-hidden bg-slate-50 flex-shrink-0 flex items-center justify-center">
+                                <img src="<?php echo htmlspecialchars($current_icon); ?>" alt="Icon Preview" class="h-full w-full object-contain">
                             </div>
                             <div class="min-w-0 flex-1">
-                                <label class="block text-[9px] font-bold text-slate-600 uppercase mb-0.5 font-sans">Change Image</label>
-                                <input type="hidden" name="promo_cards_old_image[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($card['image']); ?>">
-                                <input type="file" name="promo_cards_image[<?php echo $idx; ?>]" accept="image/*"
-                                       class="w-full text-[10px] text-slate-550 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-0.5 font-sans">Change Icon (PNG/JPG)</label>
+                                <input type="file" name="category_icon[<?php echo $cat_key; ?>]" accept="image/*"
+                                       class="w-full text-[10px] text-slate-550 file:mr-2 file:py-0.5 file:px-1.5 file:rounded-md file:border-0 file:text-[8px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
                             </div>
                         </div>
 
-                        <!-- Discount Label -->
+                        <!-- English Name -->
                         <div class="md:w-1/4">
-                            <label class="block text-[9px] font-bold text-slate-600 uppercase mb-1 font-sans">Discount Tag Text</label>
-                            <input type="text" name="promo_cards_discount[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($card['discount']); ?>" required
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Category Name (English)</label>
+                            <input type="text" name="category_name[<?php echo $cat_key; ?>]" value="<?php echo htmlspecialchars($cat['name']); ?>" required
                                    class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805">
                         </div>
 
-                        <!-- Redirect Link -->
+                        <!-- Urdu Translation Name -->
                         <div class="md:w-1/4">
-                            <label class="block text-[9px] font-bold text-slate-600 uppercase mb-1 font-sans">Redirect URL/Link</label>
-                            <input type="text" name="promo_cards_link[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($card['link']); ?>" required
-                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805 font-mono">
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Urdu Name (Translation)</label>
+                            <input type="text" name="category_urdu[<?php echo $cat_key; ?>]" value="<?php echo htmlspecialchars($cat['urdu'] ?? ''); ?>"
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805 text-right font-semibold font-sans">
                         </div>
 
-                        <!-- Status Toggle & Delete Action -->
-                        <div class="flex items-center justify-between md:justify-end gap-6 md:w-1/6 pt-2 md:pt-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase font-sans">Active</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="promo_cards_enabled[<?php echo $idx; ?>]" value="1" <?php echo ($card['enabled'] == 1) ? 'checked' : ''; ?> class="sr-only peer">
-                                    <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600"></div>
-                                </label>
-                            </div>
-                            
-                            <button type="button" onclick="deletePromoCard(<?php echo $card['id']; ?>)" 
-                                    class="text-rose-500 hover:text-rose-700 text-sm p-1.5 hover:bg-rose-55 rounded-lg transition-all" title="Delete Card">
+                        <!-- Actions -->
+                        <div class="flex items-center justify-end md:w-1/12 pt-2 md:pt-0">
+                            <button type="button" onclick="deleteCategory('<?php echo $cat_key; ?>')"
+                                    class="text-rose-500 hover:text-rose-700 text-sm p-2 hover:bg-rose-55 rounded-xl transition-all" title="Delete Category">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
-
                     </div>
                     <?php endforeach; ?>
                 </div>
 
+                <!-- Add New Category Sub-Section -->
+                <div class="p-4 bg-slate-50 border border-slate-200/60 rounded-3xl space-y-4">
+                    <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1.5 font-sans">
+                        <i class="fas fa-plus-circle text-emerald-600"></i> Add New Category
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">New Category Name (English)</label>
+                            <input type="text" name="add_category_name" placeholder="e.g. Fresh Fruits"
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">New Category Urdu</label>
+                            <input type="text" name="add_category_urdu" placeholder="e.g. تازہ پھل"
+                                   class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805 text-right font-semibold font-sans">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Upload Icon (PNG/JPG)</label>
+                            <input type="file" name="add_category_icon" accept="image/*"
+                                   class="w-full text-[10px] text-slate-550 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons -->
                 <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <button type="button" onclick="addNewPromoCard()" 
-                            class="px-4 py-2 border border-slate-205 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 font-sans">
-                        <i class="fas fa-plus"></i> Add New Promo Card
-                    </button>
+                    <span class="text-[10px] text-slate-450 leading-relaxed max-w-md text-left">
+                        * Note: Deleting a category will remove it from the home page. Make sure to update any products assigned to that category.
+                    </span>
                     <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest shadow-md shadow-emerald-600/10 font-sans">
-                        Save Promo Cards Settings
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Store Category Icons Manager Panel -->
-        <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm mt-8 space-y-6">
-            <div>
-                <h3 class="font-bold text-base text-slate-900">Store Category Icons Manager</h3>
-                <p class="text-[10px] text-slate-505">Upload custom images/icons for each storefront department category (overrides standard SVG defaults).</p>
-            </div>
-
-            <form action="dashboard.php" method="POST" enctype="multipart/form-data" class="space-y-4">
-                <input type="hidden" name="action" value="update_settings">
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <?php
-                    $categories_list = [
-                        'anaj' => 'Anaj (Grains & Pulses)',
-                        'grocery' => 'Grocery',
-                        'ice_cream' => 'Ice Cream',
-                        'beverages' => 'Beverages',
-                        'milk' => 'Milk',
-                        'cosmetics' => 'Cosmetics',
-                        'snacks' => 'Snacks',
-                        'bakery' => 'Bakery',
-                        'sauce' => 'Sauces'
-                    ];
-                    foreach ($categories_list as $cat_key => $cat_name):
-                        $current_icon = get_category_icon_url($cat_key);
-                    ?>
-                    <div class="p-4 border border-slate-100 rounded-2xl flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 flex-shrink-0 flex items-center justify-center">
-                            <img src="<?php echo htmlspecialchars($current_icon); ?>" alt="Icon Preview" class="h-full w-full object-contain">
-                        </div>
-                        <div class="min-w-0 flex-1 space-y-1">
-                            <span class="block text-xs font-bold text-slate-800 truncate"><?php echo $cat_name; ?></span>
-                            <input type="file" name="category_icon[<?php echo $cat_key; ?>]" accept="image/*"
-                                   class="w-full text-[9px] text-slate-550 file:mr-2 file:py-0.5 file:px-1.5 file:rounded-md file:border-0 file:text-[8px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <div class="pt-4 border-t border-slate-100 text-right">
-                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest shadow-md shadow-emerald-600/10 font-sans">
-                        Save Category Icons
+                        Save Category Settings
                     </button>
                 </div>
             </form>
         </div>
 
         <script>
-            function deletePromoCard(id) {
-                if (confirm('Are you sure you want to delete this promo card?')) {
-                    document.getElementById('delete-card-id').value = id;
-                    document.getElementById('promo-cards-form').submit();
+            function deleteCategory(key) {
+                if (confirm('Are you sure you want to delete this category? All storefront configurations will update immediately.')) {
+                    document.getElementById('delete-category-key').value = key;
+                    document.getElementById('categories-manager-form').submit();
                 }
-            }
-            function addNewPromoCard() {
-                document.getElementById('add-new-card').value = '1';
-                document.getElementById('promo-cards-form').submit();
             }
         </script>
 
+        <!-- Store Hero Banners Manager Panel -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm mt-8 space-y-6">
+            <div>
+                <h3 class="font-bold text-base text-slate-900">Store Hero Banners Manager</h3>
+                <p class="text-[10px] text-slate-505">Manage sliding banners displayed on the storefront. Set custom backgrounds, tags, headers, and click links.</p>
+            </div>
+
+            <form action="dashboard.php" method="POST" enctype="multipart/form-data" id="banners-manager-form" class="space-y-6">
+                <input type="hidden" name="action" value="update_settings">
+                <input type="hidden" name="delete_banner_idx" id="delete-banner-idx" value="">
+                <input type="hidden" name="add_banner" id="add-banner-flag" value="0">
+                
+                <div class="space-y-6 divide-y divide-slate-100">
+                    <?php 
+                    foreach ($hero_banners as $idx => $banner): 
+                        $has_img = !empty($banner['image']) && file_exists(__DIR__ . '/../' . $banner['image']);
+                        $current_bg = $has_img ? BASE_URL . $banner['image'] : '';
+                    ?>
+                    <div class="pt-6 first:pt-0 flex flex-col gap-4 text-left">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-slate-700 font-sans font-bold">Slide #<?php echo ($idx + 1); ?></h4>
+                            <button type="button" onclick="deleteBanner(<?php echo $idx; ?>)"
+                                    class="text-rose-500 hover:text-rose-700 text-xs p-1.5 hover:bg-rose-55 rounded-lg transition-all" title="Delete Slide">
+                                <i class="fas fa-trash-alt mr-1"></i> Delete Slide
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Background Image / Upload -->
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Slide Image / Background</label>
+                                <input type="hidden" name="banner_old_image[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($banner['image'] ?? ''); ?>">
+                                <?php if ($has_img): ?>
+                                    <div class="h-14 w-full rounded-xl border border-slate-200 overflow-hidden bg-slate-50 mb-2 flex items-center justify-center">
+                                        <img src="<?php echo htmlspecialchars($current_bg); ?>" alt="Preview" class="h-full w-full object-cover">
+                                    </div>
+                                <?php else: ?>
+                                    <div class="h-14 w-full rounded-xl border border-slate-200/60 bg-slate-50 mb-2 flex items-center justify-center text-[10px] text-slate-400 font-sans">
+                                        Gradient Theme Active
+                                    </div>
+                                <?php endif; ?>
+                                <input type="file" name="banner_image[<?php echo $idx; ?>]" accept="image/*"
+                                       class="w-full text-[10px] text-slate-550 file:mr-2 file:py-0.5 file:px-1.5 file:rounded-md file:border-0 file:text-[8px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer font-sans">
+                            </div>
+
+                            <!-- Tag & Title -->
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Badge / Tag (e.g. Premium Choice)</label>
+                                    <input type="text" name="banner_tag[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($banner['tag'] ?? ''); ?>" required
+                                           class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Slide Title / Heading</label>
+                                    <input type="text" name="banner_title[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($banner['title'] ?? ''); ?>" required
+                                           class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-850 font-bold">
+                                </div>
+                            </div>
+
+                            <!-- Subtitle & Link & Theme -->
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Description / Subtitle</label>
+                                    <input type="text" name="banner_subtitle[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($banner['subtitle'] ?? ''); ?>" required
+                                           class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Redirect Link</label>
+                                        <input type="text" name="banner_link[<?php echo $idx; ?>]" value="<?php echo htmlspecialchars($banner['link'] ?? 'shop.php'); ?>" required
+                                               class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-805">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1 font-sans">Gradient Theme</label>
+                                        <select name="banner_theme[<?php echo $idx; ?>]"
+                                                class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-705">
+                                            <option value="emerald" <?php echo ($banner['color_theme'] ?? '') === 'emerald' ? 'selected' : ''; ?>>Emerald (Green)</option>
+                                            <option value="teal" <?php echo ($banner['color_theme'] ?? '') === 'teal' ? 'selected' : ''; ?>>Teal (Blue-Green)</option>
+                                            <option value="cyan" <?php echo ($banner['color_theme'] ?? '') === 'cyan' ? 'selected' : ''; ?>>Cyan (Light Blue)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <button type="button" onclick="addBannerSlide()"
+                            class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 font-sans">
+                        <i class="fas fa-plus-circle text-emerald-600"></i> Add New Slide
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors uppercase tracking-widest shadow-md shadow-emerald-600/10 font-sans">
+                        Save Banner Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            function deleteBanner(idx) {
+                if (confirm('Are you sure you want to delete this slide? Storefront carousel slides will update immediately.')) {
+                    document.getElementById('delete-banner-idx').value = idx;
+                    document.getElementById('banners-manager-form').submit();
+                }
+            }
+            function addBannerSlide() {
+                document.getElementById('add-banner-flag').value = '1';
+                document.getElementById('banners-manager-form').submit();
+            }
+        </script>
     </div>
     <?php endif; ?>
 </main>

@@ -503,16 +503,19 @@ try {
             }
 
             // Sync category custom icons if missing from disk
-            $categories_keys = ['anaj', 'grocery', 'ice_cream', 'beverages', 'milk', 'cosmetics', 'snacks', 'bakery', 'sauce'];
-            foreach ($categories_keys as $cat_k) {
-                $t_file = __DIR__ . '/../assets/images/categories/' . $cat_k . '.png';
-                $b_file = __DIR__ . '/../product_uploads/categories/' . $cat_k . '.png';
-                if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
-                    $cat_dir = dirname($t_file);
-                    if (!@is_dir($cat_dir)) {
-                        @mkdir($cat_dir, 0777, true);
+            $sync_cats_json = get_setting('store_categories', '');
+            $sync_cats = !empty($sync_cats_json) ? json_decode($sync_cats_json, true) : [];
+            if (is_array($sync_cats)) {
+                foreach (array_keys($sync_cats) as $cat_k) {
+                    $t_file = __DIR__ . '/../assets/images/categories/' . $cat_k . '.png';
+                    $b_file = __DIR__ . '/../product_uploads/categories/' . $cat_k . '.png';
+                    if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
+                        $cat_dir = dirname($t_file);
+                        if (!@is_dir($cat_dir)) {
+                            @mkdir($cat_dir, 0777, true);
+                        }
+                        @copy($b_file, $t_file);
                     }
-                    @copy($b_file, $t_file);
                 }
             }
         } catch (Throwable $sync_err) {
@@ -526,72 +529,7 @@ try {
     die("Database Connection Failed: " . $e->getMessage() . "<br><br><strong>Tip:</strong> If you are setting up the system for the first time, run the <a href='" . BASE_URL . "install.php' style='color:blue;text-decoration:underline;'>System Installer (install.php)</a> to automatically create the database and tables.");
 }
 
-// Categories helper map (with English keys, English display, and Urdu translation)
-$CATEGORIES = [
-    'anaj' => [
-        'name' => 'Anaj',
-        'urdu' => 'اناج'
-    ],
-    'grocery' => [
-        'name' => 'Grocery',
-        'urdu' => 'گروسری'
-    ],
-    'ice_cream' => [
-        'name' => 'Ice Cream',
-        'urdu' => 'آئس کریم',
-        'alert' => 'Available for nearby locations only'
-    ],
-    'beverages' => [
-        'name' => 'Beverages',
-        'urdu' => 'مشروبات'
-    ],
-    'milk' => [
-        'name' => 'Milk',
-        'urdu' => 'دودھ'
-    ],
-    'cosmetics' => [
-        'name' => 'Cosmetics',
-        'urdu' => 'کاسمیٹکس'
-    ],
-    'snacks' => [
-        'name' => 'Snacks',
-        'urdu' => 'سنیکس'
-    ],
-    'bakery' => [
-        'name' => 'Bakery',
-        'urdu' => 'بیکری'
-    ],
-    'sauce' => [
-        'name' => 'Sauce',
-        'urdu' => 'سوس'
-    ],
-    // Sub-items map to Cosmetics for unified display
-    'shampoo' => [
-        'name' => 'Cosmetics (Shampoo)',
-        'urdu' => 'کاسمیٹکس (شیمپو)',
-        'parent' => 'cosmetics'
-    ],
-    'soap' => [
-        'name' => 'Cosmetics (Soap)',
-        'urdu' => 'کاسمیٹکس (صابن)',
-        'parent' => 'cosmetics'
-    ],
-    'toothpaste' => [
-        'name' => 'Cosmetics (Toothpaste)',
-        'urdu' => 'کاسمیٹکس (ٹوتھ پیسٹ)',
-        'parent' => 'cosmetics'
-    ],
-    'body_wash' => [
-        'name' => 'Cosmetics (Body Wash)',
-        'urdu' => 'کاسمیٹکس (باڈی واش)',
-        'parent' => 'cosmetics'
-    ],
-    'deodorant' => [
-        'name' => 'Cosmetics (Deodorant)',
-        'urdu' => 'کاسمیٹکس (ڈیوڈرینٹ)',
-        'parent' => 'cosmetics'
-    ]
-];
+$CATEGORIES = [];
 
 $SETTINGS_CACHE = null;
 
@@ -630,6 +568,28 @@ function update_setting($key, $value) {
     } catch (PDOException $e) {
         return false;
     }
+}
+$categories_json = get_setting('store_categories', '');
+if (empty($categories_json)) {
+    $CATEGORIES = [
+        'anaj' => ['name' => 'Anaj', 'urdu' => 'اناج'],
+        'grocery' => ['name' => 'Grocery', 'urdu' => 'گروسری'],
+        'ice_cream' => ['name' => 'Ice Cream', 'urdu' => 'آئس کریم', 'alert' => 'Available for nearby locations only'],
+        'beverages' => ['name' => 'Beverages', 'urdu' => 'مشروبات'],
+        'milk' => ['name' => 'Milk', 'urdu' => 'دودھ'],
+        'cosmetics' => ['name' => 'Cosmetics', 'urdu' => 'کاسمیٹکس'],
+        'snacks' => ['name' => 'Snacks', 'urdu' => 'سنیکس'],
+        'bakery' => ['name' => 'Bakery', 'urdu' => 'بیکری'],
+        'sauce' => ['name' => 'Sauces', 'urdu' => 'سوس'],
+        'shampoo' => ['name' => 'Cosmetics (Shampoo)', 'urdu' => 'کاسمیٹکس (شیمپو)', 'parent' => 'cosmetics'],
+        'soap' => ['name' => 'Cosmetics (Soap)', 'urdu' => 'کاسمیٹکس (صابن)', 'parent' => 'cosmetics'],
+        'toothpaste' => ['name' => 'Cosmetics (Toothpaste)', 'urdu' => 'کاسمیٹکس (ٹوتھ پیسٹ)', 'parent' => 'cosmetics'],
+        'body_wash' => ['name' => 'Cosmetics (Body Wash)', 'urdu' => 'کاسمیٹکس (باڈی واش)', 'parent' => 'cosmetics'],
+        'deodorant' => ['name' => 'Cosmetics (Deodorant)', 'urdu' => 'کاسمیٹکس (ڈیوڈرینٹ)', 'parent' => 'cosmetics']
+    ];
+    update_setting('store_categories', json_encode($CATEGORIES));
+} else {
+    $CATEGORIES = json_decode($categories_json, true);
 }
 
 // Define dynamic global metadata configurations (with database settings override)
