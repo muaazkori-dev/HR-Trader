@@ -161,14 +161,14 @@ if (empty($hero_banners_json)) {
             if (isset($cat['parent'])) continue; // Skip subcategories
         ?>
         <a href="<?php echo BASE_URL; ?>shop.php?category=<?php echo urlencode($cat_key); ?>#shop-container" 
-           class="glass-card p-4 sm:p-5 rounded-2xl flex flex-col items-center justify-center text-center gap-2.5 w-[105px] sm:w-[120px] flex-shrink-0 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+           class="glass-card p-3 sm:p-4 rounded-2xl flex flex-col items-center justify-center text-center gap-2 w-[115px] sm:w-[130px] flex-shrink-0 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
             <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden flex items-center justify-center border border-slate-200/60 bg-white">
                 <img src="<?php echo get_category_icon_url($cat_key); ?>" alt="<?php echo htmlspecialchars($cat['name']); ?>" class="w-full h-full object-cover">
             </div>
             <div class="min-w-0 w-full">
-                <h4 class="font-bold text-slate-800 dark:text-slate-205 text-xs sm:text-sm whitespace-normal leading-tight break-words"><?php echo htmlspecialchars($cat['name']); ?></h4>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205 text-[10px] sm:text-xs whitespace-normal leading-tight break-normal"><?php echo htmlspecialchars($cat['name']); ?></h4>
                 <?php if (!empty($cat['urdu'])): ?>
-                    <p class="text-[9px] sm:text-[10px] text-slate-550 urdu-text tracking-wider whitespace-normal leading-tight break-words mt-0.5"><?php echo htmlspecialchars($cat['urdu']); ?></p>
+                    <p class="text-[9px] sm:text-[10px] text-slate-550 urdu-text tracking-wider whitespace-normal leading-tight break-normal mt-0.5"><?php echo htmlspecialchars($cat['urdu']); ?></p>
                 <?php endif; ?>
             </div>
         </a>
