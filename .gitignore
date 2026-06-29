@@ -1,6 +1,8 @@
 config/db.php
 assets/images/products/*
 !assets/images/products/.gitkeep
+assets/images/categories/*
+!assets/images/categories/.gitkeep
 website.zip
 website.zip.zip
 project.zip.zip

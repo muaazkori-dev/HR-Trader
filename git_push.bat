@@ -11,6 +11,9 @@ echo Step 1: Configuring local git author details...
 git config user.email "muaazkori-dev@users.noreply.github.com"
 git config user.name "muaazkori-dev"
 
+echo Step 1.5: Untracking category icons from Git...
+git rm -r --cached assets\images\categories 2>nul
+
 echo.
 echo Step 2: Adding all files (including database configuration)...
 git add .
