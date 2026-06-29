@@ -572,8 +572,25 @@ function get_category_icon_url($category) {
         return $fallbacks[$category_key];
     }
     
-    // Default dynamic placeholder link fallback if key not matched
-    return 'https://placehold.co/100x100/10b981/ffffff?text=' . urlencode(ucfirst($category_key));
+    // Generate a beautiful, local SVG fallback dynamically
+    $text_len = strlen($category_key);
+    $font_size = 20;
+    if ($text_len > 12) {
+        $font_size = 11;
+    } elseif ($text_len > 10) {
+        $font_size = 13;
+    } elseif ($text_len > 8) {
+        $font_size = 15;
+    } elseif ($text_len > 6) {
+        $font_size = 17;
+    }
+    
+    $label_text = ucfirst($category_key);
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">' .
+           '<circle cx="50" cy="50" r="48" fill="#10b981" />' .
+           '<text x="50" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="' . $font_size . '" font-weight="800" fill="#ffffff" text-anchor="middle">' . $label_text . '</text>' .
+           '</svg>';
+    return 'data:image/svg+xml;utf8,' . rawurlencode($svg);
 }
 
 // Live self-healing database-driven product images restore (runs outside migrations)
