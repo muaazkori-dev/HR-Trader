@@ -166,9 +166,9 @@ if (empty($hero_banners_json)) {
                 <img src="<?php echo get_category_icon_url($cat_key); ?>" alt="<?php echo htmlspecialchars($cat['name']); ?>" class="w-full h-full object-cover">
             </div>
             <div class="min-w-0 w-full">
-                <h4 class="font-bold text-slate-800 dark:text-slate-205 text-xs sm:text-sm truncate"><?php echo htmlspecialchars($cat['name']); ?></h4>
+                <h4 class="font-bold text-slate-800 dark:text-slate-205 text-xs sm:text-sm whitespace-normal leading-tight"><?php echo htmlspecialchars($cat['name']); ?></h4>
                 <?php if (!empty($cat['urdu'])): ?>
-                    <p class="text-[9px] sm:text-[10px] text-slate-550 urdu-text tracking-wider truncate"><?php echo htmlspecialchars($cat['urdu']); ?></p>
+                    <p class="text-[9px] sm:text-[10px] text-slate-550 urdu-text tracking-wider whitespace-normal leading-tight mt-0.5"><?php echo htmlspecialchars($cat['urdu']); ?></p>
                 <?php endif; ?>
             </div>
         </a>
