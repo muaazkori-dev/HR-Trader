@@ -536,6 +536,14 @@ define('WHATSAPP_NUMBER', get_setting('whatsapp_number', '923033943814')); // Wh
  * Get category icon URL, with clean SVG fallback data URI if file is missing from disk
  */
 function get_category_icon_url($category) {
+    // Check if a direct custom icon for this category key has been uploaded and exists
+    $direct_path = 'assets/images/categories/' . $category . '.png';
+    $full_direct_path = __DIR__ . '/../' . $direct_path;
+    if (file_exists($full_direct_path)) {
+        $version = filemtime($full_direct_path);
+        return BASE_URL . $direct_path . '?v=' . $version;
+    }
+
     $mapping = [
         'beverages' => 'cold_drinks',
         'shampoo' => 'cosmetics',
