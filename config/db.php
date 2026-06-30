@@ -541,18 +541,23 @@ function get_category_icon_url($category) {
     $category_key = isset($mapping[$category]) ? $mapping[$category] : $category;
     
     $local_path = 'assets/images/categories/' . $category_key . '.png';
+    $full_local_path = __DIR__ . '/../' . $local_path;
+    
     if ($category_key === 'ice_cream' || $category_key === 'milk') {
         // Double check jpg extension fallback
-        if (!file_exists(__DIR__ . '/../' . $local_path)) {
+        if (!file_exists($full_local_path)) {
             $local_jpg = 'assets/images/categories/' . $category_key . '.jpg';
-            if (file_exists(__DIR__ . '/../' . $local_jpg)) {
-                return BASE_URL . $local_jpg;
+            $full_local_jpg = __DIR__ . '/../' . $local_jpg;
+            if (file_exists($full_local_jpg)) {
+                $version = file_exists($full_local_jpg) ? filemtime($full_local_jpg) : time();
+                return BASE_URL . $local_jpg . '?v=' . $version;
             }
         }
     }
     
-    if (file_exists(__DIR__ . '/../' . $local_path)) {
-        return BASE_URL . $local_path;
+    if (file_exists($full_local_path)) {
+        $version = file_exists($full_local_path) ? filemtime($full_local_path) : time();
+        return BASE_URL . $local_path . '?v=' . $version;
     }
 
     // Dynamic, high-quality, lightweight SVG fallbacks keyed by category type
