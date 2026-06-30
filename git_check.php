@@ -16,7 +16,12 @@ foreach ($paths as $name => $full) {
         $files = scandir($full);
         foreach ($files as $f) {
             if ($f === '.' || $f === '..') continue;
-            echo "  $f (" . filesize($full . '/' . $f) . " bytes)\n";
+            $f_path = $full . '/' . $f;
+            if (is_dir($f_path)) {
+                echo "  $f [DIR]\n";
+            } else {
+                echo "  $f (" . @filesize($f_path) . " bytes)\n";
+            }
         }
     }
     echo "\n";
