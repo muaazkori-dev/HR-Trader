@@ -91,7 +91,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet"></noscript>
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=2.3">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css?v=<?php echo file_exists(__DIR__ . '/../assets/css/style.css') ? filemtime(__DIR__ . '/../assets/css/style.css') : '2.3'; ?>">
     <!-- Local FontAwesome Icons (Fast and CDN-independent) -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/all.min.css">
     
