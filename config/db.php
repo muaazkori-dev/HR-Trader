@@ -122,10 +122,16 @@ try {
     );
     
     if (isset($_GET['debug_images'])) {
-        $stmt = $pdo->query("SELECT id, name, category, image FROM products ORDER BY id DESC LIMIT 15");
+        $stmt = $pdo->query("SELECT id, name, category, image FROM products WHERE image IS NOT NULL AND image != '' ORDER BY id DESC LIMIT 15");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         header('Content-Type: application/json');
         echo json_encode($rows, JSON_PRETTY_PRINT);
+        exit;
+    }
+    
+    if (isset($_GET['debug_categories'])) {
+        header('Content-Type: application/json');
+        echo get_setting('store_categories', '[]');
         exit;
     }
     

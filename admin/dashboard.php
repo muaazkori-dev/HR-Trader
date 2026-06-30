@@ -296,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $tmp_name = $_FILES['add_category_icon']['tmp_name'];
                     $filename = $_FILES['add_category_icon']['name'];
                     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                    if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg'])) {
+                    if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg', 'webp'])) {
                         $target_path = __DIR__ . '/../assets/images/categories/' . $add_key . '.png';
                         if (move_uploaded_file($tmp_name, $target_path)) {
                             $backup_dir = __DIR__ . '/../../product_uploads/categories';
@@ -328,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     if ($error === UPLOAD_ERR_OK) {
                         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                        if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg'])) {
+                        if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg', 'webp'])) {
                             $target_name = $cat_key . '.png';
                             $target_path = __DIR__ . '/../assets/images/categories/' . $target_name;
                             
