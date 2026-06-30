@@ -3,6 +3,7 @@ assets/images/products/*
 !assets/images/products/.gitkeep
 assets/images/categories/*
 !assets/images/categories/.gitkeep
+product_uploads/
 website.zip
 website.zip.zip
 project.zip.zip

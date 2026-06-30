@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if (compressAndSaveUploadedImage($file_tmp, $dest_path, $file_ext)) {
                                     $image_path = 'assets/images/products/' . $new_file_name;
                                     // Save backup copy outside public_html
-                                    $backup_dir = __DIR__ . '/../../product_uploads/';
+                                    $backup_dir = __DIR__ . '/../product_uploads/';
                                     if (!is_dir($backup_dir)) {
                                         @mkdir($backup_dir, 0777, true);
                                     }
@@ -287,11 +287,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     if ($image_path) {
                                         @unlink(__DIR__ . '/../' . $image_path);
                                         $old_filename = basename($image_path);
-                                        @unlink(__DIR__ . '/../../product_uploads/' . $old_filename);
+                                        @unlink(__DIR__ . '/../product_uploads/' . $old_filename);
                                     }
                                     $image_path = 'assets/images/products/' . $new_file_name;
                                     // Save backup copy outside public_html
-                                    $backup_dir = __DIR__ . '/../../product_uploads/';
+                                    $backup_dir = __DIR__ . '/../product_uploads/';
                                     if (!is_dir($backup_dir)) {
                                         @mkdir($backup_dir, 0777, true);
                                     }
@@ -359,7 +359,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($prod && !empty($prod['image'])) {
                         @unlink(__DIR__ . '/../' . $prod['image']);
                         $old_filename = basename($prod['image']);
-                        @unlink(__DIR__ . '/../../product_uploads/' . $old_filename);
+                        @unlink(__DIR__ . '/../product_uploads/' . $old_filename);
                     }
 
                     $stmt = $pdo->prepare("DELETE FROM products WHERE id = :id");

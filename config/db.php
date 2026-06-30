@@ -622,7 +622,7 @@ if (isset($pdo) && !$is_local) {
         try {
             $public_html_root = dirname(__DIR__);
             $target_upload_dir = $public_html_root . '/assets/images/products';
-            $backup_upload_dir = dirname($public_html_root) . '/product_uploads';
+            $backup_upload_dir = $public_html_root . '/product_uploads';
 
             if (!@is_dir($target_upload_dir)) {
                 @mkdir($target_upload_dir, 0777, true);
@@ -681,7 +681,7 @@ if (isset($pdo) && !$is_local) {
             if (is_array($sync_cats)) {
                 foreach (array_keys($sync_cats) as $cat_k) {
                     $t_file = $public_html_root . '/assets/images/categories/' . $cat_k . '.png';
-                    $b_file = dirname($public_html_root) . '/product_uploads/categories/' . $cat_k . '.png';
+                    $b_file = $public_html_root . '/product_uploads/categories/' . $cat_k . '.png';
                     if (!@file_exists($t_file) && @file_exists($b_file) && @is_file($b_file)) {
                         $cat_dir = dirname($t_file);
                         if (!@is_dir($cat_dir)) {

@@ -299,7 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     if (in_array($ext, ['png', 'jpg', 'jpeg', 'svg', 'webp'])) {
                         $target_path = __DIR__ . '/../assets/images/categories/' . $add_key . '.png';
                         if (move_uploaded_file($tmp_name, $target_path)) {
-                            $backup_dir = __DIR__ . '/../../product_uploads/categories';
+                            $backup_dir = __DIR__ . '/../product_uploads/categories';
                             if (!is_dir($backup_dir)) {
                                 @mkdir($backup_dir, 0777, true);
                             }
@@ -338,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             }
                             
                             if (move_uploaded_file($tmp_name, $target_path)) {
-                                $backup_dir = __DIR__ . '/../../product_uploads/categories';
+                                $backup_dir = __DIR__ . '/../product_uploads/categories';
                                 if (!is_dir($backup_dir)) {
                                     @mkdir($backup_dir, 0777, true);
                                 }
@@ -369,7 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $old_img = $_POST['banner_old_image'][$idx] ?? '';
                     if (!empty($old_img) && strpos($old_img, 'hero_grocery_banner') === false) {
                         @unlink(__DIR__ . '/../' . $old_img);
-                        @unlink(__DIR__ . '/../../product_uploads/' . basename($old_img));
+                        @unlink(__DIR__ . '/../product_uploads/' . basename($old_img));
                     }
                     continue;
                 }
@@ -392,11 +392,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         if (@move_uploaded_file($tmp_name, $dest_path)) {
                             if (!empty($image_path) && strpos($image_path, 'hero_grocery_banner') === false) {
                                 @unlink(__DIR__ . '/../' . $image_path);
-                                @unlink(__DIR__ . '/../../product_uploads/' . basename($image_path));
+                                @unlink(__DIR__ . '/../product_uploads/' . basename($image_path));
                             }
                             $image_path = 'assets/images/products/' . $new_name;
                             
-                            $backup_dir = __DIR__ . '/../../product_uploads/';
+                            $backup_dir = __DIR__ . '/../product_uploads/';
                             if (!is_dir($backup_dir)) {
                                 @mkdir($backup_dir, 0777, true);
                             }
@@ -466,7 +466,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         $old_promo_img = get_setting('promo_popup_image', '');
                         if (!empty($old_promo_img)) {
                             @unlink(__DIR__ . '/../' . $old_promo_img);
-                            @unlink(__DIR__ . '/../../product_uploads/' . basename($old_promo_img));
+                            @unlink(__DIR__ . '/../product_uploads/' . basename($old_promo_img));
                         }
                         
                         // Save new image setting
@@ -474,7 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         update_setting('promo_popup_image', $relative_image_path);
                         
                         // Save backup copy outside public_html
-                        $backup_dir = __DIR__ . '/../../product_uploads/';
+                        $backup_dir = __DIR__ . '/../product_uploads/';
                         if (!is_dir($backup_dir)) {
                             @mkdir($backup_dir, 0777, true);
                         }
