@@ -239,11 +239,11 @@ body {
 }
 
 /* Logo containers in header/footer to stay cleanly white in dark modes */
-.theme-midnight_indigo header a div, .theme-midnight_indigo footer div div,
-.theme-cyberpunk_neon header a div, .theme-cyberpunk_neon footer div div,
-.theme-deep_purple header a div, .theme-deep_purple footer div div,
-.theme-forest_dark header a div, .theme-forest_dark footer div div,
-.theme-crimson_dark header a div, .theme-crimson_dark footer div div {
+.theme-midnight_indigo .logo-container,
+.theme-cyberpunk_neon .logo-container,
+.theme-deep_purple .logo-container,
+.theme-forest_dark .logo-container,
+.theme-crimson_dark .logo-container {
     background-color: #ffffff !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
 }

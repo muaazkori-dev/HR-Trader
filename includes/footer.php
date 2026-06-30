@@ -14,7 +14,7 @@ $today_timings = $shop_timings[$today_day] ?? '6:00 AM - 12:00 PM';
             <!-- Store info -->
             <div class="space-y-4 col-span-1 md:col-span-2">
                 <div class="flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-full overflow-hidden border border-slate-200 bg-white shadow-sm flex-shrink-0 flex items-center justify-center p-1">
+                    <div class="h-10 w-10 rounded-full overflow-hidden border border-slate-200 bg-white shadow-sm flex-shrink-0 flex items-center justify-center p-1 logo-container">
                         <img src="<?php echo BASE_URL; ?>assets/images/logo.png" alt="HR Traders Logo" class="w-full h-full object-contain">
                     </div>
                     <div class="flex flex-col">

@@ -309,7 +309,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
             
             <!-- Brand Logo -->
             <a href="<?php echo BASE_URL; ?>" class="flex-shrink-0 flex items-center gap-2.5">
-                <div class="h-11 w-11 rounded-full overflow-hidden border border-slate-200 bg-white shadow-sm flex-shrink-0 flex items-center justify-center p-1">
+                <div class="h-11 w-11 rounded-full overflow-hidden border border-slate-200 bg-white shadow-sm flex-shrink-0 flex items-center justify-center p-1 logo-container">
                     <img src="<?php echo BASE_URL; ?>assets/images/logo.png?v=2.1" alt="HR Traders Logo" class="w-full h-full object-contain">
                 </div>
                 <div class="flex flex-col">
