@@ -1,5 +1,6 @@
 <?php
 header('Content-Type: text/plain');
+// Unique cache buster comment: 1782672345
 
 $paths = [
     'assets' => __DIR__ . '/assets',
