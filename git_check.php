@@ -1,10 +1,13 @@
 <?php
 header('Content-Type: text/plain');
-chdir("d:/xampp orginal/htdocs/HR Traders");
-echo "1. Staging all files...\n";
-echo shell_exec("git add --all 2>&1");
-echo "2. Committing changes...\n";
-echo shell_exec("git commit -m \"Deployment: Added permissions check and path fixes\" 2>&1");
-echo "3. Pushing changes...\n";
-echo shell_exec("git push origin main 2>&1");
+$paths = [
+    'assets/images/categories',
+    '../product_uploads/categories'
+];
+foreach ($paths as $p) {
+    $full = dirname(__DIR__) . '/' . str_replace('../', '', $p);
+    echo "$p path: $full\n";
+    echo "$p exists: " . (is_dir($full) ? 'yes' : 'no') . "\n";
+    echo "$p writeable: " . (is_writable($full) ? 'yes' : 'no') . "\n\n";
+}
 ?>
