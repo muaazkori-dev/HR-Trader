@@ -1,10 +1,24 @@
 <?php
 header('Content-Type: text/plain');
-$db_content = file_get_contents(__DIR__ . '/config/db.php');
-$start = strpos($db_content, 'function get_category_icon_url');
-if ($start !== false) {
-    echo substr($db_content, $start, 700);
-} else {
-    echo "Function not found!";
+
+$paths = [
+    'assets/images/categories' => __DIR__ . '/assets/images/categories',
+    'product_uploads/categories' => __DIR__ . '/../product_uploads/categories'
+];
+
+foreach ($paths as $name => $full) {
+    echo "--- $name ---\n";
+    echo "Path: $full\n";
+    echo "Exists: " . (is_dir($full) ? 'yes' : 'no') . "\n";
+    echo "Writeable: " . (is_writable($full) ? 'yes' : 'no') . "\n";
+    if (is_dir($full)) {
+        echo "Files:\n";
+        $files = scandir($full);
+        foreach ($files as $f) {
+            if ($f === '.' || $f === '..') continue;
+            echo "  $f (" . filesize($full . '/' . $f) . " bytes)\n";
+        }
+    }
+    echo "\n";
 }
 ?>
