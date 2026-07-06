@@ -20,15 +20,17 @@ try {
     
     $is_cosmetics = (stripos($query, 'cosmetics') !== false) ? 1 : 0;
     
-    $stmt = $pdo->prepare("SELECT id, name, category, price, image 
+    $stmt = $pdo->prepare("SELECT id, name, category, price, image, barcode 
                            FROM products 
                            WHERE name LIKE :search1 
                               OR category LIKE :search2 
+                              OR barcode LIKE :search3 
                               OR (category IN ('shampoo', 'soap', 'toothpaste', 'body_wash', 'deodorant') AND :is_cosmetics = 1)
                            LIMIT 10");
     $stmt->execute([
         'search1' => $search_term,
         'search2' => $search_term,
+        'search3' => $search_term,
         'is_cosmetics' => $is_cosmetics
     ]);
     $products = $stmt->fetchAll();
@@ -40,7 +42,8 @@ try {
             'name' => sanitize($prod['name']),
             'category' => sanitize($prod['category']),
             'price' => (float)$prod['price'],
-            'image' => $prod['image'] ? $prod['image'] : 'assets/images/placeholder.svg'
+            'image' => $prod['image'] ? $prod['image'] : 'assets/images/placeholder.svg',
+            'barcode' => sanitize($prod['barcode'])
         ];
     }
 

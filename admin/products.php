@@ -558,12 +558,14 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
         <!-- Search and Filters form -->
         <form action="products.php" method="GET" class="flex flex-wrap items-center gap-3 flex-1">
             <div class="relative w-64">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-505">
                     <i class="fas fa-search"></i>
                 </span>
-                <input type="text" name="search" value="<?php echo sanitize($search_query); ?>"
+                <input type="text" id="admin-search" name="search" value="<?php echo sanitize($search_query); ?>" autocomplete="off"
                        class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-900"
                        placeholder="Search name or barcode...">
+                <!-- Suggestions Dropdown -->
+                <div id="admin-search-results" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl hidden z-50 max-h-64 overflow-y-auto"></div>
             </div>
 
             <select name="category" onchange="this.form.submit()"
@@ -1049,6 +1051,133 @@ document.addEventListener('DOMContentLoaded', () => {
             populateFormIds();
             bulkActionForm.submit();
         });
+    }
+
+    // Admin Live Autocomplete Search implementation
+    const adminSearchInput = document.getElementById('admin-search');
+    const adminSuggestionsBox = document.getElementById('admin-search-results');
+    
+    if (adminSearchInput && adminSuggestionsBox) {
+        let debounceTimer;
+        let abortController = null;
+
+        adminSearchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value.trim();
+
+            if (query.length < 1) {
+                adminSuggestionsBox.innerHTML = '';
+                adminSuggestionsBox.classList.add('hidden');
+                if (abortController) {
+                    abortController.abort();
+                }
+                filterTableRows('');
+                return;
+            }
+
+            // Real-time client-side filter
+            filterTableRows(query);
+
+            debounceTimer = setTimeout(() => {
+                if (abortController) {
+                    abortController.abort();
+                }
+                abortController = new AbortController();
+                const signal = abortController.signal;
+
+                fetch(BASE_URL + `api/live_search.php?q=${encodeURIComponent(query)}`, { signal })
+                    .then(res => res.json())
+                    .then(products => {
+                        if (products.length === 0) {
+                            adminSuggestionsBox.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">No catalog matches found</div>`;
+                            adminSuggestionsBox.classList.remove('hidden');
+                            return;
+                        }
+
+                        let html = '';
+                        products.forEach(p => {
+                            const safeName = p.name.replace(/['"\\]/g, '\\$&');
+                            html += `
+                                <div onclick="selectAdminSearch('${safeName}')" 
+                                     class="p-2.5 hover:bg-slate-50 flex items-center justify-between gap-3 border-b border-slate-100 last:border-0 cursor-pointer transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <img src="${BASE_URL + p.image}" class="w-7 h-7 object-cover rounded-md border border-slate-200 bg-slate-50 flex-shrink-0" loading="lazy">
+                                        <div class="min-w-0 text-left">
+                                            <h5 class="text-xs font-semibold text-slate-800 leading-tight truncate">${p.name}</h5>
+                                            <p class="text-[10px] text-slate-400 font-mono">${p.barcode ? p.barcode : 'No Barcode'}</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] uppercase font-bold bg-slate-100 text-slate-600 border border-slate-200 flex-shrink-0">
+                                        Rs. ${p.price.toFixed(0)}
+                                    </span>
+                                </div>
+                            `;
+                        });
+                        adminSuggestionsBox.innerHTML = html;
+                        adminSuggestionsBox.classList.remove('hidden');
+                    })
+                    .catch(err => {
+                        if (err.name !== 'AbortError') {
+                            console.error(err);
+                        }
+                    });
+            }, 250);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!adminSearchInput.contains(e.target) && !adminSuggestionsBox.contains(e.target)) {
+                adminSuggestionsBox.classList.add('hidden');
+            }
+        });
+    }
+
+    window.selectAdminSearch = function(name) {
+        if (adminSearchInput) {
+            adminSearchInput.value = name;
+            adminSuggestionsBox.classList.add('hidden');
+            adminSearchInput.form.submit();
+        }
+    };
+
+    function filterTableRows(query) {
+        query = query.toLowerCase().trim();
+        const rows = document.querySelectorAll('table tbody tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            if (row.id === 'no-match-row' || (row.cells.length === 1 && row.cells[0].colSpan === 9)) {
+                return;
+            }
+            
+            const barcodeCell = row.querySelector('td:nth-child(2)');
+            const nameCell = row.querySelector('td:nth-child(3) strong');
+            
+            const barcode = barcodeCell ? barcodeCell.textContent.toLowerCase() : '';
+            const name = nameCell ? nameCell.textContent.toLowerCase() : '';
+            
+            if (name.includes(query) || barcode.includes(query)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        let noMatchRow = document.getElementById('no-match-row');
+        if (visibleCount === 0 && query !== '') {
+            if (!noMatchRow) {
+                const tbody = document.querySelector('table tbody');
+                noMatchRow = document.createElement('tr');
+                noMatchRow.id = 'no-match-row';
+                noMatchRow.className = 'bg-white';
+                noMatchRow.innerHTML = `<td colspan="9" class="p-16 text-center text-slate-400 font-semibold">No products matching "${query}" found in current inventory.</td>`;
+                tbody.appendChild(noMatchRow);
+            }
+        } else {
+            if (noMatchRow) {
+                noMatchRow.remove();
+            }
+        }
     }
 });
 </script>
