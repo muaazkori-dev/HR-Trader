@@ -44,6 +44,12 @@ export const Header: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isDemandModalOpen, setIsDemandModalOpen] = useState(false);
+  const [demandName, setDemandName] = useState('');
+  const [demandPhone, setDemandPhone] = useState('');
+  const [demandDetails, setDemandDetails] = useState('');
+  const [isSubmittingDemand, setIsSubmittingDemand] = useState(false);
+  const [demandSuccess, setDemandSuccess] = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -121,6 +127,39 @@ export const Header: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleDemandSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!demandName.trim() || !demandPhone.trim() || !demandDetails.trim()) return;
+
+    setIsSubmittingDemand(true);
+    try {
+      const { error } = await supabase
+        .from('product_demands')
+        .insert({
+          customer_name: demandName.trim(),
+          customer_phone: demandPhone.trim(),
+          demand_details: demandDetails.trim(),
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      setDemandSuccess(true);
+      setDemandName('');
+      setDemandPhone('');
+      setDemandDetails('');
+      setTimeout(() => {
+        setDemandSuccess(false);
+        setIsDemandModalOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Error submitting demand:', err);
+      alert('Failed to submit demand. Please try again.');
+    } finally {
+      setIsSubmittingDemand(false);
+    }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,6 +262,14 @@ export const Header: React.FC = () => {
             <Link href="/shop" className="hidden lg:inline text-xs font-bold text-slate-600 hover:text-emerald-600 transition-colors">
               Browse Shop
             </Link>
+
+            <button
+              onClick={() => setIsDemandModalOpen(true)}
+              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+            >
+              <ClipboardList className="w-3.5 h-3.5 text-amber-600" />
+              Demand Box
+            </button>
 
             {/* User Login/Account */}
             <div ref={profileRef} className="relative">
@@ -493,6 +540,92 @@ export const Header: React.FC = () => {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* 4. CUSTOMER DEMAND BOX MODAL */}
+      {isDemandModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-amber-600 animate-pulse" />
+                <h3 className="font-black text-slate-800 text-sm uppercase tracking-wider text-left">Demand Box Register</h3>
+              </div>
+              <button
+                onClick={() => setIsDemandModalOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {demandSuccess ? (
+              <div className="py-8 text-center space-y-3">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold shadow-md">
+                  ✓
+                </div>
+                <h4 className="text-sm font-bold text-slate-800">Demand Registered!</h4>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                  Thank you! We will update our stock status or contact you shortly about this product.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleDemandSubmit} className="space-y-4 text-left">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Is there a product you need that we do not have in stock? Drop your name, contact, and product details below!
+                </p>
+
+                {/* Name */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={demandName}
+                    onChange={(e) => setDemandName(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 text-xs font-semibold text-slate-805"
+                    placeholder="e.g. Haroon Kori"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone / WhatsApp Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={demandPhone}
+                    onChange={(e) => setDemandPhone(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 text-xs font-semibold text-slate-805"
+                    placeholder="e.g. 03337155323"
+                  />
+                </div>
+
+                {/* Details */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Product Details (Name, Qty, Brand)</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={demandDetails}
+                    onChange={(e) => setDemandDetails(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-500 text-xs font-semibold text-slate-805 resize-none"
+                    placeholder="e.g. National Chili Sauce 500ml - 2 bottles"
+                  />
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={isSubmittingDemand}
+                  className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl shadow-md transition-all uppercase tracking-wider flex items-center justify-center gap-1.5"
+                >
+                  {isSubmittingDemand ? 'Registering...' : 'Submit Request'}
+                </button>
+              </form>
             )}
           </div>
         </div>

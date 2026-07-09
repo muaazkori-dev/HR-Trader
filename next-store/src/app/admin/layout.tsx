@@ -13,7 +13,9 @@ import {
   ShieldCheck, 
   Menu,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  Barcode,
+  UserCheck
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -47,8 +49,11 @@ export default function AdminLayout({
 
   const navLinks = [
     { href: '/admin', label: 'Dashboard Overview', icon: TrendingUp },
+    { href: '/admin/pos', label: 'POS Billing Desk', icon: Barcode },
     { href: '/admin/products', label: 'Inventory Catalog', icon: ShoppingBag },
     { href: '/admin/orders', label: 'Order Register', icon: ClipboardList },
+    { href: '/admin/demands', label: 'Customer Demands', icon: ClipboardList },
+    ...(profile?.role === 'owner' ? [{ href: '/admin/staff', label: 'Staff Management', icon: UserCheck }] : []),
     { href: '/admin/settings', label: 'System Settings', icon: Settings },
   ];
 

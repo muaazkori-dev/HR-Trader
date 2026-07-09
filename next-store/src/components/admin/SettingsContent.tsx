@@ -55,6 +55,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
   const [dispatchTemplate, setDispatchTemplate] = useState(
     getValue('whatsapp_dispatch_template', '')
   );
+  const [storeName, setStoreName] = useState(getValue('store_name', 'HR Traders'));
+  const [storePhone, setStorePhone] = useState(getValue('store_phone', '+92 333 7155323'));
+  const [storeEmail, setStoreEmail] = useState(getValue('store_email', 'owner@hrtraders.com'));
+  const [storeAddress, setStoreAddress] = useState(getValue('store_address', 'Main Bazaar, Lahore, Pakistan'));
+  const [storeMapsUrl, setStoreMapsUrl] = useState(getValue('store_maps_url', ''));
+  const [whatsappNumber, setWhatsappNumber] = useState(getValue('whatsapp_number', '03337155323'));
+  const [facebookUrl, setFacebookUrl] = useState(getValue('facebook_url', ''));
+  const [instagramUrl, setInstagramUrl] = useState(getValue('instagram_url', ''));
+  const [tiktokUrl, setTiktokUrl] = useState(getValue('tiktok_url', ''));
+  const [minOrderValue, setMinOrderValue] = useState(getValue('min_order_value', '0'));
+  const [shippingFee, setShippingFee] = useState(getValue('shipping_fee', '0'));
+  const [storeCurrency, setStoreCurrency] = useState(getValue('store_currency', 'Rs.'));
 
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
@@ -73,6 +85,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
         { key_name: 'low_stock_threshold', val_value: lowStock },
         { key_name: 'homepage_announcement', val_value: announcement },
         { key_name: 'whatsapp_dispatch_template', val_value: dispatchTemplate },
+        { key_name: 'store_name', val_value: storeName },
+        { key_name: 'store_phone', val_value: storePhone },
+        { key_name: 'store_email', val_value: storeEmail },
+        { key_name: 'store_address', val_value: storeAddress },
+        { key_name: 'store_maps_url', val_value: storeMapsUrl },
+        { key_name: 'whatsapp_number', val_value: whatsappNumber },
+        { key_name: 'facebook_url', val_value: facebookUrl },
+        { key_name: 'instagram_url', val_value: instagramUrl },
+        { key_name: 'tiktok_url', val_value: tiktokUrl },
+        { key_name: 'min_order_value', val_value: minOrderValue },
+        { key_name: 'shipping_fee', val_value: shippingFee },
+        { key_name: 'store_currency', val_value: storeCurrency },
       ];
 
       for (const update of updates) {
@@ -199,6 +223,150 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                   <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;ref&#125;</code>, 
                   <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;total&#125;</code>, 
                   <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;address&#125;</code>
+                </div>
+              </div>
+            </div>
+
+            {/* Store Information */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Store Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Store Name</label>
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Store Currency Symbol</label>
+                  <input
+                    type="text"
+                    value={storeCurrency}
+                    onChange={(e) => setStoreCurrency(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Contact Email</label>
+                  <input
+                    type="email"
+                    value={storeEmail}
+                    onChange={(e) => setStoreEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Contact Phone</label>
+                  <input
+                    type="text"
+                    value={storePhone}
+                    onChange={(e) => setStorePhone(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Store Physical Address</label>
+                <input
+                  type="text"
+                  value={storeAddress}
+                  onChange={(e) => setStoreAddress(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Google Maps URL</label>
+                <input
+                  type="text"
+                  value={storeMapsUrl}
+                  onChange={(e) => setStoreMapsUrl(e.target.value)}
+                  placeholder="https://maps.google.com/..."
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Checkout Config */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Checkout Configurations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">WhatsApp Contact</label>
+                  <input
+                    type="text"
+                    value={whatsappNumber}
+                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                    required
+                    placeholder="e.g. 03337155323"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Min Order Value (Rs.)</label>
+                  <input
+                    type="number"
+                    value={minOrderValue}
+                    onChange={(e) => setMinOrderValue(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Standard Shipping (Rs.)</label>
+                  <input
+                    type="number"
+                    value={shippingFee}
+                    onChange={(e) => setShippingFee(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Social Media Linkage */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Social Media Links</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Facebook Page URL</label>
+                  <input
+                    type="text"
+                    value={facebookUrl}
+                    onChange={(e) => setFacebookUrl(e.target.value)}
+                    placeholder="https://facebook.com/..."
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-650"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Instagram URL</label>
+                  <input
+                    type="text"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                    placeholder="https://instagram.com/..."
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-650"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">TikTok Profile URL</label>
+                  <input
+                    type="text"
+                    value={tiktokUrl}
+                    onChange={(e) => setTiktokUrl(e.target.value)}
+                    placeholder="https://tiktok.com/..."
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-650"
+                  />
                 </div>
               </div>
             </div>
