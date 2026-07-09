@@ -13,7 +13,7 @@ echo "2. Git add all files...\n";
 echo shell_exec('git add . 2>&1');
 
 echo "3. Git commit...\n";
-echo shell_exec('git commit -m "Update store favicon and brand icon to new circular green leaf logo" 2>&1');
+echo shell_exec('git commit -m "Implement multi-branch WhatsApp floating support popup and update footer store locations" 2>&1');
 
 echo "4. Git push origin main...\n";
 $output = shell_exec('git push origin main 2>&1');
