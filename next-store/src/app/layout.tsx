@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     'Shop the freshest organic grains, cosmetics, and cold beverages online. Fast home delivery and retail store in Tando Adam.',
 };
 
-export const revalidate = 0; // Disable server caching to ensure theme changes apply instantly
+export const revalidate = 30; // Enable 30-second edge CDN caching for instant page transitions
 
 export default async function RootLayout({
   children,
