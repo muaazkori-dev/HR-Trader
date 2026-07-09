@@ -23,7 +23,22 @@ interface ProductPageProps {
   }>;
 }
 
-export const revalidate = 30; // Cache on edge CDN for 30 seconds for instant transition
+export const revalidate = 30; // Revalidate cache in the background every 30 seconds
+
+export async function generateStaticParams() {
+  try {
+    const { data: products } = await supabase
+      .from('products')
+      .select('id');
+    if (!products) return [];
+    return products.map((p) => ({
+      id: p.id.toString(),
+    }));
+  } catch (error) {
+    console.error('Error in generateStaticParams:', error);
+    return [];
+  }
+}
 
 export default async function ProductDetails({ params }: ProductPageProps) {
   const resolvedParams = await params;

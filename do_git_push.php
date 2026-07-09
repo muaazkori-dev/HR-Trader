@@ -13,7 +13,7 @@ echo "2. Git add all files...\n";
 echo shell_exec('git add . 2>&1');
 
 echo "3. Git commit...\n";
-echo shell_exec('git commit -m "Optimize image delivery by converting key storefront paths to Next.js Image component" 2>&1');
+echo shell_exec('git commit -m "Optimize page transitions by adding generateStaticParams for product static pre-rendering" 2>&1');
 
 echo "4. Git push origin main...\n";
 $output = shell_exec('git push origin main 2>&1');
