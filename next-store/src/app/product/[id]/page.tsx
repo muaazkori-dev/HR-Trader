@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -122,12 +123,17 @@ export default async function ProductDetails({ params }: ProductPageProps) {
           
           {/* Left Column: Image wrapper */}
           <div className="lg:col-span-5">
-            <div className="p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center relative min-h-[300px] sm:min-h-[400px]">
-              <img
-                src={product.image ? `/${product.image}` : '/assets/images/placeholder.svg'}
-                alt={product.name}
-                className="max-h-[280px] sm:max-h-[360px] max-w-full object-contain rounded-2xl drop-shadow-md hover:scale-105 transition-transform duration-300"
-              />
+            <div className="p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center relative min-h-[300px] sm:min-h-[400px] w-full">
+              <div className="relative w-full h-[280px] sm:h-[360px]">
+                <Image
+                  src={product.image ? `/${product.image}` : '/assets/images/placeholder.svg'}
+                  alt={product.name}
+                  fill
+                  className="object-contain rounded-2xl drop-shadow-md hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                />
+              </div>
               <span className="absolute top-4 left-4 px-3 py-1 rounded-xl text-[9px] uppercase font-extrabold bg-white/90 backdrop-blur-sm border border-slate-250 text-slate-500 shadow-sm">
                 {product.category.replace('_', ' ')}
               </span>
@@ -282,11 +288,12 @@ export default async function ProductDetails({ params }: ProductPageProps) {
                       href={`/product/${p.id}`}
                       className="block relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 mb-3 flex-shrink-0"
                     >
-                      <img
+                      <Image
                         src={p.image ? `/${p.image}` : '/assets/images/placeholder.svg'}
                         alt={p.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 50vw, 25vw"
                       />
                     </Link>
                     <div className="text-left space-y-0.5">
