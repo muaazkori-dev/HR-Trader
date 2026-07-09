@@ -18,7 +18,7 @@ const CATEGORIES = [
   { id: 'milk', name: 'Dairy & Milk', icon: '🥛', desc: 'UHT Milk packs' },
 ];
 
-export const revalidate = 0; // Ensure live data on reload
+export const revalidate = 30; // Cache on edge CDN for 30 seconds for instant transition
 
 export default async function Home() {
   let products: any[] = [];
@@ -59,9 +59,6 @@ export default async function Home() {
               <Sparkles className="w-4 h-4 text-emerald-500" />
               Shop by Category
             </h2>
-            <Link href="/shop" className="text-xs font-bold text-emerald-600 hover:underline">
-              View All
-            </Link>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200">
             {CATEGORIES.map((cat) => (
@@ -190,6 +187,15 @@ export default async function Home() {
               })}
             </div>
           )}
+
+          <div className="text-center pt-8">
+            <Link
+              href="/shop"
+              className="inline-flex items-center justify-center px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-md hover:shadow-lg transition-all uppercase tracking-widest"
+            >
+              View All Products Catalog
+            </Link>
+          </div>
         </section>
 
       </main>
