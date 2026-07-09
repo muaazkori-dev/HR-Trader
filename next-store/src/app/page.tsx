@@ -45,14 +45,12 @@ export default async function Home() {
       {/* Header */}
       <Header />
 
+      {/* 1. HERO SLIDER CAROUSEL (Full Width with side peek) */}
+      <HomeSlider />
+
       {/* Main Container */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-12">
         
-        {/* 1. HERO SLIDER CAROUSEL */}
-        <section className="rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-white">
-          <HomeSlider />
-        </section>
-
         {/* 2. DYNAMIC HORIZONTAL CATEGORY SCROLL */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
