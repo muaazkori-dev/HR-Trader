@@ -1,0 +1,98 @@
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\eslint',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\eslint\lib\cli-engine'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\eslint\\lib\\cli-engine'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\next',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\next\dist\bin'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\next\\dist\\bin'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\next',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\next\dist\api'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\next\\dist\\api'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\resolve',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\resolve\test\shadowed_core'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\resolve\\test\\shadowed_core'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\eslint',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\eslint\lib\languages\js\source-code\token-store'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\eslint\\lib\\languages\\js\\source-code\\token-store'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\lucide-react',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\lucide-react\dist\esm'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\lucide-react\\dist\\esm'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\lucide-react',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\lucide-react\dist\esm'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\lucide-react\\dist\\esm'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\@supabase\\supabase-js',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\@supabase\supabase-js\src\lib'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\@supabase\\supabase-js\\src\\lib'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\@supabase\\supabase-js',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\@supabase\supabase-js\src\lib'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\@supabase\\supabase-js\\src\\lib'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\resolve',
+npm warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\resolve\test\resolver'] {
+npm warn cleanup       errno: -4051,
+npm warn cleanup       code: 'ENOTEMPTY',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\xampp orginal\\htdocs\\HR Traders\\next-store\\node_modules\\resolve\\test\\resolver'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm error code ENOTEMPTY
+npm error syscall rmdir
+npm error path D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\lucide-react\dist\esm\icons
+npm error errno -4051
+npm error ENOTEMPTY: directory not empty, rmdir 'D:\xampp orginal\htdocs\HR Traders\next-store\node_modules\lucide-react\dist\esm\icons'
+npm error A complete log of this run can be found in: C:\Users\Administrator\AppData\Local\npm-cache\_logs\2026-07-09T15_11_55_568Z-debug-0.log

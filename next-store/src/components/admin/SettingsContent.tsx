@@ -1,0 +1,255 @@
+'use client';
+
+import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { 
+  Settings, 
+  Save, 
+  Info, 
+  AlertCircle, 
+  CheckCircle2, 
+  Clock, 
+  Palette, 
+  Lock,
+  Unlock,
+  MessageSquare
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+interface SettingItem {
+  key_name: string;
+  val_value: string;
+}
+
+interface SettingsContentProps {
+  initialSettings: SettingItem[];
+}
+
+const THEME_OPTIONS = [
+  { id: 'emerald_green', label: 'Emerald Green (Light Default)', bg: 'bg-emerald-500' },
+  { id: 'rose_gold', label: 'Rose Gold (Light Elegant)', bg: 'bg-pink-500' },
+  { id: 'slate_blue', label: 'Slate Blue (Light Soft)', bg: 'bg-blue-500' },
+  { id: 'amber_honey', label: 'Amber Honey (Light Sunny)', bg: 'bg-amber-500' },
+  { id: 'classic_light', label: 'Monochrome (Light High Contrast)', bg: 'bg-zinc-800' },
+  { id: 'midnight_indigo', label: 'Midnight Indigo (Dark Mode)', bg: 'bg-indigo-600' },
+  { id: 'cyberpunk_neon', label: 'Cyberpunk Neon (Dark Neon)', bg: 'bg-cyan-500' },
+  { id: 'deep_purple', label: 'Deep Purple (Dark Royal)', bg: 'bg-purple-600' },
+  { id: 'forest_dark', label: 'Forest Dark (Dark Nature)', bg: 'bg-emerald-800' },
+  { id: 'crimson_dark', label: 'Crimson Ruby (Dark Intense)', bg: 'bg-rose-600' },
+];
+
+export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSettings }) => {
+  const router = useRouter();
+
+  // Find setting values
+  const getValue = (key: string, fallback = '') => {
+    return initialSettings.find((s) => s.key_name === key)?.val_value || fallback;
+  };
+
+  const [activeTheme, setActiveTheme] = useState(getValue('active_theme', 'emerald_green'));
+  const [shopStatus, setShopStatus] = useState(getValue('shop_status', 'open'));
+  const [lowStock, setLowStock] = useState(getValue('low_stock_threshold', '5'));
+  const [announcement, setAnnouncement] = useState(
+    getValue('homepage_announcement', 'Welcome to HR Traders!')
+  );
+  const [dispatchTemplate, setDispatchTemplate] = useState(
+    getValue('whatsapp_dispatch_template', '')
+  );
+
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setMessage('');
+    setIsError(false);
+
+    try {
+      const updates = [
+        { key_name: 'active_theme', val_value: activeTheme },
+        { key_name: 'shop_status', val_value: shopStatus },
+        { key_name: 'low_stock_threshold', val_value: lowStock },
+        { key_name: 'homepage_announcement', val_value: announcement },
+        { key_name: 'whatsapp_dispatch_template', val_value: dispatchTemplate },
+      ];
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('settings')
+          .upsert(update, { onConflict: 'key_name' });
+        if (error) throw error;
+      }
+
+      setIsError(false);
+      setMessage('System configuration settings successfully saved!');
+      
+      // Refresh page (triggers re-eval of layouts, theme changes immediately!)
+      router.refresh();
+      setTimeout(() => {
+        window.location.reload(); // Hard reload to repaint layout body class
+      }, 1000);
+    } catch (err: any) {
+      setIsError(true);
+      setMessage(err.message || 'Failed to save settings to database.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 w-full flex flex-col flex-1 text-left">
+      {/* Header */}
+      <section className="pb-4 border-b border-slate-200">
+        <h1 className="text-xl font-black text-slate-800 uppercase tracking-wider">System Settings</h1>
+        <p className="text-xs text-slate-400 mt-1">Configure active themes, storefront announcements, dispatch templates, and warning thresholds.</p>
+      </section>
+
+      {/* Main settings form */}
+      <form onSubmit={handleSaveSettings} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Form config */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            
+            {/* Feedback messages */}
+            {message && (
+              <div className={`p-4 rounded-xl border font-semibold text-xs leading-relaxed ${
+                isError 
+                  ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}>
+                {message}
+              </div>
+            )}
+
+            {/* Shop Status Toggle */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Store Status</label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShopStatus('open')}
+                  className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
+                    shopStatus === 'open'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
+                      : 'bg-white hover:bg-slate-50 text-slate-500 border-slate-200'
+                  }`}
+                >
+                  <Unlock className="w-4 h-4" /> Open Shop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShopStatus('closed')}
+                  className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
+                    shopStatus === 'closed'
+                      ? 'bg-rose-50 text-rose-700 border-rose-200 shadow-sm'
+                      : 'bg-white hover:bg-slate-50 text-slate-500 border-slate-200'
+                  }`}
+                >
+                  <Lock className="w-4 h-4" /> Temporarily Closed
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-normal font-normal">Closed status prevents storefront checkouts.</p>
+            </div>
+
+            {/* Announcement Banner */}
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Store Banner Announcement</label>
+              <textarea
+                value={announcement}
+                onChange={(e) => setAnnouncement(e.target.value)}
+                required
+                rows={2}
+                placeholder="Alert details displayed on home screen..."
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 resize-none font-semibold"
+              />
+            </div>
+
+            {/* Low stock threshold */}
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Low Stock warning Limit</label>
+              <input
+                type="number"
+                value={lowStock}
+                onChange={(e) => setLowStock(e.target.value)}
+                required
+                min={1}
+                className="w-32 px-4 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-mono font-bold"
+              />
+              <p className="text-[10px] text-slate-400 font-normal">Highlight item in red inside admin panels if stock falls below this quantity.</p>
+            </div>
+
+            {/* Dispatch SMS Template */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">WhatsApp Dispatch Message Template</label>
+              <textarea
+                value={dispatchTemplate}
+                onChange={(e) => setDispatchTemplate(e.target.value)}
+                rows={3}
+                placeholder="e.g. Hi {name}, your order #{ref} is out for delivery! Total: {total}..."
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono leading-relaxed"
+              />
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex gap-2 items-start text-[10px] text-slate-500 leading-normal font-normal">
+                <Info className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  Supported Dynamic Placeholders:
+                  <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;name&#125;</code>, 
+                  <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;ref&#125;</code>, 
+                  <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;total&#125;</code>, 
+                  <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;address&#125;</code>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="pt-4 border-t border-slate-100">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition-all disabled:bg-slate-350"
+              >
+                <Save className="w-4 h-4" />
+                {submitting ? 'Saving Configuration...' : 'Save Configuration settings'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Right Column: Theme picker */}
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100">
+              <Palette className="w-4 h-4 text-emerald-600" />
+              Active System Theme
+            </h3>
+
+            <div className="space-y-2">
+              {THEME_OPTIONS.map((theme) => {
+                const isActive = activeTheme === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => setActiveTheme(theme.id)}
+                    className={`w-full p-3 rounded-xl border text-xs font-semibold flex items-center gap-3 transition-all ${
+                      isActive
+                        ? 'border-emerald-500 bg-emerald-50/20 text-slate-850 font-extrabold shadow-sm'
+                        : 'border-slate-200 hover:bg-slate-50 text-slate-650'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full ${theme.bg} border border-white/20`} />
+                    <span className="truncate">{theme.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  );
+};
