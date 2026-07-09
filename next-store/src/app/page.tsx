@@ -205,3 +205,6 @@ export default async function Home() {
     </div>
   );
 }
+
+// Trigger Vercel rebuild for layout updates
+
