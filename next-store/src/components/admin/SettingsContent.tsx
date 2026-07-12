@@ -68,6 +68,21 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
   const [shippingFee, setShippingFee] = useState(getValue('shipping_fee', '0'));
   const [storeCurrency, setStoreCurrency] = useState(getValue('store_currency', 'Rs.'));
 
+  // Branch 1 locations
+  const [branch1Address, setBranch1Address] = useState(getValue('branch_1_address', 'Toor Colony, Front of Hira Public School, Tando Adam'));
+  const [branch1Phone, setBranch1Phone] = useState(getValue('branch_1_phone', '+92 303 3943814'));
+  const [branch1MapsUrl, setBranch1MapsUrl] = useState(getValue('branch_1_maps_url', 'https://maps.app.goo.gl/ux1364EzVohtCkby7'));
+
+  // Branch 2 locations
+  const [branch2Address, setBranch2Address] = useState(getValue('branch_2_address', 'Gulshan-e-Sardar, near Ayoub Hotel, Tando Adam'));
+  const [branch2Phone, setBranch2Phone] = useState(getValue('branch_2_phone', '+92 313 7889859'));
+  const [branch2MapsUrl, setBranch2MapsUrl] = useState(getValue('branch_2_maps_url', 'https://maps.app.goo.gl/PP2a4Uey6twZvHCKA?g_st=aw'));
+
+  // Business timings
+  const [timingsSatThu, setTimingsSatThu] = useState(getValue('timings_sat_thu', '6:00 AM - 12:00 PM'));
+  const [timingsFri, setTimingsFri] = useState(getValue('timings_fri', '6:00 AM - 12:00 PM'));
+  const [timingsFriEve, setTimingsFriEve] = useState(getValue('timings_fri_eve', '4:00 PM - 12:00 AM'));
+
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -97,6 +112,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
         { key_name: 'min_order_value', val_value: minOrderValue },
         { key_name: 'shipping_fee', val_value: shippingFee },
         { key_name: 'store_currency', val_value: storeCurrency },
+        { key_name: 'branch_1_address', val_value: branch1Address },
+        { key_name: 'branch_1_phone', val_value: branch1Phone },
+        { key_name: 'branch_1_maps_url', val_value: branch1MapsUrl },
+        { key_name: 'branch_2_address', val_value: branch2Address },
+        { key_name: 'branch_2_phone', val_value: branch2Phone },
+        { key_name: 'branch_2_maps_url', val_value: branch2MapsUrl },
+        { key_name: 'timings_sat_thu', val_value: timingsSatThu },
+        { key_name: 'timings_fri', val_value: timingsFri },
+        { key_name: 'timings_fri_eve', val_value: timingsFriEve },
       ];
 
       for (const update of updates) {
@@ -293,6 +317,119 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                   placeholder="https://maps.google.com/..."
                   className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono"
                 />
+              </div>
+            </div>
+
+            {/* Branch 1 Location Config */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Branch 1 Location Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Branch 1 Address</label>
+                  <input
+                    type="text"
+                    value={branch1Address}
+                    onChange={(e) => setBranch1Address(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Branch 1 Phone</label>
+                  <input
+                    type="text"
+                    value={branch1Phone}
+                    onChange={(e) => setBranch1Phone(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-505 uppercase tracking-wider text-left">Branch 1 Google Maps Link</label>
+                <input
+                  type="text"
+                  value={branch1MapsUrl}
+                  onChange={(e) => setBranch1MapsUrl(e.target.value)}
+                  required
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Branch 2 Location Config */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Branch 2 Location Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-505 uppercase tracking-wider text-left">Branch 2 Address</label>
+                  <input
+                    type="text"
+                    value={branch2Address}
+                    onChange={(e) => setBranch2Address(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-505 uppercase tracking-wider text-left">Branch 2 Phone</label>
+                  <input
+                    type="text"
+                    value={branch2Phone}
+                    onChange={(e) => setBranch2Phone(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-505 uppercase tracking-wider text-left">Branch 2 Google Maps Link</label>
+                <input
+                  type="text"
+                  value={branch2MapsUrl}
+                  onChange={(e) => setBranch2MapsUrl(e.target.value)}
+                  required
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-850 font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Business Timings Config */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Store Business Timings</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px]">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-505 uppercase tracking-wider text-left">Saturday - Thursday</label>
+                  <input
+                    type="text"
+                    value={timingsSatThu}
+                    onChange={(e) => setTimingsSatThu(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-550 uppercase tracking-wider text-left">Friday (Morning)</label>
+                  <input
+                    type="text"
+                    value={timingsFri}
+                    onChange={(e) => setTimingsFri(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-550 uppercase tracking-wider text-left">Friday (Evening)</label>
+                  <input
+                    type="text"
+                    value={timingsFriEve}
+                    onChange={(e) => setTimingsFriEve(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
+                </div>
               </div>
             </div>
 
