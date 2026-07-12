@@ -235,13 +235,15 @@ export const Header: React.FC = () => {
     <>
       {/* 1. MAIN HEADER NAVBAR */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
-            <div className="logo-container w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
-              HR
-            </div>
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0">
+            <img 
+              src="/assets/images/favicon.png" 
+              alt="HR Traders Logo" 
+              className="w-10 h-10 object-contain rounded-full shadow-md group-hover:scale-105 transition-transform duration-200"
+            />
             <div className="hidden sm:block text-left">
               <h1 className="text-base font-extrabold text-slate-800 leading-none">HR Traders</h1>
               <span className="text-[10px] text-slate-450 font-mono tracking-widest uppercase">Grocery & Care</span>
@@ -249,7 +251,7 @@ export const Header: React.FC = () => {
           </Link>
 
           {/* Autocomplete Search input */}
-          <div ref={searchRef} className="relative flex-1 max-w-md hidden md:block">
+          <div ref={searchRef} className="relative flex-1 max-w-md">
             <form onSubmit={handleSearchSubmit} className="relative w-full">
               <input
                 type="text"
@@ -304,14 +306,14 @@ export const Header: React.FC = () => {
 
             <button
               onClick={() => setIsDemandModalOpen(true)}
-              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+              className="hidden sm:flex px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-bold rounded-xl transition-all shadow-sm items-center gap-1.5"
             >
               <ClipboardList className="w-3.5 h-3.5 text-amber-600" />
               Demand Box
             </button>
 
             {/* User Login/Account */}
-            <div ref={profileRef} className="relative">
+            <div ref={profileRef} className="relative hidden sm:block">
               {user ? (
                 <>
                   <button
@@ -330,7 +332,7 @@ export const Header: React.FC = () => {
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 py-2 divide-y divide-slate-100 animate-in fade-in slide-in-from-top-1">
                       <div className="px-4 py-2 text-left">
                         <p className="text-xs font-bold text-slate-800 truncate">{profile?.name || 'Customer'}</p>
-                        <p className="text-[10px] text-slate-400 truncate mt-0.5">{user.email}</p>
+                        <p className="text-[10px] text-slate-450 truncate mt-0.5">{user.email}</p>
                       </div>
                       <div className="py-1">
                         <Link
@@ -387,54 +389,8 @@ export const Header: React.FC = () => {
                 </span>
               )}
             </button>
-
-            {/* Mobile menu trigger */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 md:hidden hover:bg-slate-100 rounded-xl transition-colors text-slate-700"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-
           </div>
         </div>
-
-        {/* Mobile menu expand */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3 shadow-inner">
-            <form onSubmit={handleSearchSubmit} className="relative w-full">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={currentPlaceholder}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-4 pr-10 text-xs text-slate-900"
-              />
-              <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                <Search className="w-4 h-4" />
-              </button>
-            </form>
-
-            <div className="flex flex-col gap-2 pt-2 text-left">
-              <Link
-                href="/shop"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block py-2 text-xs font-bold text-slate-700 hover:text-emerald-600"
-              >
-                Browse Shop Catalog
-              </Link>
-              {user && (
-                <Link
-                  href="/my-account"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-2 text-xs font-bold text-slate-700 hover:text-emerald-600"
-                >
-                  My Orders History
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* 2. SUB-HEADER ANNOUNCEMENT BAR (alert under header navbar) */}

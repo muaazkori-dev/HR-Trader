@@ -9,7 +9,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'push') {
     
     $commitMessage = isset($_POST['message']) && trim($_POST['message']) !== '' 
         ? trim($_POST['message']) 
-        : 'Upgrade search bar with typewriter placeholder and move announcement alert below header';
+        : 'Optimize header mobile search, show cart button on right, remove hamburger menu, set favicon logo, fix initial slider width on mount';
         
     $escapedMessage = escapeshellarg($commitMessage);
     

@@ -38,6 +38,7 @@ export const HomeSlider: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
   useEffect(() => {
+    setWindowWidth(window.innerWidth);
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -187,17 +188,17 @@ export const HomeSlider: React.FC = () => {
         {/* Chevron buttons */}
         <button
           onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-white border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none hidden sm:block"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center"
           aria-label="Previous Slide"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); handleNext(); }}
-          className="absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-white border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none hidden sm:block"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center"
           aria-label="Next Slide"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Dot Indicators */}
