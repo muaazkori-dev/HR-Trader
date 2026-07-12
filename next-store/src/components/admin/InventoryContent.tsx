@@ -117,7 +117,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
     setUnit(p.unit);
     setCategory(p.category);
     setImageFile(null);
-    setImageUrl(p.image || '');
+    setImageUrl(p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : '/' + p.image) : '');
     setMessage('');
     setIsModalOpen(true);
   };
@@ -403,7 +403,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={p.image ? p.image : '/assets/images/placeholder.svg'}
+                            src={p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : '/' + p.image) : '/assets/images/placeholder.svg'}
                             alt={p.name}
                             className="w-10 h-10 object-cover rounded-xl border border-slate-200 bg-slate-50 flex-shrink-0"
                           />
@@ -618,7 +618,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                 <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-250 border-dashed rounded-2xl">
                   {imageUrl ? (
                     <img
-                      src={imageUrl}
+                      src={imageUrl ? (imageUrl.startsWith('blob:') || imageUrl.startsWith('http') || imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl) : '/assets/images/placeholder.svg'}
                       alt="Preview"
                       className="w-16 h-16 object-cover rounded-xl border border-slate-200 bg-white"
                     />

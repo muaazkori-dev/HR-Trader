@@ -292,7 +292,7 @@ export const Header: React.FC = () => {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
-                        src={p.image ? `/${p.image}` : '/assets/images/placeholder.svg'}
+                        src={p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : `/${p.image}`) : '/assets/images/placeholder.svg'}
                         alt={p.name}
                         className="w-9 h-9 object-cover rounded-lg border border-slate-200/80 bg-slate-50 flex-shrink-0"
                       />
@@ -465,7 +465,7 @@ export const Header: React.FC = () => {
                     className="flex gap-3 p-3 bg-slate-50 border border-slate-200/65 rounded-2xl transition-all"
                   >
                     <img
-                      src={item.image ? `/${item.image}` : '/assets/images/placeholder.svg'}
+                      src={item.image ? (item.image.startsWith('http') || item.image.startsWith('/') ? item.image : `/${item.image}`) : '/assets/images/placeholder.svg'}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-xl border border-slate-200 bg-white flex-shrink-0"
                     />
