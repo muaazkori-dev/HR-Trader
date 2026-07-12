@@ -15,11 +15,23 @@ import {
   Minus, 
   Trash2, 
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  Megaphone
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+
+const PLACEHOLDERS = [
+  'Search for "basmati grains"...',
+  'Search for "chocolate ice cream"...',
+  'Search for "cold soft drinks"...',
+  'Search for "washing powders"...',
+  'Search for "hair shampoo"...',
+  'Search for "body soaps"...',
+  'Search for "daily cosmetics"...',
+  'Search for "dal and grains"...'
+];
 
 interface ProductSuggestion {
   id: number;
@@ -50,6 +62,49 @@ export const Header: React.FC = () => {
   const [demandDetails, setDemandDetails] = useState('');
   const [isSubmittingDemand, setIsSubmittingDemand] = useState(false);
   const [demandSuccess, setDemandSuccess] = useState(false);
+  const [currentPlaceholder, setCurrentPlaceholder] = useState('');
+
+  // Typewriter placeholder animation
+  useEffect(() => {
+    let isMounted = true;
+    let wordIdx = 0;
+    let charIdx = 0;
+    let isDeleting = false;
+    let delay = 100;
+
+    const tick = () => {
+      if (!isMounted) return;
+      
+      const fullText = PLACEHOLDERS[wordIdx];
+      
+      if (isDeleting) {
+        setCurrentPlaceholder(fullText.substring(0, charIdx - 1));
+        charIdx--;
+        delay = 40;
+      } else {
+        setCurrentPlaceholder(fullText.substring(0, charIdx + 1));
+        charIdx++;
+        delay = 100;
+      }
+
+      if (!isDeleting && charIdx === fullText.length) {
+        isDeleting = true;
+        delay = 2000;
+      } else if (isDeleting && charIdx === 0) {
+        isDeleting = false;
+        wordIdx = (wordIdx + 1) % PLACEHOLDERS.length;
+        delay = 300;
+      }
+
+      setTimeout(tick, delay);
+    };
+
+    const timer = setTimeout(tick, 100);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, []);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -178,23 +233,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      {/* 1. TOP ANNOUNCEMENT BAR */}
-      <div className="bg-emerald-600 text-white py-2 px-4 text-xs font-semibold flex flex-col md:flex-row items-center justify-between gap-2 z-40 transition-colors duration-300">
-        <div className="flex items-center gap-1.5 truncate max-w-full">
-          <span className="bg-emerald-500/30 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-extrabold flex-shrink-0 animate-pulse">
-            Alert
-          </span>
-          <span className="truncate">{announcement}</span>
-        </div>
-        <div className="flex items-center gap-4 text-[11px] font-mono text-emerald-100 flex-shrink-0">
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
-            Timings Today: <strong className="text-white">{timings}</strong>
-          </span>
-        </div>
-      </div>
-
-      {/* 2. MAIN HEADER NAVBAR */}
+      {/* 1. MAIN HEADER NAVBAR */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
@@ -220,7 +259,7 @@ export const Header: React.FC = () => {
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="Search premium grains, shampoo, soap..."
+                placeholder={currentPlaceholder}
                 className="w-full bg-slate-50 border border-slate-200 rounded-full py-2 pl-4 pr-10 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
               />
               <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors">
@@ -368,7 +407,7 @@ export const Header: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search items..."
+                placeholder={currentPlaceholder}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-4 pr-10 text-xs text-slate-900"
               />
               <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -397,6 +436,12 @@ export const Header: React.FC = () => {
           </div>
         )}
       </header>
+
+      {/* 2. SUB-HEADER ANNOUNCEMENT BAR (alert under header navbar) */}
+      <div className="bg-emerald-600 text-white py-2.5 px-4 text-center text-xs font-semibold tracking-wider relative overflow-hidden flex items-center justify-center gap-2 shadow-sm z-20 print-hidden select-none">
+        <Megaphone className="w-3.5 h-3.5 animate-bounce flex-shrink-0" />
+        <span>{announcement}</span>
+      </div>
 
       {/* 3. SLIDING MINI-CART DRAWER PANEL */}
       {isCartOpen && (
