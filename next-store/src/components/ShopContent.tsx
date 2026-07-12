@@ -28,12 +28,16 @@ interface ShopContentProps {
 const CATEGORIES = [
   { id: '', name: 'All Categories', icon: '🛍️' },
   { id: 'anaj', name: 'Grains & Rice', icon: '🌾' },
-  { id: 'shampoo', name: 'Hair Care', icon: '🧴' },
-  { id: 'soap', name: 'Soaps & Care', icon: '🧼' },
-  { id: 'cold_drinks', name: 'Beverages', icon: '🥤' },
-  { id: 'water', name: 'Mineral Water', icon: '💧' },
+  { id: 'grocery', name: 'Grocery & Oils', icon: '🛒' },
   { id: 'ice_cream', name: 'Ice Creams', icon: '🍦' },
+  { id: 'beverages', name: 'Beverages', icon: '🥤' },
   { id: 'milk', name: 'Dairy & Milk', icon: '🥛' },
+  { id: 'cosmetics', name: 'Cosmetics', icon: '🧴' },
+  { id: 'confectionary', name: 'Confectionary & Snacks', icon: '🍟' },
+  { id: 'bakery', name: 'Bakery', icon: '🍞' },
+  { id: 'sauce', name: 'Sauces & Pickles', icon: '🥫' },
+  { id: 'soap', name: 'Soaps & Hygiene', icon: '🧼' },
+  { id: 'toothpaste', name: 'Dental Care', icon: '🪥' },
 ];
 
 export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts }) => {

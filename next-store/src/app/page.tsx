@@ -10,13 +10,15 @@ import { AddToCartButton } from '@/components/AddToCartButton';
 
 // Categories list
 const CATEGORIES = [
-  { id: 'anaj', name: 'Grains & Rice', icon: '🌾', desc: 'Pulses & Rice' },
-  { id: 'shampoo', name: 'Hair Care', icon: '🧴', desc: 'Premium Shampoos' },
-  { id: 'soap', name: 'Soaps & Care', icon: '🧼', desc: 'Body Soaps & Bars' },
-  { id: 'cold_drinks', name: 'Beverages', icon: '🥤', desc: 'Carbonated Drinks' },
-  { id: 'water', name: 'Mineral Water', icon: '💧', desc: 'Pure Drinking Water' },
-  { id: 'ice_cream', name: 'Ice Creams', icon: '🍦', desc: 'Desserts & Cups' },
-  { id: 'milk', name: 'Dairy & Milk', icon: '🥛', desc: 'UHT Milk packs' },
+  { id: 'anaj', name: 'Anaj', urdu: 'اناج', image: '/anaj.png' },
+  { id: 'grocery', name: 'Grocery', urdu: 'گروسری', image: '/grocery.png' },
+  { id: 'ice_cream', name: 'Ice Cream', urdu: 'آئس کریم', image: '/ice_cream.png' },
+  { id: 'beverages', name: 'Beverages', urdu: 'مشروبات', image: '/cold_drinks.png' },
+  { id: 'milk', name: 'Milk', urdu: 'دودھ', image: '/milk.png' },
+  { id: 'cosmetics', name: 'Cosmetics', urdu: 'کاسمیٹکس', image: '/cosmetics.png' },
+  { id: 'confectionary', name: 'Snacks', urdu: 'سنیکس', image: '/snacks.png' },
+  { id: 'bakery', name: 'Bakery', urdu: 'بیکری', image: '/bakery.png' },
+  { id: 'sauce', name: 'Sauces', urdu: 'سوس', image: '/sauce.png' },
 ];
 
 export const revalidate = 30; // Cache on edge CDN for 30 seconds for instant transition
@@ -51,26 +53,40 @@ export default async function Home() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-12">
         
-        {/* 2. DYNAMIC HORIZONTAL CATEGORY SCROLL */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-emerald-500" />
-              Shop by Category
+        {/* 2. CATEGORIES SECTION */}
+        <section className="space-y-6 text-center">
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Browse By Categories
             </h2>
+            <p className="text-xs text-slate-500">
+              Select a category to filter your grocery requirements
+            </p>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200">
+          
+          <div className="grid grid-cols-3 md:grid-cols-9 gap-3 sm:gap-4 md:gap-6">
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/shop?category=${cat.id}`}
-                className="flex-shrink-0 w-36 p-4 bg-white border border-slate-200 rounded-2xl text-center hover:shadow-md hover:border-emerald-300 transition-all group"
+                className="flex flex-col items-center justify-center p-3 sm:p-4 bg-white border border-slate-200/80 rounded-[2rem] text-center hover:shadow-md hover:border-emerald-300 transition-all duration-200 group shadow-sm"
               >
-                <span className="text-3xl block group-hover:scale-110 transition-transform duration-200">
-                  {cat.icon}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center mb-2 flex-shrink-0 group-hover:scale-105 transition-transform duration-200 shadow-inner">
+                  <img 
+                    src={cat.image} 
+                    alt={cat.name} 
+                    className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+                  />
+                </div>
+                <h3 className="text-[10px] sm:text-xs font-bold text-slate-805 tracking-tight leading-none">
+                  {cat.name}
+                </h3>
+                <span 
+                  className="text-[9px] sm:text-[10px] text-slate-400 mt-1 block leading-tight font-medium"
+                  style={{ fontFamily: 'var(--font-urdu)' }}
+                >
+                  {cat.urdu}
                 </span>
-                <h3 className="text-xs font-bold text-slate-800 mt-3 truncate">{cat.name}</h3>
-                <p className="text-[9px] text-slate-400 mt-1 truncate">{cat.desc}</p>
               </Link>
             ))}
           </div>

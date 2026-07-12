@@ -183,6 +183,18 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Listen for bottom navigation custom events
+  useEffect(() => {
+    const handleOpenDemand = () => setIsDemandModalOpen(true);
+    const handleOpenCart = () => setIsCartOpen(true);
+    window.addEventListener('open-demand-modal', handleOpenDemand);
+    window.addEventListener('open-cart-drawer', handleOpenCart);
+    return () => {
+      window.removeEventListener('open-demand-modal', handleOpenDemand);
+      window.removeEventListener('open-cart-drawer', handleOpenCart);
+    };
+  }, []);
+
   const handleDemandSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demandName.trim() || !demandPhone.trim() || !demandDetails.trim()) return;

@@ -4,6 +4,8 @@ import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { BottomNav } from '@/components/BottomNav';
+
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -51,10 +53,11 @@ export default async function RootLayout({
       lang="en"
       className={`${outfit.variable} ${urdu.variable} h-full antialiased`}
     >
-      <body className={`theme-${activeTheme} min-h-full flex flex-col transition-colors duration-300`}>
+      <body className={`theme-${activeTheme} min-h-full flex flex-col transition-colors duration-300 pb-16 md:pb-0`}>
         <AuthProvider>
           <CartProvider>
             {children}
+            <BottomNav />
           </CartProvider>
         </AuthProvider>
       </body>
