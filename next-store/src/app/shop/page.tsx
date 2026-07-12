@@ -5,19 +5,49 @@ import { ShopContent } from '@/components/ShopContent';
 import { supabase } from '@/lib/supabase';
 import { Sparkles } from 'lucide-react';
 
-export const revalidate = 30; // Cache on edge CDN for 30 seconds for instant transition
+export const revalidate = 0; // Disable static cache to fetch fresh dynamic configurations from Supabase on every load
 
 export default async function Shop() {
   let products: any[] = [];
+  let categories: any[] = [];
   
   try {
-    const { data, error } = await supabase
+    const { data: prodData, error } = await supabase
       .from('products')
       .select('*')
       .order('id', { ascending: false });
       
-    if (!error && data) {
-      products = data;
+    if (!error && prodData) {
+      products = prodData;
+    }
+
+    const { data: catSetting } = await supabase
+      .from('settings')
+      .select('val_value')
+      .eq('key_name', 'store_categories')
+      .maybeSingle();
+
+    if (catSetting?.val_value) {
+      try {
+        const parsed = JSON.parse(catSetting.val_value);
+        if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+          categories = Object.entries(parsed).map(([id, val]: any) => ({
+            id,
+            name: val.name,
+            urdu: val.urdu || '',
+            image: val.image || `/assets/images/categories/${id}.png`
+          }));
+        } else if (Array.isArray(parsed)) {
+          categories = parsed.map((cat: any) => ({
+            id: cat.id || cat.key,
+            name: cat.name,
+            urdu: cat.urdu || '',
+            image: cat.image || `/assets/images/categories/${cat.id || cat.key}.png`
+          }));
+        }
+      } catch (err) {
+        console.error('Error parsing categories:', err);
+      }
     }
   } catch (err) {
     console.error('Error fetching shop products:', err);
@@ -46,7 +76,7 @@ export default async function Shop() {
             Loading Catalog Items...
           </div>
         }>
-          <ShopContent initialProducts={products} />
+          <ShopContent initialProducts={products} categories={categories} />
         </Suspense>
 
       </main>

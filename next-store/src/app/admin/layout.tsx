@@ -15,7 +15,9 @@ import {
   ChevronRight,
   TrendingUp,
   Barcode,
-  UserCheck
+  UserCheck,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -51,6 +53,8 @@ export default function AdminLayout({
     { href: '/admin', label: 'Dashboard Overview', icon: TrendingUp },
     { href: '/admin/pos', label: 'POS Billing Desk', icon: Barcode },
     { href: '/admin/products', label: 'Inventory Catalog', icon: ShoppingBag },
+    { href: '/admin/categories', label: 'Categories Desk', icon: Layers },
+    { href: '/admin/banners', label: 'Hero Banners Desk', icon: Sparkles },
     { href: '/admin/orders', label: 'Order Register', icon: ClipboardList },
     { href: '/admin/demands', label: 'Customer Demands', icon: ClipboardList },
     ...(profile?.role === 'owner' ? [{ href: '/admin/staff', label: 'Staff Management', icon: UserCheck }] : []),

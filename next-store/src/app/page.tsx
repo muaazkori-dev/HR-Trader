@@ -8,38 +8,125 @@ import { ShoppingCart, Star, Eye, Tag, Sparkles } from 'lucide-react';
 import { HomeSlider } from '@/components/HomeSlider';
 import { AddToCartButton } from '@/components/AddToCartButton';
 
-// Categories list
-const CATEGORIES = [
-  { id: 'anaj', name: 'Anaj', urdu: 'اناج', image: '/anaj.png' },
-  { id: 'grocery', name: 'Grocery', urdu: 'گروسری', image: '/grocery.png' },
-  { id: 'ice_cream', name: 'Ice Cream', urdu: 'آئس کریم', image: '/ice_cream.png' },
-  { id: 'beverages', name: 'Beverages', urdu: 'مشروبات', image: '/cold_drinks.png' },
-  { id: 'milk', name: 'Milk', urdu: 'دودھ', image: '/milk.png' },
-  { id: 'cosmetics', name: 'Cosmetics', urdu: 'کاسمیٹکس', image: '/cosmetics.png' },
-  { id: 'confectionary', name: 'Snacks', urdu: 'سنیکس', image: '/snacks.png' },
-  { id: 'bakery', name: 'Bakery', urdu: 'بیکری', image: '/bakery.png' },
-  { id: 'sauce', name: 'Sauces', urdu: 'سوس', image: '/sauce.png' },
+// Default Categories list
+const DEFAULT_CATEGORIES = [
+  { id: 'anaj', name: 'Anaj', urdu: 'اناج', image: '/assets/images/categories/anaj.png' },
+  { id: 'grocery', name: 'Grocery', urdu: 'گروسری', image: '/assets/images/categories/grocery.png' },
+  { id: 'ice_cream', name: 'Ice Cream', urdu: 'آئس کریم', image: '/assets/images/categories/ice_cream.png' },
+  { id: 'beverages', name: 'Beverages', urdu: 'مشروبات', image: '/assets/images/categories/cold_drinks.png' },
+  { id: 'milk', name: 'Milk', urdu: 'دودھ', image: '/assets/images/categories/milk.png' },
+  { id: 'cosmetics', name: 'Cosmetics', urdu: 'کاسمیٹکس', image: '/assets/images/categories/cosmetics.png' },
+  { id: 'confectionary', name: 'Snacks', urdu: 'سنیکس', image: '/assets/images/categories/snacks.png' },
+  { id: 'bakery', name: 'Bakery', urdu: 'بیکری', image: '/assets/images/categories/bakery.png' },
+  { id: 'sauce', name: 'Sauces', urdu: 'سوس', image: '/assets/images/categories/sauce.png' },
 ];
 
-export const revalidate = 30; // Cache on edge CDN for 30 seconds for instant transition
+// Default Hero Banners list
+const DEFAULT_BANNERS = [
+  {
+    id: 1,
+    tag: 'Premium Choice',
+    title: 'Your Premium Grocery Partner',
+    desc: 'Fresh organic crops, groceries, and premium household brands delivered straight to your home.',
+    link: '/shop',
+    image: '/assets/images/hero_grocery_banner.png',
+    theme: 'emerald'
+  },
+  {
+    id: 2,
+    tag: 'Beat The Heat',
+    title: 'Quench Your Thirst',
+    desc: 'Soft drinks, juices, mineral water bottles, and energy drinks delivered straight to your doorstep ice cold.',
+    link: '/shop?category=beverages',
+    image: null,
+    theme: 'teal'
+  },
+  {
+    id: 3,
+    tag: 'Frozen Delights',
+    title: 'Frozen Ice Creams',
+    desc: 'Family pack ice creams and chicken frozen snacks. *Available for nearby locations to maintain cold chain.',
+    link: '/shop?category=ice_cream',
+    image: null,
+    theme: 'cyan'
+  }
+];
+
+export const revalidate = 0; // Disable static cache or set 0 to fetch fresh dynamic configurations from Supabase on every load
 
 export default async function Home() {
   let products: any[] = [];
   let featuredProducts: any[] = [];
+  let categories: any[] = [];
+  let banners: any[] = [];
 
   try {
-    const { data } = await supabase
+    // 1. Fetch products
+    const { data: prodData } = await supabase
       .from('products')
       .select('*')
       .order('id', { ascending: false });
 
-    if (data) {
-      products = data;
-      // Featured: products with stock > 0, showing first 8
-      featuredProducts = data.slice(0, 8);
+    if (prodData) {
+      products = prodData;
+      featuredProducts = prodData.slice(0, 8);
+    }
+
+    // 2. Fetch categories setting
+    const { data: catSetting } = await supabase
+      .from('settings')
+      .select('val_value')
+      .eq('key_name', 'store_categories')
+      .maybeSingle();
+
+    if (catSetting?.val_value) {
+      try {
+        const parsed = JSON.parse(catSetting.val_value);
+        if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+          // Format is key-value e.g. { anaj: { name: 'Anaj', urdu: 'اناج' } }
+          categories = Object.entries(parsed).map(([id, val]: any) => ({
+            id,
+            name: val.name,
+            urdu: val.urdu || '',
+            image: val.image || `/assets/images/categories/${id}.png`
+          }));
+        } else if (Array.isArray(parsed)) {
+          categories = parsed.map((cat: any) => ({
+            id: cat.id || cat.key,
+            name: cat.name,
+            urdu: cat.urdu || '',
+            image: cat.image || `/assets/images/categories/${cat.id || cat.key}.png`
+          }));
+        }
+      } catch (err) {
+        console.error('Error parsing dynamic categories:', err);
+      }
+    }
+
+    // 3. Fetch hero banners setting
+    const { data: bannerSetting } = await supabase
+      .from('settings')
+      .select('val_value')
+      .eq('key_name', 'store_hero_banners')
+      .maybeSingle();
+
+    if (bannerSetting?.val_value) {
+      try {
+        banners = JSON.parse(bannerSetting.val_value);
+      } catch (err) {
+        console.error('Error parsing dynamic banners:', err);
+      }
     }
   } catch (error) {
-    console.error('Error fetching storefront products:', error);
+    console.error('Error fetching storefront configs:', error);
+  }
+
+  // Fallbacks if database is empty
+  if (categories.length === 0) {
+    categories = DEFAULT_CATEGORIES;
+  }
+  if (banners.length === 0) {
+    banners = DEFAULT_BANNERS;
   }
 
   return (
@@ -47,8 +134,8 @@ export default async function Home() {
       {/* Header */}
       <Header />
 
-      {/* 1. HERO SLIDER CAROUSEL (Full Width with side peek) */}
-      <HomeSlider />
+      {/* 1. HERO SLIDER CAROUSEL (Dynamic Banners from DB) */}
+      <HomeSlider banners={banners} />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-12">
@@ -63,9 +150,8 @@ export default async function Home() {
               Select a category to filter your grocery requirements
             </p>
           </div>
-          
           <div className="grid grid-cols-3 md:grid-cols-9 gap-3 sm:gap-4 md:gap-6">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/shop?category=${cat.id}`}

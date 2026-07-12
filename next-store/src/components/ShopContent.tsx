@@ -23,6 +23,7 @@ interface Product {
 
 interface ShopContentProps {
   initialProducts: Product[];
+  categories?: any[];
 }
 
 const CATEGORIES = [
@@ -40,9 +41,29 @@ const CATEGORIES = [
   { id: 'toothpaste', name: 'Dental Care', icon: '🪥' },
 ];
 
-export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts }) => {
+export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categories }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Derive categories list from props or fallback to static list
+  const categoriesList = categories && categories.length > 0
+    ? [
+        { id: '', name: 'All Categories', icon: '🛍️' },
+        ...categories.map(c => ({
+          id: c.id,
+          name: c.name,
+          icon: c.id === 'anaj' ? '🌾' :
+                c.id === 'grocery' ? '🛒' :
+                c.id === 'ice_cream' ? '🍦' :
+                c.id === 'beverages' ? '🥤' :
+                c.id === 'milk' ? '🥛' :
+                c.id === 'cosmetics' ? '🧴' :
+                c.id === 'confectionary' ? '🍟' :
+                c.id === 'bakery' ? '🍞' :
+                c.id === 'sauce' ? '🥫' : '🏷️'
+        }))
+      ]
+    : CATEGORIES;
 
   // Get initial values from URL query parameters
   const initialCategory = searchParams.get('category') || '';
@@ -134,7 +155,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts }) => 
           <div className="space-y-2">
             <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Categories</label>
             <div className="flex flex-wrap lg:flex-col gap-1.5">
-              {CATEGORIES.map((cat) => {
+              {categoriesList.map((cat) => {
                 const isActive = selectedCategory === cat.id;
                 return (
                   <button

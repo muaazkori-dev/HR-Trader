@@ -33,22 +33,28 @@ const SLIDES = [
   }
 ];
 
-export const HomeSlider: React.FC = () => {
+interface HomeSliderProps {
+  banners?: any[];
+}
+
+export const HomeSlider: React.FC<HomeSliderProps> = ({ banners }) => {
+  const slidesToUse = banners && banners.length > 0 ? banners : SLIDES;
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
+    if (slidesToUse.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % SLIDES.length);
+      setCurrent((prev) => (prev + 1) % slidesToUse.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slidesToUse.length]);
 
   const handlePrev = () => {
-    setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+    setCurrent((prev) => (prev - 1 + slidesToUse.length) % slidesToUse.length);
   };
 
   const handleNext = () => {
-    setCurrent((prev) => (prev + 1) % SLIDES.length);
+    setCurrent((prev) => (prev + 1) % slidesToUse.length);
   };
 
   return (
@@ -64,7 +70,7 @@ export const HomeSlider: React.FC = () => {
               transform: `translateX(-${current * 100}%)` 
             }}
           >
-            {SLIDES.map((slide) => {
+            {slidesToUse.map((slide) => {
               const hasImage = !!slide.image;
               
               // Build theme dynamic styling
@@ -161,34 +167,40 @@ export const HomeSlider: React.FC = () => {
           </div>
 
           {/* Chevron buttons inside the card area */}
-          <button
-            onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center"
-            aria-label="Previous Slide"
-          >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleNext(); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center"
-            aria-label="Next Slide"
-          >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
+          {slidesToUse.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center"
+                aria-label="Previous Slide"
+              >
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-md text-slate-700 hover:text-emerald-600 rounded-full transition-all hover:scale-105 active:scale-95 focus:outline-none flex items-center justify-center"
+                aria-label="Next Slide"
+              >
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            </>
+          )}
 
           {/* Dot Indicators inside the card area */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-            {SLIDES.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSlide(idx)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  idx === current ? 'bg-emerald-600 w-6' : 'bg-slate-300'
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
-          </div>
+          {slidesToUse.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+              {slidesToUse.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSlide(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    idx === current ? 'bg-emerald-600 w-6' : 'bg-slate-300'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
