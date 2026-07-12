@@ -265,36 +265,13 @@ body {
 }
 
 .whatsapp-float {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background-color: #25d366;
-  color: white;
-  border-radius: 50px;
-  text-align: center;
-  font-size: 30px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-@media (max-w: 768px) {
-  .whatsapp-float {
-    bottom: 90px !important;
-    right: 16px !important;
-    width: 44px !important;
-    height: 44px !important;
-    font-size: 22px !important;
-  }
-}
 .whatsapp-float:hover {
-  transform: translateY(-3px) scale(1.05);
   box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
 }
+
 
 .urdu-text {
   font-family: var(--font-urdu);
