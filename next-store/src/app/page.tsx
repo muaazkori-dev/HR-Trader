@@ -52,7 +52,7 @@ const DEFAULT_BANNERS = [
   }
 ];
 
-export const revalidate = 0; // Disable static cache or set 0 to fetch fresh dynamic configurations from Supabase on every load
+export const revalidate = 30; // Enable 30-second edge CDN caching for instant homepage delivery
 
 export default async function Home() {
   let products: any[] = [];

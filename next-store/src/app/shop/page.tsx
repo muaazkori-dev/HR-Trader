@@ -5,7 +5,7 @@ import { ShopContent } from '@/components/ShopContent';
 import { supabase } from '@/lib/supabase';
 import { Sparkles } from 'lucide-react';
 
-export const revalidate = 0; // Disable static cache to fetch fresh dynamic configurations from Supabase on every load
+export const revalidate = 30; // Enable 30-second edge CDN caching for instant catalog delivery
 
 export default async function Shop() {
   let products: any[] = [];
