@@ -254,20 +254,20 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
                       )}
                     </div>
 
-                    {/* Pricing / CTA */}
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="text-left">
-                        <span className="text-xs sm:text-sm font-mono font-extrabold text-slate-900">
-                          Rs. {p.price.toFixed(0)}
+                    {/* Pricing */}
+                    <div className="mt-4 flex items-baseline gap-2">
+                      <span className="text-sm sm:text-base font-mono font-black text-emerald-600">
+                        Rs. {p.price.toFixed(0)}
+                      </span>
+                      {oldPrice > p.price && (
+                        <span className="text-[10px] text-slate-400 line-through font-normal font-mono">
+                          Rs. {oldPrice.toFixed(0)}
                         </span>
-                        {oldPrice > p.price && (
-                          <span className="text-[10px] text-slate-400 line-through font-normal block">
-                            Rs. {oldPrice.toFixed(0)}
-                          </span>
-                        )}
-                      </div>
+                      )}
+                    </div>
 
-                      {/* Inline Add to Cart Button */}
+                    {/* Add/Buy Buttons */}
+                    <div className="mt-3 w-full">
                       <AddToCartButton product={{
                         id: p.id,
                         name: p.name,
