@@ -60,9 +60,9 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
   const [barcode, setBarcode] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState(0);
-  const [purchasePrice, setPurchasePrice] = useState(0);
-  const [stockQuantity, setStockQuantity] = useState(0);
+  const [price, setPrice] = useState<string>('');
+  const [purchasePrice, setPurchasePrice] = useState<string>('');
+  const [stockQuantity, setStockQuantity] = useState<string>('');
   const [weight, setWeight] = useState('');
   const [unit, setUnit] = useState('pcs');
   const [category, setCategory] = useState('anaj');
@@ -92,9 +92,9 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
     setBarcode('');
     setName('');
     setDescription('');
-    setPrice(0);
-    setPurchasePrice(0);
-    setStockQuantity(0);
+    setPrice('');
+    setPurchasePrice('');
+    setStockQuantity('');
     setWeight('');
     setUnit('pcs');
     setCategory('anaj');
@@ -110,9 +110,9 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
     setBarcode(p.barcode);
     setName(p.name);
     setDescription(p.description || '');
-    setPrice(p.price);
-    setPurchasePrice(p.purchase_price);
-    setStockQuantity(p.stock_quantity);
+    setPrice(p.price !== undefined && p.price !== null ? String(p.price) : '');
+    setPurchasePrice(p.purchase_price !== undefined && p.purchase_price !== null ? String(p.purchase_price) : '');
+    setStockQuantity(p.stock_quantity !== undefined && p.stock_quantity !== null ? String(p.stock_quantity) : '');
     setWeight(p.weight || '');
     setUnit(p.unit);
     setCategory(p.category);
@@ -163,9 +163,9 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
         barcode: barcode.trim(),
         name: name.trim(),
         description: description.trim() || null,
-        price,
-        purchase_price: purchasePrice,
-        stock_quantity: stockQuantity,
+        price: price === '' ? 0 : parseFloat(price),
+        purchase_price: purchasePrice === '' ? 0 : parseFloat(purchasePrice),
+        stock_quantity: stockQuantity === '' ? 0 : parseInt(stockQuantity, 10),
         weight: weight.trim() || null,
         unit,
         category,
@@ -418,19 +418,27 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                       <td className="p-4 font-semibold text-slate-650 capitalize">
                         {CATEGORIES[p.category] || p.category.replace('_', ' ')}
                       </td>
-                      <td className="p-4 text-right font-mono font-bold text-slate-500">Rs. {p.purchase_price.toFixed(0)}</td>
-                      <td className="p-4 text-right font-mono font-black text-emerald-600">Rs. {p.price.toFixed(0)}</td>
+                      <td className="p-4 text-right font-mono font-bold text-slate-500">
+                        {p.purchase_price > 0 ? `Rs. ${p.purchase_price.toFixed(0)}` : '-'}
+                      </td>
+                      <td className="p-4 text-right font-mono font-black text-emerald-600">
+                        {p.price > 0 ? `Rs. ${p.price.toFixed(0)}` : '-'}
+                      </td>
                       <td className="p-4 text-center font-bold text-slate-650">
                         {p.weight ? `${p.weight} (${p.unit})` : p.unit}
                       </td>
                       <td className="p-4 text-center">
-                        <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] border ${
-                          isLow 
-                            ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' 
-                            : 'bg-slate-100 text-slate-700 border-slate-200'
-                        }`}>
-                          {p.stock_quantity}
-                        </span>
+                        {p.stock_quantity > 0 ? (
+                          <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] border ${
+                            isLow 
+                              ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' 
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}>
+                            {p.stock_quantity}
+                          </span>
+                        ) : (
+                          <span className="text-slate-350 font-semibold text-[10px]">-</span>
+                        )}
                       </td>
                       <td className="p-4 text-center pr-6 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
@@ -539,11 +547,10 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                   <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Purchase Price (Cost)</label>
                   <input
                     type="number"
-                    value={purchasePrice || ''}
-                    onChange={(e) => setPurchasePrice(parseFloat(e.target.value) || 0)}
-                    required
+                    value={purchasePrice}
+                    onChange={(e) => setPurchasePrice(e.target.value)}
                     min={0}
-                    placeholder="0"
+                    placeholder="e.g. 250"
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
                   />
                 </div>
@@ -551,11 +558,10 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                   <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Selling Price</label>
                   <input
                     type="number"
-                    value={price || ''}
-                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                    required
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
                     min={0}
-                    placeholder="0"
+                    placeholder="e.g. 300"
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
                   />
                 </div>
@@ -563,11 +569,10 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                   <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Stock Register</label>
                   <input
                     type="number"
-                    value={stockQuantity || ''}
-                    onChange={(e) => setStockQuantity(parseInt(e.target.value, 10) || 0)}
-                    required
+                    value={stockQuantity}
+                    onChange={(e) => setStockQuantity(e.target.value)}
                     min={0}
-                    placeholder="0"
+                    placeholder="e.g. 50"
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
                   />
                 </div>
