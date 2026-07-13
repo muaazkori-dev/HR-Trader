@@ -200,6 +200,18 @@ export default function Checkout() {
           .eq('id', item.id);
       }
 
+      // Link push subscription endpoint with customer phone number if subscribed
+      if (typeof window !== 'undefined') {
+        const endpoint = localStorage.getItem('push_subscription_endpoint');
+        if (endpoint) {
+          const cleanPhone = phone.trim().replace(/[^0-9]/g, '');
+          await supabase
+            .from('push_subscriptions')
+            .update({ customer_phone: cleanPhone })
+            .filter('subscription->>endpoint', 'eq', endpoint);
+        }
+      }
+
       // 4. Success! Clear cart and redirect
       clearCart();
       router.replace(`/checkout/success?id=${order.id}`);

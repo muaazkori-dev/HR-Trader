@@ -5,6 +5,7 @@ import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { BottomNav } from '@/components/BottomNav';
+import { CookieConsentBanner } from '@/components/CookieConsentBanner';
 
 
 const outfit = Outfit({
@@ -58,6 +59,7 @@ export default async function RootLayout({
           <CartProvider>
             {children}
             <BottomNav />
+            <CookieConsentBanner />
           </CartProvider>
         </AuthProvider>
       </body>

@@ -93,9 +93,43 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
 
       if (error) throw error;
 
+      // Update state
       setOrders(
         orders.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
       );
+
+      // Trigger Web Push Notification alert to customer device
+      const orderObj = orders.find((o) => o.id === id);
+      if (orderObj) {
+        let messageBody = '';
+        switch (newStatus) {
+          case 'packaging':
+            messageBody = `Hi ${orderObj.customer_name}, your order #HRT-${String(id).padStart(5, '0')} is currently being packed!`;
+            break;
+          case 'out_for_delivery':
+            messageBody = `Hi ${orderObj.customer_name}, your order #HRT-${String(id).padStart(5, '0')} is out for delivery! Our rider is on their way.`;
+            break;
+          case 'delivered':
+            messageBody = `Hi ${orderObj.customer_name}, your order #HRT-${String(id).padStart(5, '0')} has been successfully delivered! Thank you.`;
+            break;
+          case 'cancelled':
+            messageBody = `Hi ${orderObj.customer_name}, your order #HRT-${String(id).padStart(5, '0')} has been cancelled.`;
+            break;
+          default:
+            messageBody = `Hi ${orderObj.customer_name}, your order #HRT-${String(id).padStart(5, '0')} status updated to: ${newStatus}`;
+        }
+
+        fetch('/api/push-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: orderObj.customer_phone,
+            title: `Order Update - HR Traders`,
+            body: messageBody,
+            url: `/my-account`
+          })
+        }).catch(err => console.error('Error triggering push notify:', err));
+      }
     } catch (err: any) {
       alert('Failed to update status: ' + err.message);
     } finally {
