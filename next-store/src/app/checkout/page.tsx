@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Truck,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react';
 
 export default function Checkout() {
@@ -45,6 +46,7 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [showGuestPromo, setShowGuestPromo] = useState(false);
 
   // 1. Redirect if cart is empty on mount
   useEffect(() => {
@@ -111,6 +113,16 @@ export default function Checkout() {
 
     fetchSettingsAndCheckFirstOrder();
   }, [user]);
+
+  // 4. Trigger guest promo dialog
+  useEffect(() => {
+    if (!loadingSettings && !user) {
+      const dismissed = sessionStorage.getItem('guest_promo_dismissed');
+      if (!dismissed) {
+        setShowGuestPromo(true);
+      }
+    }
+  }, [user, loadingSettings]);
 
   const handleApplyCoupon = async () => {
     setCouponError('');
@@ -539,6 +551,62 @@ export default function Checkout() {
         </div>
 
       </main>
+
+      {/* Guest Promo Modal */}
+      {showGuestPromo && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative space-y-6 text-center animate-in zoom-in-95 duration-200">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowGuestPromo(false);
+                sessionStorage.setItem('guest_promo_dismissed', 'true');
+              }}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Gift Icon */}
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
+              🎁
+            </div>
+
+            {/* Texts */}
+            <div className="space-y-2">
+              <h2 className="text-xl font-black text-slate-800 tracking-tight">Muft Delivery Hasil Karen! 🎁</h2>
+              <p className="text-xs text-slate-505 leading-relaxed">
+                Apna account register/sign up karein aur pehli delivery bilkul <strong className="text-emerald-600">**FREE**</strong> hasil karein!
+              </p>
+            </div>
+
+            {/* Highlight Box */}
+            <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-emerald-800 text-xs font-bold leading-normal">
+              Sign Up karne par aapko first order delivery charges (Rs. {defaultShipping}) bilkul free milenge.
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <Link
+                href="/login?redirect=/checkout"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-emerald-600/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <User className="w-4 h-4" />
+                SIGN UP & GET FREE DELIVERY
+              </Link>
+              <button
+                onClick={() => {
+                  setShowGuestPromo(false);
+                  sessionStorage.setItem('guest_promo_dismissed', 'true');
+                }}
+                className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-650 font-extrabold rounded-2xl text-xs transition-all border border-slate-200"
+              >
+                CONTINUE AS GUEST (PAY RS. {defaultShipping})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
