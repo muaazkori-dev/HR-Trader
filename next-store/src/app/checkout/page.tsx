@@ -39,6 +39,13 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // PWA/WhatsApp & Coupons State
+  const [whatsappNumber, setWhatsappNumber] = useState('923337155323');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponDiscount, setCouponDiscount] = useState(0);
+
   // 1. Redirect if cart is empty on mount
   useEffect(() => {
     if (cart.length === 0) {
@@ -77,6 +84,9 @@ export default function Checkout() {
 
           const status = settingsData.find((s) => s.key_name === 'shop_status');
           if (status) setShopStatus(status.val_value);
+
+          const wa = settingsData.find((s) => s.key_name === 'whatsapp_number');
+          if (wa) setWhatsappNumber(wa.val_value.replace(/[^0-9]/g, ''));
         }
 
         // Determine if first order for free shipping
@@ -102,8 +112,50 @@ export default function Checkout() {
     fetchSettingsAndCheckFirstOrder();
   }, [user]);
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApplyCoupon = async () => {
+    setCouponError('');
+    if (!couponCode.trim()) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode.trim().toUpperCase())
+        .eq('active', true)
+        .maybeSingle();
+        
+      if (error || !data) {
+        setCouponError('Invalid or inactive coupon code.');
+        setAppliedCoupon(null);
+        setCouponDiscount(0);
+        return;
+      }
+      
+      const subtotal = getCartTotal();
+      if (subtotal < parseFloat(data.min_order_amount)) {
+        setCouponError(`Min order amount to use this coupon is Rs. ${data.min_order_amount}`);
+        setAppliedCoupon(null);
+        setCouponDiscount(0);
+        return;
+      }
+      
+      let discount = 0;
+      if (data.discount_type === 'percentage') {
+        discount = (subtotal * parseFloat(data.discount_value)) / 100;
+      } else {
+        discount = parseFloat(data.discount_value);
+      }
+      
+      discount = Math.min(discount, subtotal);
+      
+      setAppliedCoupon(data);
+      setCouponDiscount(discount);
+    } catch (err) {
+      setCouponError('Failed to apply coupon.');
+    }
+  };
+
+  const processCheckout = async (method: 'COD' | 'WhatsApp') => {
     if (cart.length === 0) return;
 
     if (shopStatus === 'closed') {
@@ -146,7 +198,7 @@ export default function Checkout() {
       }
 
       // 2. Create the order header
-      const orderTotal = subtotal + shippingFee;
+      const orderTotal = subtotal - couponDiscount + shippingFee;
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert([
@@ -156,9 +208,11 @@ export default function Checkout() {
             customer_phone: phone.trim(),
             customer_address: address.trim(),
             total_amount: orderTotal,
-            payment_method: 'COD',
+            payment_method: method,
             status: 'pending',
             notes: notes.trim() || null,
+            coupon_code: appliedCoupon ? appliedCoupon.code : null,
+            discount_amount: couponDiscount,
           },
         ])
         .select()
@@ -212,9 +266,36 @@ export default function Checkout() {
         }
       }
 
-      // 4. Success! Clear cart and redirect
-      clearCart();
-      router.replace(`/checkout/success?id=${order.id}`);
+      // 4. Success! If WhatsApp, redirect to WhatsApp API
+      if (method === 'WhatsApp') {
+        let cartText = '';
+        cart.forEach((item, index) => {
+          cartText += `${index + 1}. *${item.name}* x${item.quantity} - Rs. ${(item.price * item.quantity).toFixed(0)}\n`;
+        });
+        
+        const messageText = `*NEW ORDER - HR TRADERS*\n\n` +
+          `*Order ID:* #HRT-${String(order.id).padStart(5, '0')}\n` +
+          `*Customer Name:* ${name.trim()}\n` +
+          `*Phone:* ${phone.trim()}\n` +
+          `*Delivery Address:* ${address.trim()}\n` +
+          `*Notes:* ${notes.trim() || 'None'}\n\n` +
+          `*Order Items:*\n${cartText}\n` +
+          `*Subtotal:* Rs. ${subtotal.toFixed(0)}\n` +
+          (couponDiscount > 0 ? `*Discount Coupon:* -Rs. ${couponDiscount.toFixed(0)} (${appliedCoupon?.code})\n` : '') +
+          `*Shipping Fee:* Rs. ${shippingFee.toFixed(0)}\n` +
+          `*Total Payable:* *Rs. ${orderTotal.toFixed(0)}*\n\n` +
+          `Please confirm my order!`;
+          
+        const encodedText = encodeURIComponent(messageText);
+        const waUrl = `https://wa.me/${whatsappNumber}?text=${encodedText}`;
+        
+        clearCart();
+        window.open(waUrl, '_blank');
+        router.replace(`/checkout/success?id=${order.id}`);
+      } else {
+        clearCart();
+        router.replace(`/checkout/success?id=${order.id}`);
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to place order. Please try again.');
     } finally {
@@ -223,7 +304,7 @@ export default function Checkout() {
   };
 
   const subtotal = getCartTotal();
-  const grandTotal = subtotal + shippingFee;
+  const grandTotal = Math.max(0, subtotal - couponDiscount + shippingFee);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50">
@@ -272,7 +353,7 @@ export default function Checkout() {
                 Shipping & Delivery Address
               </h3>
 
-              <form onSubmit={handlePlaceOrder} className="space-y-4">
+              <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                 {/* Name */}
                 <div className="space-y-1">
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -344,15 +425,29 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* Place Order CTA */}
-                <button
-                  type="submit"
-                  disabled={submitting || subtotal < minOrder || loadingSettings}
-                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-lg shadow-emerald-600/10 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {submitting ? 'Processing Order...' : `Place Cash on Delivery Order (Rs. ${grandTotal.toFixed(0)})`}
-                </button>
+                {/* Place Order CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={submitting || subtotal < minOrder || loadingSettings}
+                    onClick={() => processCheckout('COD')}
+                    className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    {submitting ? 'Processing...' : `Place COD Order (Rs. ${grandTotal.toFixed(0)})`}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submitting || subtotal < minOrder || loadingSettings}
+                    onClick={() => processCheckout('WhatsApp')}
+                    className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md shadow-emerald-600/10 active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                  >
+                    <svg className="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    Order via WhatsApp
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -379,12 +474,45 @@ export default function Checkout() {
                 ))}
               </div>
 
+              {/* Promo Coupon Applier */}
+              <div className="border-t border-slate-100 pt-4 space-y-2 text-left">
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider">Promo Coupon / ڈسکاؤنٹ کوپن</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="ENTER CODE"
+                    className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 uppercase font-mono font-bold text-slate-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {couponError && <p className="text-[10px] font-semibold text-rose-600">{couponError}</p>}
+                {appliedCoupon && (
+                  <p className="text-[10px] font-semibold text-emerald-600">
+                    🎉 Coupon '{appliedCoupon.code}' applied successfully!
+                  </p>
+                )}
+              </div>
+
               {/* Pricing Math */}
               <div className="border-t border-slate-100 pt-4 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-500">
                   <span>Cart Items Subtotal</span>
                   <span className="font-mono font-bold text-slate-700">Rs. {subtotal.toFixed(0)}</span>
                 </div>
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-bold">
+                    <span>Coupon Discount</span>
+                    <span className="font-mono">-Rs. {couponDiscount.toFixed(0)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-slate-500">
                   <span>Shipping Fee</span>
                   <span className="font-mono font-bold text-slate-705 flex items-center gap-1">

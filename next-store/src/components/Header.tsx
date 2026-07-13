@@ -44,7 +44,7 @@ interface ProductSuggestion {
 
 export const Header: React.FC = () => {
   const router = useRouter();
-  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartCount, clearCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, getCartTotal, getCartCount, clearCart } = useCart();
   const { user, profile, signOut } = useAuth();
   
   // Header state
@@ -301,9 +301,27 @@ export const Header: React.FC = () => {
                         <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.barcode}</p>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">
-                      Rs. {p.price.toFixed(0)}
-                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">
+                        Rs. {p.price.toFixed(0)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent suggestion redirect click
+                           addToCart({
+                             id: p.id,
+                             name: p.name,
+                             price: p.price,
+                             image: p.image || ''
+                           });
+                        }}
+                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all hover:scale-105 active:scale-95 shadow-sm"
+                        title="Add to Cart"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

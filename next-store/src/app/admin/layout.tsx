@@ -17,7 +17,8 @@ import {
   Barcode,
   UserCheck,
   Layers,
-  Sparkles
+  Sparkles,
+  Ticket
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -55,6 +56,7 @@ export default function AdminLayout({
     { href: '/admin/products', label: 'Inventory Catalog', icon: ShoppingBag },
     { href: '/admin/categories', label: 'Categories Desk', icon: Layers },
     { href: '/admin/banners', label: 'Hero Banners Desk', icon: Sparkles },
+    { href: '/admin/coupons', label: 'Coupons Desk', icon: Ticket },
     { href: '/admin/orders', label: 'Order Register', icon: ClipboardList },
     { href: '/admin/demands', label: 'Customer Demands', icon: ClipboardList },
     ...(profile?.role === 'owner' ? [{ href: '/admin/staff', label: 'Staff Management', icon: UserCheck }] : []),

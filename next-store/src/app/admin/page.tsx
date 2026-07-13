@@ -6,91 +6,134 @@ import {
   ClipboardList, 
   AlertTriangle,
   ArrowRight,
-  TrendingDown
+  TrendingDown,
+  Coins
 } from 'lucide-react';
 import Link from 'next/link';
 
 export const revalidate = 0; // Fresh metrics always
 
 export default async function AdminDashboard() {
-  let totalSales = 0;
-  let totalOrdersCount = 0;
+  let grossSales = 0;
+  let netExpense = 0;
+  let netProfit = 0;
+  let activeFulfillments = 0;
   let catalogCount = 0;
   let lowStockProducts: any[] = [];
   let recentOrders: any[] = [];
 
   try {
-    // 1. Fetch completed orders stats
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('total_amount, status')
-      .neq('status', 'cancelled');
+    // 1. Fetch POS transactions stats
+    let posSales = 0;
+    let posProfit = 0;
+    const { data: posData } = await supabase
+      .from('sales')
+      .select('total_amount, total_profit');
 
-    if (orders) {
-      totalOrdersCount = orders.length;
-      totalSales = orders.reduce((sum, ord) => sum + parseFloat(ord.total_amount), 0);
+    if (posData) {
+      posData.forEach((s) => {
+        posSales += parseFloat(s.total_amount);
+        posProfit += parseFloat(s.total_profit);
+      });
     }
 
-    // 2. Fetch catalog items count
+    // 2. Fetch completed online orders total
+    let onlineSales = 0;
+    let onlineCost = 0;
+    const { data: onlineDelivered } = await supabase
+      .from('orders')
+      .select('id, total_amount')
+      .eq('status', 'delivered');
+
+    if (onlineDelivered) {
+      onlineSales = onlineDelivered.reduce((sum, ord) => sum + parseFloat(ord.total_amount), 0);
+      const onlineDeliveredIds = onlineDelivered.map((o) => o.id);
+      
+      if (onlineDeliveredIds.length > 0) {
+        const { data: items } = await supabase
+          .from('order_items')
+          .select('price, quantity, products(purchase_price)')
+          .in('order_id', onlineDeliveredIds);
+
+        if (items) {
+          items.forEach((item: any) => {
+            const purchasePrice = item.products?.purchase_price ? parseFloat(item.products.purchase_price) : 0;
+            onlineCost += item.quantity * purchasePrice;
+          });
+        }
+      }
+    }
+
+    const onlineProfit = onlineSales - onlineCost;
+
+    // Sum overall totals
+    grossSales = posSales + onlineSales;
+    netProfit = posProfit + onlineProfit;
+    netExpense = grossSales - netProfit;
+
+    // 3. Count active non-cancelled orders
+    const { data: activeOrders } = await supabase
+      .from('orders')
+      .select('id')
+      .neq('status', 'cancelled');
+    if (activeOrders) {
+      activeFulfillments = activeOrders.length;
+    }
+
+    // 4. Fetch catalog count
     const { count } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true });
-    
     if (count !== null) catalogCount = count;
 
-    // 3. Fetch products with low stock (<= 5 items)
+    // 5. Fetch low stock items
     const { data: lowStock } = await supabase
       .from('products')
       .select('id, name, stock_quantity, unit, weight, category')
       .lte('stock_quantity', 5)
       .order('stock_quantity', { ascending: true })
       .limit(6);
-
     if (lowStock) lowStockProducts = lowStock;
 
-    // 4. Fetch recent 5 orders for activity logs
+    // 6. Fetch recent orders list
     const { data: recent } = await supabase
       .from('orders')
       .select('id, customer_name, total_amount, status, created_at')
       .order('id', { ascending: false })
       .limit(5);
-
     if (recent) recentOrders = recent;
-
   } catch (err) {
-    console.error('Error fetching admin dashboard statistics:', err);
+    console.error('Error fetching dashboard statistics:', err);
   }
 
   const statCards = [
     {
       label: 'Gross Sales Revenue',
-      value: `Rs. ${totalSales.toFixed(0)}`,
-      desc: 'Sum of all active online orders',
+      value: `Rs. ${grossSales.toFixed(0)}`,
+      desc: 'Combined online orders & POS sales',
       icon: TrendingUp,
       color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
     },
     {
+      label: 'Net Cost / Expense',
+      value: `Rs. ${netExpense.toFixed(0)}`,
+      desc: 'Cost of goods sold (purchase margins)',
+      icon: TrendingDown,
+      color: 'text-rose-600 bg-rose-50 border-rose-100',
+    },
+    {
+      label: 'Net Store Profit',
+      value: `Rs. ${netProfit.toFixed(0)}`,
+      desc: 'Actual net business income margins',
+      icon: Coins,
+      color: 'text-amber-600 bg-amber-50 border-amber-100',
+    },
+    {
       label: 'Fulfillment Orders',
-      value: totalOrdersCount.toString(),
-      desc: 'Active customer billing cycles',
+      value: activeFulfillments.toString(),
+      desc: 'Total ongoing online billing registers',
       icon: ClipboardList,
       color: 'text-blue-600 bg-blue-50 border-blue-100',
-    },
-    {
-      label: 'Catalog Registry',
-      value: catalogCount.toString(),
-      desc: 'Active products in local store',
-      icon: ShoppingBag,
-      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
-    },
-    {
-      label: 'Low Stock Warnings',
-      value: lowStockProducts.length.toString(),
-      desc: 'Items with quantity <= 5 units',
-      icon: AlertTriangle,
-      color: lowStockProducts.length > 0 
-        ? 'text-rose-600 bg-rose-50 border-rose-100 animate-pulse' 
-        : 'text-slate-500 bg-slate-50 border-slate-100',
     },
   ];
 
