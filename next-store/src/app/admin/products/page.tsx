@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { InventoryContent } from '@/components/admin/InventoryContent';
 
@@ -22,7 +22,9 @@ export default async function AdminProductsPage() {
 
   return (
     <div className="w-full flex-grow flex flex-col">
-      <InventoryContent initialProducts={products} />
+      <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400 font-semibold">Loading Catalog Desk...</div>}>
+        <InventoryContent initialProducts={products} />
+      </Suspense>
     </div>
   );
 }

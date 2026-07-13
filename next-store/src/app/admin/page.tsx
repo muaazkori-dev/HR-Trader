@@ -239,21 +239,25 @@ export default async function AdminDashboard() {
               </div>
             ) : (
               lowStockProducts.map((p) => (
-                <div key={p.id} className="py-3 flex items-center justify-between gap-4 first:pt-0 last:pb-0 text-xs">
+                <Link
+                  key={p.id}
+                  href={`/admin/products?editId=${p.id}`}
+                  className="py-3 flex items-center justify-between gap-4 first:pt-0 last:pb-0 text-xs hover:bg-slate-50 rounded-xl px-2 -mx-2 transition-colors cursor-pointer group"
+                >
                   <div className="min-w-0 text-left">
-                    <strong className="text-slate-800 font-bold block truncate">{p.name}</strong>
+                    <strong className="text-slate-800 font-bold block truncate group-hover:text-emerald-600 transition-colors">{p.name}</strong>
                     <span className="text-[10px] text-slate-400 capitalize">
                       {p.category.replace('_', ' ')} {p.weight ? `• ${p.weight}` : ''}
                     </span>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded font-bold font-mono text-[10px] border ${
+                  <span className={`px-2.5 py-0.5 rounded font-bold font-mono text-[10px] border flex-shrink-0 ${
                     p.stock_quantity === 0 
                       ? 'bg-rose-50 text-rose-705 border-rose-200' 
-                      : 'bg-amber-50 text-amber-705 border-amber-250 animate-pulse'
+                      : 'bg-amber-50 text-amber-705 border-amber-250'
                   }`}>
                     {p.stock_quantity} left
                   </span>
-                </div>
+                </Link>
               ))
             )}
           </div>

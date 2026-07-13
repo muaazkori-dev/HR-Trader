@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { 
   Plus, 
@@ -47,6 +48,10 @@ const CATEGORIES: Record<string, string> = {
 };
 
 export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProducts }) => {
+  const searchParams = useSearchParams();
+  const editIdParam = searchParams.get('editId');
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
+
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -58,6 +63,20 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
 
   // Form states
   const [barcode, setBarcode] = useState('');
+
+  // Auto-open modal if editId is provided in URL
+  useEffect(() => {
+    if (editIdParam && !hasAutoOpened && products.length > 0) {
+      const match = products.find(p => p.id === parseInt(editIdParam, 10));
+      if (match) {
+        setHasAutoOpened(true);
+        // Call next tick to make sure DOM / component has completely finished mount loading
+        setTimeout(() => {
+          openEditModal(match);
+        }, 100);
+      }
+    }
+  }, [editIdParam, products, hasAutoOpened]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<string>('');
