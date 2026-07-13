@@ -83,6 +83,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
   const [timingsFri, setTimingsFri] = useState(getValue('timings_fri', '6:00 AM - 12:00 PM'));
   const [timingsFriEve, setTimingsFriEve] = useState(getValue('timings_fri_eve', '4:00 PM - 12:00 AM'));
 
+  // Promo modal ad states
+  const [promoAdEnabled, setPromoAdEnabled] = useState(getValue('promo_ad_enabled', 'false'));
+  const [promoAdImage, setPromoAdImage] = useState(getValue('promo_ad_image', ''));
+  const [promoAdLink, setPromoAdLink] = useState(getValue('promo_ad_link', ''));
+  const [promoAdFile, setPromoAdFile] = useState<File | null>(null);
+  const [promoAdPreview, setPromoAdPreview] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -93,7 +100,30 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
     setMessage('');
     setIsError(false);
 
+    const uploadImage = async (file: File): Promise<string> => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `promo_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `promo/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    };
+
     try {
+      let finalPromoImage = promoAdImage;
+      if (promoAdFile) {
+        finalPromoImage = await uploadImage(promoAdFile);
+      }
+
       const updates = [
         { key_name: 'active_theme', val_value: activeTheme },
         { key_name: 'shop_status', val_value: shopStatus },
@@ -112,6 +142,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
         { key_name: 'min_order_value', val_value: minOrderValue },
         { key_name: 'shipping_fee', val_value: shippingFee },
         { key_name: 'store_currency', val_value: storeCurrency },
+        { key_name: 'promo_ad_enabled', val_value: promoAdEnabled },
+        { key_name: 'promo_ad_image', val_value: finalPromoImage },
+        { key_name: 'promo_ad_link', val_value: promoAdLink },
         { key_name: 'branch_1_address', val_value: branch1Address },
         { key_name: 'branch_1_phone', val_value: branch1Phone },
         { key_name: 'branch_1_maps_url', val_value: branch1MapsUrl },
@@ -247,6 +280,84 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                   <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;ref&#125;</code>, 
                   <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;total&#125;</code>, 
                   <code className="bg-white border border-slate-200 px-1 py-0.5 rounded mx-1 font-bold text-slate-700 font-mono">&#123;address&#125;</code>
+                </div>
+              </div>
+            </div>
+
+            {/* Promo Modal Ad Settings */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Fullscreen Promo Modal Ad / ہوم اسکرین اشتہار
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Enabled Toggle */}
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <div className="text-left">
+                    <label className="block text-[10px] font-bold text-slate-650 uppercase tracking-wider">Display Popup Ad on Website Load</label>
+                    <p className="text-[9px] text-slate-405 leading-normal font-normal">Saves a session flag so it only shows once per customer visit.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPromoAdEnabled(promoAdEnabled === 'true' ? 'false' : 'true')}
+                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all border ${
+                      promoAdEnabled === 'true'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-250 shadow-sm'
+                        : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {promoAdEnabled === 'true' ? 'ACTIVE' : 'INACTIVE'}
+                  </button>
+                </div>
+
+                {/* Redirect Link Input */}
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Ad Action / Redirect URL (Optional)</label>
+                  <input
+                    type="text"
+                    value={promoAdLink}
+                    onChange={(e) => setPromoAdLink(e.target.value)}
+                    placeholder="e.g. /shop?category=ice_cream"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono"
+                  />
+                  <p className="text-[9px] text-slate-400 font-normal">Action triggered when customer clicks the image. Leave blank for no redirect.</p>
+                </div>
+
+                {/* Image Upload Input */}
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Ad Banner Image</label>
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-4 border border-dashed border-slate-350 bg-slate-50 rounded-2xl">
+                    {/* Image Preview */}
+                    {(promoAdPreview || promoAdImage) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={promoAdPreview || promoAdImage}
+                        alt="Promo Preview"
+                        className="w-20 h-24 object-cover rounded-xl border border-slate-250 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-20 h-24 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-[10px] font-bold">
+                        No Image
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 w-full text-left space-y-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setPromoAdFile(file);
+                            setPromoAdPreview(URL.createObjectURL(file));
+                          }
+                        }}
+                        className="text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 file:cursor-pointer"
+                      />
+                      <p className="text-[9px] text-slate-400 font-normal">Choose a premium vertical/square poster image. Max size: 10MB.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

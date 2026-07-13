@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { BottomNav } from '@/components/BottomNav';
 import { CookieConsentBanner } from '@/components/CookieConsentBanner';
 import { ThemeManager } from '@/components/ThemeManager';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { PromoModalAd } from '@/components/PromoModalAd';
 
 
 const outfit = Outfit({
@@ -26,6 +28,7 @@ export const metadata: Metadata = {
   title: 'HR Traders - Premium Online Grocery & Cosmetics Store',
   description:
     'Shop the freshest organic grains, cosmetics, and cold beverages online. Fast home delivery and retail store in Tando Adam.',
+  manifest: '/manifest.json',
 };
 
 export const revalidate = 30; // Enable 30-second edge CDN caching for instant page transitions
@@ -62,6 +65,8 @@ export default async function RootLayout({
             <BottomNav />
             <CookieConsentBanner />
             <ThemeManager />
+            <PWAInstallPrompt />
+            <PromoModalAd />
           </CartProvider>
         </AuthProvider>
       </body>
