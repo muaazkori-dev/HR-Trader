@@ -298,17 +298,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                     <label className="block text-[10px] font-bold text-slate-650 uppercase tracking-wider">Display Popup Ad on Website Load</label>
                     <p className="text-[9px] text-slate-405 leading-normal font-normal">Saves a session flag so it only shows once per customer visit.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPromoAdEnabled(promoAdEnabled === 'true' ? 'false' : 'true')}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-all border ${
-                      promoAdEnabled === 'true'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-250 shadow-sm'
-                        : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
-                    }`}
+                  <select
+                    value={promoAdEnabled}
+                    onChange={(e) => setPromoAdEnabled(e.target.value)}
+                    className="px-3.5 py-1.5 rounded-xl text-[10px] font-bold border bg-white border-slate-250 text-slate-800 focus:outline-none focus:border-emerald-500"
                   >
-                    {promoAdEnabled === 'true' ? 'ACTIVE' : 'INACTIVE'}
-                  </button>
+                    <option value="false">INACTIVE (Hidden)</option>
+                    <option value="true">ACTIVE (Displayed)</option>
+                  </select>
                 </div>
 
                 {/* Redirect Link Input */}
@@ -364,7 +361,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
 
             {/* Store Information */}
             <div className="border-t border-slate-100 pt-6 space-y-4">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Store Information</h3>
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Store Branding & currency</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Store Name</label>
@@ -386,48 +383,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                     className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Contact Email</label>
-                  <input
-                    type="email"
-                    value={storeEmail}
-                    onChange={(e) => setStoreEmail(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Contact Phone</label>
-                  <input
-                    type="text"
-                    value={storePhone}
-                    onChange={(e) => setStorePhone(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Store Physical Address</label>
-                <input
-                  type="text"
-                  value={storeAddress}
-                  onChange={(e) => setStoreAddress(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Google Maps URL</label>
-                <input
-                  type="text"
-                  value={storeMapsUrl}
-                  onChange={(e) => setStoreMapsUrl(e.target.value)}
-                  placeholder="https://maps.google.com/..."
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono"
-                />
               </div>
             </div>
 
