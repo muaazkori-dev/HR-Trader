@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -19,7 +19,7 @@ import {
   LogIn
 } from 'lucide-react';
 
-export default function Login() {
+function LoginContent() {
   const router = useRouter();
   const { user, profile, loading } = useAuth();
 
@@ -38,16 +38,19 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect') || '/';
+
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
       if (profile?.role === 'owner' || profile?.role === 'manager') {
         router.replace('/admin');
       } else {
-        router.replace('/my-account');
+        router.replace(redirectParam);
       }
     }
-  }, [user, profile, loading, router]);
+  }, [user, profile, loading, router, redirectParam]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -349,5 +352,21 @@ export default function Login() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col min-h-screen bg-slate-50/50">
+        <Header />
+        <div className="flex-grow flex items-center justify-center p-24 text-slate-400 font-semibold text-xs">
+          Loading Auth Portal...
+        </div>
+        <Footer />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
