@@ -542,6 +542,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_message = "No products were selected for export.";
         }
     }
+  }
 }
 
 // 2. FETCH INVENTORY FOR RENDERING
