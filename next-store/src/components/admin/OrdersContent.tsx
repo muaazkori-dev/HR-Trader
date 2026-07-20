@@ -45,6 +45,21 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
   // WhatsApp Alert Template
   const [whatsappTemplate, setWhatsappTemplate] = useState('');
 
+  const fetchFreshOrders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .order('id', { ascending: false });
+
+      if (!error && data) {
+        setOrders(data as Order[]);
+      }
+    } catch (err) {
+      console.error('Error fetching fresh orders on mount:', err);
+    }
+  };
+
   useEffect(() => {
     const fetchTemplate = async () => {
       try {
@@ -60,7 +75,29 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
         console.error(err);
       }
     };
+
     fetchTemplate();
+    fetchFreshOrders();
+
+    // Live sync channel to automatically load newly placed/updated orders in the list
+    const channel = supabase
+      .channel('admin-orders-live-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+        },
+        async () => {
+          await fetchFreshOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const sendWhatsAppAlert = (ord: Order) => {
