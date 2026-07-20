@@ -1,10 +1,12 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import React from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { supabase } from '@/lib/supabase';
-import { ShoppingCart, Star, Eye, Tag, Sparkles } from 'lucide-react';
+import { ShoppingCart, Star, Eye, Tag, Sparkles, Loader2 } from 'lucide-react';
 import { HomeSlider } from '@/components/HomeSlider';
 import { AddToCartButton } from '@/components/AddToCartButton';
 
@@ -52,82 +54,81 @@ const DEFAULT_BANNERS = [
   }
 ];
 
-export const revalidate = 30; // Enable 30-second edge CDN caching for instant homepage delivery
+export default function Home() {
+  const [loading, setLoading] = useState(true);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
 
-export default async function Home() {
-  let products: any[] = [];
-  let featuredProducts: any[] = [];
-  let categories: any[] = [];
-  let banners: any[] = [];
-
-  try {
-    // 1. Fetch products
-    const { data: prodData } = await supabase
-      .from('products')
-      .select('*')
-      .order('id', { ascending: false });
-
-    if (prodData) {
-      products = prodData;
-      featuredProducts = prodData.slice(0, 8);
-    }
-
-    // 2. Fetch categories setting
-    const { data: catSetting } = await supabase
-      .from('settings')
-      .select('val_value')
-      .eq('key_name', 'store_categories')
-      .maybeSingle();
-
-    if (catSetting?.val_value) {
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const parsed = JSON.parse(catSetting.val_value);
-        if (typeof parsed === 'object' && !Array.isArray(parsed)) {
-          // Format is key-value e.g. { anaj: { name: 'Anaj', urdu: 'اناج' } }
-          categories = Object.entries(parsed).map(([id, val]: any) => ({
-            id,
-            name: val.name,
-            urdu: val.urdu || '',
-            image: val.image || `/assets/images/categories/${id}.png`
-          }));
-        } else if (Array.isArray(parsed)) {
-          categories = parsed.map((cat: any) => ({
-            id: cat.id || cat.key,
-            name: cat.name,
-            urdu: cat.urdu || '',
-            image: cat.image || `/assets/images/categories/${cat.id || cat.key}.png`
-          }));
+        // 1. Fetch products sorted by ID descending (Latest Arrivals first)
+        const { data: prodData } = await supabase
+          .from('products')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (prodData) {
+          setFeaturedProducts(prodData.slice(0, 8));
         }
-      } catch (err) {
-        console.error('Error parsing dynamic categories:', err);
+
+        // 2. Fetch categories setting
+        const { data: catSetting } = await supabase
+          .from('settings')
+          .select('val_value')
+          .eq('key_name', 'store_categories')
+          .maybeSingle();
+
+        if (catSetting?.val_value) {
+          try {
+            const parsed = JSON.parse(catSetting.val_value);
+            if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+              setCategories(Object.entries(parsed).map(([id, val]: any) => ({
+                id,
+                name: val.name,
+                urdu: val.urdu || '',
+                image: val.image || `/assets/images/categories/${id}.png`
+              })));
+            } else if (Array.isArray(parsed)) {
+              setCategories(parsed.map((cat: any) => ({
+                id: cat.id || cat.key,
+                name: cat.name,
+                urdu: cat.urdu || '',
+                image: cat.image || `/assets/images/categories/${cat.id || cat.key}.png`
+              })));
+            }
+          } catch (err) {
+            console.error('Error parsing categories:', err);
+          }
+        }
+
+        // 3. Fetch hero banners setting
+        const { data: bannerSetting } = await supabase
+          .from('settings')
+          .select('val_value')
+          .eq('key_name', 'store_hero_banners')
+          .maybeSingle();
+
+        if (bannerSetting?.val_value) {
+          try {
+            setBanners(JSON.parse(bannerSetting.val_value));
+          } catch (err) {
+            console.error('Error parsing banners:', err);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching storefront configs:', error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    // 3. Fetch hero banners setting
-    const { data: bannerSetting } = await supabase
-      .from('settings')
-      .select('val_value')
-      .eq('key_name', 'store_hero_banners')
-      .maybeSingle();
+    fetchData();
+  }, []);
 
-    if (bannerSetting?.val_value) {
-      try {
-        banners = JSON.parse(bannerSetting.val_value);
-      } catch (err) {
-        console.error('Error parsing dynamic banners:', err);
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching storefront configs:', error);
-  }
-
-  // Fallbacks if database is empty
-  if (categories.length === 0) {
-    categories = DEFAULT_CATEGORIES;
-  }
-  if (banners.length === 0) {
-    banners = DEFAULT_BANNERS;
-  }
+  const activeCategories = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  const activeBanners = banners.length > 0 ? banners : DEFAULT_BANNERS;
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50">
@@ -135,7 +136,7 @@ export default async function Home() {
       <Header />
 
       {/* 1. HERO SLIDER CAROUSEL (Dynamic Banners from DB) */}
-      <HomeSlider banners={banners} />
+      <HomeSlider banners={activeBanners} />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-12">
@@ -151,7 +152,7 @@ export default async function Home() {
             </p>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-9 gap-3 sm:gap-4 md:gap-6">
-            {categories.map((cat) => (
+            {activeCategories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/shop?category=${cat.id}`}
@@ -207,11 +208,16 @@ export default async function Home() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
               <Tag className="w-4 h-4 text-emerald-500" />
-              Featured Grocery Deals
+              Featured Grocery Deals (Latest Arrivals)
             </h2>
           </div>
 
-          {featuredProducts.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center p-24 gap-3 bg-white border border-slate-200 rounded-3xl shadow-sm">
+              <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+              <span className="text-xs text-slate-450 font-semibold">Loading Deals Catalog...</span>
+            </div>
+          ) : featuredProducts.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400">
               No products found in catalog. Add some items in the admin panel!
             </div>
@@ -307,6 +313,3 @@ export default async function Home() {
     </div>
   );
 }
-
-// Trigger Vercel rebuild for layout updates
-

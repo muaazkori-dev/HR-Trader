@@ -6,6 +6,7 @@ import { Search, SlidersHorizontal, Tag, Eye } from 'lucide-react';
 import { AddToCartButton } from './AddToCartButton';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 interface Product {
   id: number;
@@ -69,8 +70,26 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
   const initialCategory = searchParams.get('category') || '';
   const initialSearch = searchParams.get('search') || '';
 
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  useEffect(() => {
+    const fetchFreshProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('id', { ascending: false });
+        if (!error && data) {
+          setProducts(data as Product[]);
+        }
+      } catch (err) {
+        console.error('Error fetching fresh shop products:', err);
+      }
+    };
+    fetchFreshProducts();
+  }, []);
 
   // Sync state if URL changes
   useEffect(() => {
@@ -100,7 +119,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
   };
 
   // Perform instant client-side filtering
-  const filteredProducts = initialProducts.filter((p) => {
+  const filteredProducts = products.filter((p) => {
     const matchesCategory =
       selectedCategory === '' || p.category === selectedCategory;
     const matchesSearch =
@@ -183,7 +202,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
         <div className="flex items-center justify-between bg-white border border-slate-200 rounded-2xl p-4 shadow-sm text-xs font-semibold text-slate-600 text-left">
           <div>
             Showing <strong className="text-slate-800">{filteredProducts.length}</strong> items of{' '}
-            <strong className="text-slate-800">{initialProducts.length}</strong> total products
+            <strong className="text-slate-800">{products.length}</strong> total products
           </div>
           {selectedCategory && (
             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold border border-emerald-150 uppercase text-[9px] tracking-wider">
