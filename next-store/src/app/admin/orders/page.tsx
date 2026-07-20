@@ -8,10 +8,10 @@ export default async function AdminOrdersPage() {
   let orders: any[] = [];
 
   try {
-    // Query orders from DB
+    // Query orders from DB with preloaded items
     const { data, error } = await supabase
       .from('orders')
-      .select('*')
+      .select('*, order_items(*)')
       .order('id', { ascending: false });
 
     if (!error && data) {

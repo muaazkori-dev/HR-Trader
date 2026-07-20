@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
-  Search, 
-  ChevronDown, 
-  ChevronUp, 
-  MapPin, 
   Phone, 
-  Calendar,
-  ClipboardList,
-  Filter,
-  DollarSign
+  MapPin, 
+  Calendar, 
+  Truck, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 interface OrderItem {
@@ -40,15 +39,13 @@ interface OrdersContentProps {
 
 export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) => {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>(''); // empty means All
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   // WhatsApp Alert Template
   const [whatsappTemplate, setWhatsappTemplate] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchTemplate = async () => {
       try {
         const { data } = await supabase
@@ -86,44 +83,6 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
     window.open(waUrl, '_blank');
   };
 
-  // Filter orders
-  const filteredOrders = orders.filter((o) => {
-    const matchesSearch =
-      searchQuery.trim() === '' ||
-      o.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.customer_phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(o.id).includes(searchQuery);
-    const matchesStatus = statusFilter === '' || o.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const toggleExpandOrder = async (id: number) => {
-    if (expandedOrderId === id) {
-      setExpandedOrderId(null);
-      return;
-    }
-
-    // Expand & fetch items if not loaded
-    const orderIndex = orders.findIndex((o) => o.id === id);
-    if (orderIndex !== -1 && !orders[orderIndex].order_items) {
-      try {
-        const { data: itemsData } = await supabase
-          .from('order_items')
-          .select('*')
-          .eq('order_id', id);
-
-        setOrders(
-          orders.map((o) =>
-            o.id === id ? { ...o, order_items: (itemsData as OrderItem[]) || [] } : o
-          )
-        );
-      } catch (err) {
-        console.error('Failed to load order items:', err);
-      }
-    }
-    setExpandedOrderId(id);
-  };
-
   const handleStatusChange = async (id: number, newStatus: Order['status']) => {
     setUpdatingId(id);
     try {
@@ -134,9 +93,9 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
 
       if (error) throw error;
 
-      // Update state
-      setOrders(
-        orders.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
+      // Update local state
+      setOrders(prev => 
+        prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
       );
 
       // Trigger Web Push Notification alert to customer device
@@ -181,208 +140,234 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
   const getStatusClass = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-amber-50 text-amber-705 border-amber-200';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'packaging':
-        return 'bg-blue-50 text-blue-705 border-blue-200';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'out_for_delivery':
-        return 'bg-purple-50 text-purple-705 border-purple-200 animate-pulse';
+        return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'delivered':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'cancelled':
         return 'bg-rose-50 text-rose-700 border-rose-200';
       default:
-        return 'bg-slate-50 text-slate-705 border-slate-200';
+        return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
+  // Filter orders by status
+  const filteredOrders = statusFilter === '' 
+    ? orders 
+    : orders.filter(o => o.status === statusFilter);
+
+  const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    
+    return `${day}-${month}-${year} ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+  };
+
   return (
-    <div className="space-y-6 w-full flex flex-col flex-1 text-left">
+    <div className="space-y-6 w-full flex flex-col flex-1 text-left select-none">
       
-      {/* Header */}
-      <section className="pb-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header Title Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4">
         <div>
-          <h1 className="text-xl font-black text-slate-800 uppercase tracking-wider">Order Register</h1>
-          <p className="text-xs text-slate-400 mt-1">Track customer order dispatch cycles, update fulfillment status levels.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Fulfillment Desk</h1>
+          <p className="text-xs text-slate-500 mt-1">Monitor, pack, and mark delivery status for online customer orders</p>
         </div>
-      </section>
 
-      {/* Filters row */}
-      <section className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search name, phone, ref..."
-              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-slate-800 shadow-sm"
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-slate-200 px-3.5 py-2 rounded-xl text-xs text-slate-650 focus:outline-none focus:border-emerald-500 shadow-sm w-full sm:w-auto font-semibold"
+        {/* Filter tabs */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setStatusFilter('')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+              statusFilter === '' 
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/10' 
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
           >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="packaging">Packaging</option>
-            <option value="out_for_delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+            All Orders
+          </button>
+          {(['pending', 'packaging', 'out_for_delivery', 'delivered', 'cancelled'] as const).map((st) => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                statusFilter === st 
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/10' 
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {st === 'out_for_delivery' ? 'Out for delivery' : st.charAt(0).toUpperCase() + st.slice(1)}
+            </button>
+          ))}
         </div>
-      </section>
+      </div>
 
-      {/* Orders List Table */}
-      <section className="space-y-4">
+      {/* Orders queue grid list */}
+      <div className="space-y-4">
         {filteredOrders.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center shadow-sm">
-            <div className="w-16 h-16 bg-slate-50 border border-dashed border-slate-350 rounded-full flex items-center justify-center text-slate-350 mx-auto mb-4">
-              <ClipboardList className="w-8 h-8" />
-            </div>
-            <h4 className="font-extrabold text-slate-800 text-sm">No Orders Found</h4>
-            <p className="text-xs text-slate-400 mt-1">There are no orders registered or matching your active search filters.</p>
+          <div className="bg-white py-16 text-center text-slate-400 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-3">
+            <Truck className="w-12 h-12 opacity-25 text-slate-405 animate-pulse" />
+            <h3 className="font-bold text-slate-650 text-base">No orders in queue</h3>
+            <p className="text-xs mt-1 text-slate-400">There are no incoming customer orders matching this filter.</p>
           </div>
         ) : (
           filteredOrders.map((ord) => {
-            const isExpanded = expandedOrderId === ord.id;
-            const formattedDate = new Date(ord.created_at).toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            });
+            const ref = `#HRT-${String(ord.id).padStart(5, '0')}`;
+            const isPending = ord.status === 'pending';
+            const isPackaging = ord.status === 'packaging';
+            const isShipping = ord.status === 'out_for_delivery';
+            const isDelivered = ord.status === 'delivered';
+            const isCancelled = ord.status === 'cancelled';
+
+            // Items formatted list
+            const itemsString = ord.order_items
+              ? ord.order_items.map(item => `${item.product_name} (x${item.quantity})`).join(', ')
+              : 'No items';
 
             return (
-              <div
-                key={ord.id}
-                className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm transition-all"
+              <div 
+                key={ord.id} 
+                className="bg-white shadow-sm p-5 rounded-2xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all hover:border-slate-300"
               >
-                {/* Header overview row */}
-                <div
-                  onClick={() => toggleExpandOrder(ord.id)}
-                  className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 transition-colors text-xs"
-                >
-                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-left">
+                
+                {/* Details Section */}
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="font-mono text-sm font-bold text-slate-800">{ref}</span>
+                    <span className={`px-2.5 py-0.5 rounded text-[10px] uppercase font-black border ${getStatusClass(ord.status)}`}>
+                      {ord.status.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-slate-400 font-medium">
+                      {formatDateTime(ord.created_at)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-600 pt-1">
                     <div>
-                      <span className="text-[9px] text-slate-400 uppercase font-extrabold block">Order Ref</span>
-                      <strong className="text-slate-800 font-bold block text-sm">#HRT-{String(ord.id).padStart(5, '0')}</strong>
+                      <span className="text-slate-400 block uppercase font-semibold text-[10px]">Recipient</span>
+                      <strong className="text-slate-805 text-[13px]">{ord.customer_name}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] text-slate-400 uppercase font-extrabold block">Customer Name</span>
-                      <strong className="text-slate-800 font-bold block">{ord.customer_name}</strong>
+                      <span className="text-slate-400 block uppercase font-semibold text-[10px]">Contact</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-slate-700">{ord.customer_phone}</span>
+                        <button 
+                          onClick={() => sendWhatsAppAlert(ord)}
+                          className="px-1.5 py-0.5 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 border border-emerald-250 text-[9px] font-bold rounded flex items-center gap-0.5 transition-all cursor-pointer"
+                          title="Send WhatsApp dispatch notification"
+                        >
+                          Alert
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[9px] text-slate-400 uppercase font-extrabold block">Date Placed</span>
-                      <span className="text-slate-550 block font-semibold">{formattedDate}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-400 uppercase font-extrabold block">Total Bill</span>
-                      <span className="text-emerald-700 block font-mono font-extrabold">Rs. {ord.total_amount.toFixed(0)}</span>
+                    <div className="col-span-1 sm:col-span-2 md:col-span-1">
+                      <span className="text-slate-400 block uppercase font-semibold text-[10px]">Address</span>
+                      <span className="truncate block max-w-xs text-slate-700" title={ord.customer_address}>
+                        {ord.customer_address}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                    {/* Status dropdown selector */}
-                    <select
-                      value={ord.status}
-                      disabled={updatingId === ord.id}
-                      onChange={(e) => handleStatusChange(ord.id, e.target.value as Order['status'])}
-                      className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold border focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer ${getStatusClass(ord.status)}`}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="packaging">Packaging</option>
-                      <option value="out_for_delivery">Out for Delivery</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-
-                    <button
-                      onClick={() => toggleExpandOrder(ord.id)}
-                      className="p-1 text-slate-400 hover:text-slate-700 transition-colors"
-                    >
-                      {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </button>
+                  {/* Purchased Grid Preview */}
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2 text-xs text-slate-700 text-left">
+                    <span className="font-bold text-slate-500 block mb-1">Purchased Gird:</span>
+                    <span>{itemsString}</span>
                   </div>
                 </div>
 
-                {/* Collapsed items view */}
-                {isExpanded && (
-                  <div className="p-5 border-t border-slate-100 bg-slate-50/20 space-y-5 text-xs text-left">
-                    <div className="space-y-2">
-                      <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider block">Items Bill Invoice</h4>
-                      <div className="bg-white border border-slate-200/60 rounded-2xl p-4 divide-y divide-slate-100">
-                        {ord.order_items ? (
-                          ord.order_items.map((item) => (
-                            <div key={item.id} className="py-2.5 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
-                              <div className="min-w-0">
-                                <strong className="text-slate-800 font-bold block truncate">{item.product_name}</strong>
-                                <span className="text-[10px] text-slate-400 font-mono">Rs. {item.price.toFixed(0)} x {item.quantity}</span>
-                              </div>
-                              <span className="font-mono font-extrabold text-slate-700">
-                                Rs. {(item.price * item.quantity).toFixed(0)}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-slate-400 text-center py-2">Loading items details...</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Customer shipping details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                      <div className="space-y-1.5">
-                        <span className="text-[9px] text-slate-400 uppercase font-extrabold block">Shipping Address</span>
-                        <div className="flex items-start gap-2 text-slate-650">
-                          <MapPin className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <span className="leading-relaxed font-semibold">{ord.customer_address}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="space-y-1">
-                          <span className="text-[9px] text-slate-400 uppercase font-extrabold block">Contact Mobile</span>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex items-center gap-2 text-slate-650">
-                              <Phone className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                              <span className="font-mono font-bold">{ord.customer_phone}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => sendWhatsAppAlert(ord)}
-                              className="px-2 py-0.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-250 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-1 active:scale-95 shadow-sm"
-                              title="Send WhatsApp Alert"
-                            >
-                              <svg className="w-3 h-3 fill-current flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                              </svg>
-                              WhatsApp Alert
-                            </button>
-                          </div>
-                        </div>
-                        {ord.notes && (
-                          <div className="space-y-1.5 p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
-                            <span className="text-[9px] text-amber-800 uppercase font-extrabold block">Customer Instructions</span>
-                            <p className="text-[10px] text-amber-700 italic font-medium leading-relaxed">
-                              "{ord.notes}"
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+                {/* Status Trigger Action Panel */}
+                <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end justify-between gap-4 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 md:w-64">
+                  <div className="text-left md:text-right">
+                    <span className="text-[10px] text-slate-450 uppercase font-semibold block">Total Invoice</span>
+                    <span className="text-lg font-black text-emerald-600">Rs. {ord.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
-                )}
+
+                  <div className="flex flex-wrap gap-2 w-full md:justify-end">
+                    {updatingId === ord.id ? (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 py-1">
+                        <Loader2 className="w-4.5 h-4.5 animate-spin text-slate-400" /> Updating Status...
+                      </div>
+                    ) : (
+                      <>
+                        {isPending && (
+                          <>
+                            <button 
+                              onClick={() => handleStatusChange(ord.id, 'packaging')}
+                              className="flex-1 sm:flex-initial px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors active:scale-95"
+                            >
+                              Start Packaging
+                            </button>
+                            <button 
+                              onClick={() => handleStatusChange(ord.id, 'cancelled')}
+                              className="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 hover:text-rose-700 hover:border-rose-300 text-xs rounded-lg transition-colors active:scale-95"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {isPackaging && (
+                          <>
+                            <button 
+                              onClick={() => handleStatusChange(ord.id, 'out_for_delivery')}
+                              className="flex-1 sm:flex-initial px-3.5 py-1.5 bg-purple-650 hover:bg-purple-700 text-white font-bold text-xs rounded-lg transition-colors active:scale-95"
+                            >
+                              Dispatch / Ship
+                            </button>
+                            <button 
+                              onClick={() => handleStatusChange(ord.id, 'cancelled')}
+                              className="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 hover:text-rose-700 hover:border-rose-300 text-xs rounded-lg transition-colors active:scale-95"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {isShipping && (
+                          <>
+                            <button 
+                              onClick={() => handleStatusChange(ord.id, 'delivered')}
+                              className="flex-1 sm:flex-initial px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors active:scale-95"
+                            >
+                              Mark Delivered
+                            </button>
+                            <button 
+                              onClick={() => handleStatusChange(ord.id, 'cancelled')}
+                              className="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 hover:text-rose-700 hover:border-rose-300 text-xs rounded-lg transition-colors active:scale-95"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {isDelivered && (
+                          <span className="text-emerald-600 text-xs font-bold py-1 flex items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4" /> Order Fulfill Completed
+                          </span>
+                        )}
+                        {isCancelled && (
+                          <span className="text-rose-600 text-xs font-bold py-1 flex items-center gap-1">
+                            <XCircle className="w-4 h-4" /> Order Cancelled & Stock Synced
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
               </div>
             );
           })
         )}
-      </section>
+      </div>
 
     </div>
   );
