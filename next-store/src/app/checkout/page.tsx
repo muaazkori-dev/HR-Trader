@@ -306,6 +306,14 @@ export default function Checkout() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('last_placed_order_id', String(order.id));
           localStorage.setItem('last_placed_order_phone', phone.trim());
+          localStorage.setItem('last_order_details', JSON.stringify({
+            order,
+            items: cart.map(item => ({
+              product_name: item.name,
+              price: item.price,
+              quantity: item.quantity
+            }))
+          }));
         }
         clearCart();
         window.open(waUrl, '_blank');
@@ -315,6 +323,14 @@ export default function Checkout() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('last_placed_order_id', String(order.id));
           localStorage.setItem('last_placed_order_phone', phone.trim());
+          localStorage.setItem('last_order_details', JSON.stringify({
+            order,
+            items: cart.map(item => ({
+              product_name: item.name,
+              price: item.price,
+              quantity: item.quantity
+            }))
+          }));
         }
         clearCart();
         router.replace(`/checkout/success?id=${order.id}`);
