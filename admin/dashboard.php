@@ -2194,6 +2194,24 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(toast);
         }
 
+        let lastOrderId = null;
+
+        async function initLastOrder() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .select('id')
+                    .order('id', { descending: true })
+                    .limit(1);
+                if (!error && data && data.length > 0) {
+                    lastOrderId = data[0].id;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+        initLastOrder();
+
         supabaseClient
             .channel('schema-insert-realtime-php')
             .on(
@@ -2206,12 +2224,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 (payload) => {
                     if (payload.new) {
                         const newOrder = payload.new;
+                        lastOrderId = newOrder.id;
                         showOrderToast(newOrder.id, newOrder.customer_name || 'Guest', newOrder.total_amount || 0);
                         playChime();
+                        setTimeout(() => window.location.reload(), 1500);
                     }
                 }
             )
             .subscribe();
+
+        setInterval(async () => {
+            if (!lastOrderId) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .select('id, customer_name, total_amount')
+                    .order('id', { descending: true })
+                    .limit(1);
+                if (!error && data && data.length > 0) {
+                    const latestId = data[0].id;
+                    if (latestId > lastOrderId) {
+                        lastOrderId = latestId;
+                        showOrderToast(latestId, data[0].customer_name || 'Guest', data[0].total_amount || 0);
+                        playChime();
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }, 15000);
 
     } catch (err) {
         console.error(err);

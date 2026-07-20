@@ -70,9 +70,29 @@ export default function AdminLayout({
     }
   };
 
+  const [lastOrderId, setLastOrderId] = useState<number | null>(null);
+
   useEffect(() => {
     if (!user || (profile?.role !== 'owner' && profile?.role !== 'manager')) return;
 
+    // 1. Initialize last seen order ID
+    const initLatestOrder = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1);
+        if (!error && data && data.length > 0) {
+          setLastOrderId(data[0].id);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    initLatestOrder();
+
+    // 2. Real-time instant websocket listener
     const channel = supabase
       .channel('schema-insert-order')
       .on(
@@ -84,6 +104,7 @@ export default function AdminLayout({
         },
         (payload) => {
           if (payload.new) {
+            setLastOrderId(payload.new.id);
             setNewOrderNotification({
               id: payload.new.id,
               customer_name: payload.new.customer_name || 'Guest',
@@ -99,6 +120,38 @@ export default function AdminLayout({
       supabase.removeChannel(channel);
     };
   }, [user, profile]);
+
+  // 3. Fallback polling loop (Runs if real-time websockets are disabled or fail)
+  useEffect(() => {
+    if (!user || (profile?.role !== 'owner' && profile?.role !== 'manager') || !lastOrderId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('id, customer_name, total_amount')
+          .order('id', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          const latestId = data[0].id;
+          if (latestId > lastOrderId) {
+            setLastOrderId(latestId);
+            setNewOrderNotification({
+              id: latestId,
+              customer_name: data[0].customer_name || 'Guest',
+              total_amount: data[0].total_amount || 0,
+            });
+            playChime();
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, 15000); // 15s fallback poll
+
+    return () => clearInterval(interval);
+  }, [user, profile, lastOrderId]);
 
   // Guard: Redirect unauthorized users
   useEffect(() => {
