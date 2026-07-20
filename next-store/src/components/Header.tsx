@@ -239,6 +239,15 @@ export const Header: React.FC = () => {
     };
   }, []);
 
+  const dismissRecentOrderAlert = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('last_placed_order_id');
+      localStorage.removeItem('last_placed_order_phone');
+    }
+    setRecentOrderId(null);
+    setRecentOrderStatus(null);
+  };
+
   const handleOpenTrackerModal = () => {
     if (typeof window !== 'undefined') {
       const lastId = localStorage.getItem('last_placed_order_id');
@@ -574,20 +583,29 @@ export const Header: React.FC = () => {
 
       {/* 2b. LIVE RECENT ORDER TRACKER SHORTCUT ALERT BAR */}
       {recentOrderId && recentOrderStatus && (
-        <div className="bg-slate-100 border-b border-slate-250 text-slate-700 py-2 px-4 text-center text-[11px] font-bold flex items-center justify-center gap-2 z-20 print-hidden select-none animate-in slide-in-from-top-1">
-          <Truck className="w-3.5 h-3.5 text-emerald-650 animate-pulse flex-shrink-0" />
-          <span>Your recent order <strong className="font-extrabold text-slate-900">#HRT-{recentOrderId.padStart(5, '0')}</strong> status is <strong className={`uppercase px-2 py-0.5 rounded text-[9px] font-black border ${
-            recentOrderStatus === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-            recentOrderStatus === 'packaging' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-            recentOrderStatus === 'out_for_delivery' ? 'bg-purple-50 text-purple-700 border-purple-200 animate-pulse' :
-            recentOrderStatus === 'delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-            'bg-rose-50 text-rose-700 border-rose-200'
-          }`}>{recentOrderStatus.replace(/_/g, ' ')}</strong>.</span>
-          <button 
-            onClick={() => handleOpenTrackerModal()}
-            className="underline ml-1 text-emerald-700 hover:text-emerald-850 cursor-pointer font-black"
+        <div className="bg-slate-100 border-b border-slate-250 text-slate-700 py-2 px-4 text-center text-[11px] font-bold flex items-center justify-between z-20 print-hidden select-none animate-in slide-in-from-top-1">
+          <div className="flex-1 flex items-center justify-center gap-2">
+            <Truck className="w-3.5 h-3.5 text-emerald-650 animate-pulse flex-shrink-0" />
+            <span>Your recent order <strong className="font-extrabold text-slate-900">#HRT-{recentOrderId.padStart(5, '0')}</strong> status is <strong className={`uppercase px-2 py-0.5 rounded text-[9px] font-black border ${
+              recentOrderStatus === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+              recentOrderStatus === 'packaging' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+              recentOrderStatus === 'out_for_delivery' ? 'bg-purple-50 text-purple-700 border-purple-200 animate-pulse' :
+              recentOrderStatus === 'delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+              'bg-rose-50 text-rose-700 border-rose-200'
+            }`}>{recentOrderStatus.replace(/_/g, ' ')}</strong>.</span>
+            <button 
+              onClick={() => handleOpenTrackerModal()}
+              className="underline ml-1 text-emerald-700 hover:text-emerald-850 cursor-pointer font-black"
+            >
+              Track live details
+            </button>
+          </div>
+          <button
+            onClick={dismissRecentOrderAlert}
+            className="text-slate-400 hover:text-slate-700 text-xs font-black px-1.5 py-0.5 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+            title="Dismiss notification"
           >
-            Track live details
+            &times;
           </button>
         </div>
       )}
