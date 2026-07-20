@@ -16,7 +16,13 @@ import {
   Trash2, 
   ChevronRight,
   ClipboardList,
-  Megaphone
+  Megaphone,
+  Truck,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  MapPin
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -63,6 +69,44 @@ export const Header: React.FC = () => {
   const [isSubmittingDemand, setIsSubmittingDemand] = useState(false);
   const [demandSuccess, setDemandSuccess] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState('');
+
+  // Order Tracker states
+  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+  const [trackOrderId, setTrackOrderId] = useState('');
+  const [trackPhone, setTrackPhone] = useState('');
+  const [isTrackingLoading, setIsTrackingLoading] = useState(false);
+  const [trackError, setTrackError] = useState('');
+  const [trackedOrder, setTrackedOrder] = useState<any | null>(null);
+  const [trackedItems, setTrackedItems] = useState<any[]>([]);
+
+  // Local Storage recent order alert state
+  const [recentOrderId, setRecentOrderId] = useState<string | null>(null);
+  const [recentOrderStatus, setRecentOrderStatus] = useState<string | null>(null);
+
+  // Sync recent order ID status
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lastId = localStorage.getItem('last_placed_order_id');
+      if (lastId) {
+        setRecentOrderId(lastId);
+        const fetchStatus = async () => {
+          try {
+            const { data } = await supabase
+              .from('orders')
+              .select('status')
+              .eq('id', parseInt(lastId, 10))
+              .maybeSingle();
+            if (data) {
+              setRecentOrderStatus(data.status);
+            }
+          } catch (err) {
+            console.error('Error loading last order status:', err);
+          }
+        };
+        fetchStatus();
+      }
+    }
+  }, [isTrackerOpen]);
 
   // Typewriter placeholder animation
   useEffect(() => {
@@ -194,6 +238,87 @@ export const Header: React.FC = () => {
       window.removeEventListener('open-cart-drawer', handleOpenCart);
     };
   }, []);
+
+  const handleOpenTrackerModal = () => {
+    if (typeof window !== 'undefined') {
+      const lastId = localStorage.getItem('last_placed_order_id');
+      const lastPhone = localStorage.getItem('last_placed_order_phone');
+      if (lastId) setTrackOrderId(lastId);
+      if (lastPhone) setTrackPhone(lastPhone);
+    }
+    setTrackError('');
+    setTrackedOrder(null);
+    setTrackedItems([]);
+    setIsTrackerOpen(true);
+  };
+
+  const handleTrackOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trackOrderId.trim() || !trackPhone.trim()) {
+      setTrackError('Please enter both Order ID and Phone Number.');
+      return;
+    }
+
+    setIsTrackingLoading(true);
+    setTrackError('');
+    setTrackedOrder(null);
+    setTrackedItems([]);
+
+    try {
+      const cleanId = trackOrderId.replace(/[^0-9]/g, '');
+      const cleanPhone = trackPhone.replace(/[^0-9]/g, '');
+      
+      const { data: order, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', parseInt(cleanId, 10))
+        .maybeSingle();
+
+      if (error || !order) {
+        setTrackError('Order reference not found. Please verify details.');
+        setIsTrackingLoading(false);
+        return;
+      }
+
+      // Verify phone match (checking end match to ignore country code prefix differences)
+      const dbPhoneClean = order.customer_phone.replace(/[^0-9]/g, '');
+      const matchLength = Math.min(dbPhoneClean.length, cleanPhone.length, 7);
+      if (matchLength < 5 || !dbPhoneClean.endsWith(cleanPhone.substring(cleanPhone.length - matchLength))) {
+        setTrackError('Phone number does not match this order reference.');
+        setIsTrackingLoading(false);
+        return;
+      }
+
+      // Fetch items
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+
+      setTrackedOrder(order);
+      setTrackedItems(items || []);
+    } catch (err) {
+      console.error(err);
+      setTrackError('An error occurred during verification.');
+    } finally {
+      setIsTrackingLoading(false);
+    }
+  };
+
+  const getStepStatus = (stepName: string, currentStatus: string) => {
+    const statusOrder = ['pending', 'packaging', 'out_for_delivery', 'delivered'];
+    const stepIndex = statusOrder.indexOf(stepName);
+    const currentIndex = statusOrder.indexOf(currentStatus);
+
+    if (currentStatus === 'cancelled') {
+      return 'cancelled';
+    }
+
+    if (currentIndex >= stepIndex) {
+      return 'completed';
+    }
+    return 'pending';
+  };
 
   const handleDemandSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -334,6 +459,24 @@ export const Header: React.FC = () => {
               Browse Shop
             </Link>
 
+            {/* Track Order Icon Button for Mobile */}
+            <button
+              onClick={() => handleOpenTrackerModal()}
+              className="flex sm:hidden p-2 bg-slate-105 hover:bg-slate-200 text-slate-705 rounded-xl transition-all shadow-sm"
+              title="Track Order"
+            >
+              <Truck className="w-4.5 h-4.5 text-emerald-600" />
+            </button>
+
+            {/* Track Order Button for Desktop */}
+            <button
+              onClick={() => handleOpenTrackerModal()}
+              className="hidden sm:flex px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-sm items-center gap-1.5"
+            >
+              <Truck className="w-3.5 h-3.5 text-emerald-600" />
+              Track Order
+            </button>
+
             <button
               onClick={() => setIsDemandModalOpen(true)}
               className="hidden sm:flex px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-bold rounded-xl transition-all shadow-sm items-center gap-1.5"
@@ -428,6 +571,26 @@ export const Header: React.FC = () => {
         <Megaphone className="w-3.5 h-3.5 animate-bounce flex-shrink-0" />
         <span>{announcement}</span>
       </div>
+
+      {/* 2b. LIVE RECENT ORDER TRACKER SHORTCUT ALERT BAR */}
+      {recentOrderId && recentOrderStatus && (
+        <div className="bg-slate-100 border-b border-slate-250 text-slate-700 py-2 px-4 text-center text-[11px] font-bold flex items-center justify-center gap-2 z-20 print-hidden select-none animate-in slide-in-from-top-1">
+          <Truck className="w-3.5 h-3.5 text-emerald-650 animate-pulse flex-shrink-0" />
+          <span>Your recent order <strong className="font-extrabold text-slate-900">#HRT-{recentOrderId.padStart(5, '0')}</strong> status is <strong className={`uppercase px-2 py-0.5 rounded text-[9px] font-black border ${
+            recentOrderStatus === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+            recentOrderStatus === 'packaging' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+            recentOrderStatus === 'out_for_delivery' ? 'bg-purple-50 text-purple-700 border-purple-200 animate-pulse' :
+            recentOrderStatus === 'delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+            'bg-rose-50 text-rose-700 border-rose-200'
+          }`}>{recentOrderStatus.replace(/_/g, ' ')}</strong>.</span>
+          <button 
+            onClick={() => handleOpenTrackerModal()}
+            className="underline ml-1 text-emerald-700 hover:text-emerald-850 cursor-pointer font-black"
+          >
+            Track live details
+          </button>
+        </div>
+      )}
 
       {/* 3. SLIDING MINI-CART DRAWER PANEL */}
       {isCartOpen && (
@@ -657,6 +820,195 @@ export const Header: React.FC = () => {
                   {isSubmittingDemand ? 'Registering...' : 'Submit Request'}
                 </button>
               </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 5. LIVE ORDER TRACKER MODAL */}
+      {isTrackerOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in select-none">
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-2xl w-full max-w-lg p-6 relative overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-emerald-650" />
+                <h3 className="font-black text-slate-800 text-sm uppercase tracking-wider text-left">Track Customer Order</h3>
+              </div>
+              <button
+                onClick={() => setIsTrackerOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Tracker Search Form */}
+            <form onSubmit={handleTrackOrder} className="space-y-4 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Order ID / Ref Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={trackOrderId}
+                    onChange={(e) => setTrackOrderId(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-xs font-semibold text-slate-805"
+                    placeholder="e.g. #HRT-00005 or 5"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Customer Contact Phone</label>
+                  <input
+                    type="text"
+                    required
+                    value={trackPhone}
+                    onChange={(e) => setTrackPhone(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-xs font-semibold text-slate-805"
+                    placeholder="e.g. 03001234567"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isTrackingLoading}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl shadow-md transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {isTrackingLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Verifying Order Details...
+                  </>
+                ) : 'Track Order Status'}
+              </button>
+            </form>
+
+            {/* Errors */}
+            {trackError && (
+              <div className="mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1 text-left">
+                <AlertCircle className="w-4.5 h-4.5 text-rose-600 flex-shrink-0" />
+                <span>{trackError}</span>
+              </div>
+            )}
+
+            {/* Tracking Results Stepper & Details */}
+            {trackedOrder && (
+              <div className="mt-6 border-t border-slate-100 pt-6 space-y-6 text-left animate-in fade-in duration-300">
+                
+                {/* Stepper timeline */}
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider block">Fulfillment Stages</h4>
+                  
+                  {trackedOrder.status === 'cancelled' ? (
+                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-2.5 text-rose-705 text-xs font-bold">
+                      <XCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                      <span>This order has been cancelled and returned to inventory registry.</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-2 relative pt-4">
+                      {/* Connection Line */}
+                      <div className="absolute left-[12.5%] right-[12.5%] top-7.5 h-0.5 bg-slate-200 z-0" />
+                      <div 
+                        className="absolute left-[12.5%] top-7.5 h-0.5 bg-emerald-500 z-0 transition-all duration-500" 
+                        style={{
+                          width: 
+                            trackedOrder.status === 'pending' ? '0%' :
+                            trackedOrder.status === 'packaging' ? '33.3%' :
+                            trackedOrder.status === 'out_for_delivery' ? '66.6%' :
+                            '75%'
+                        }}
+                      />
+
+                      {/* Step 1: Pending */}
+                      <div className="flex flex-col items-center text-center space-y-2 z-10">
+                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
+                          getStepStatus('pending', trackedOrder.status) === 'completed'
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
+                            : 'bg-white border-slate-200 text-slate-400'
+                        }`}>
+                          ✓
+                        </div>
+                        <span className={`text-[9px] font-black uppercase ${
+                          getStepStatus('pending', trackedOrder.status) === 'completed'
+                            ? 'text-emerald-700' : 'text-slate-400'
+                        }`}>Pending</span>
+                      </div>
+
+                      {/* Step 2: Packaging */}
+                      <div className="flex flex-col items-center text-center space-y-2 z-10">
+                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
+                          getStepStatus('packaging', trackedOrder.status) === 'completed'
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
+                            : 'bg-white border-slate-200 text-slate-400'
+                        }`}>
+                          {getStepStatus('packaging', trackedOrder.status) === 'completed' ? '✓' : '2'}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase ${
+                          getStepStatus('packaging', trackedOrder.status) === 'completed'
+                            ? 'text-emerald-700' : 'text-slate-400'
+                        }`}>Packing</span>
+                      </div>
+
+                      {/* Step 3: Out for Delivery */}
+                      <div className="flex flex-col items-center text-center space-y-2 z-10">
+                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
+                          getStepStatus('out_for_delivery', trackedOrder.status) === 'completed'
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
+                            : 'bg-white border-slate-200 text-slate-400'
+                        }`}>
+                          {getStepStatus('out_for_delivery', trackedOrder.status) === 'completed' ? '✓' : '3'}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase ${
+                          getStepStatus('out_for_delivery', trackedOrder.status) === 'completed'
+                            ? 'text-emerald-700' : 'text-slate-400'
+                        }`}>Shipped</span>
+                      </div>
+
+                      {/* Step 4: Delivered */}
+                      <div className="flex flex-col items-center text-center space-y-2 z-10">
+                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
+                          getStepStatus('delivered', trackedOrder.status) === 'completed'
+                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
+                            : 'bg-white border-slate-200 text-slate-400'
+                        }`}>
+                          {getStepStatus('delivered', trackedOrder.status) === 'completed' ? '✓' : '4'}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase ${
+                          getStepStatus('delivered', trackedOrder.status) === 'completed'
+                            ? 'text-emerald-700' : 'text-slate-400'
+                        }`}>Delivered</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Items list summary */}
+                <div className="space-y-2 bg-slate-50 p-4 border border-slate-200 rounded-2xl text-xs">
+                  <span className="font-extrabold text-[10px] text-slate-500 uppercase tracking-wider block">Items Purchased</span>
+                  <div className="divide-y divide-slate-100 max-h-40 overflow-y-auto">
+                    {trackedItems.map((item) => (
+                      <div key={item.id} className="py-2 flex items-center justify-between gap-4 font-semibold text-slate-700">
+                        <span>{item.product_name} <strong className="text-[10px] text-slate-400 ml-1">x {item.quantity}</strong></span>
+                        <span className="font-mono text-slate-800">Rs. {(item.price * item.quantity).toFixed(0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-xs font-black text-slate-805">
+                    <span>Total Bill</span>
+                    <span className="font-mono text-emerald-600">Rs. {trackedOrder.total_amount.toFixed(0)}</span>
+                  </div>
+                </div>
+
+                {/* Address block */}
+                <div className="space-y-1.5 text-xs">
+                  <span className="text-[10px] text-slate-400 uppercase font-extrabold block">Shipping Address</span>
+                  <div className="flex items-start gap-1.5 text-slate-650 font-semibold leading-relaxed">
+                    <MapPin className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <span>{trackedOrder.customer_address}</span>
+                  </div>
+                </div>
+
+              </div>
             )}
           </div>
         </div>

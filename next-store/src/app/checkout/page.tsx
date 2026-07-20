@@ -38,6 +38,7 @@ export default function Checkout() {
   const [shopStatus, setShopStatus] = useState('open');
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   // PWA/WhatsApp & Coupons State
@@ -48,12 +49,12 @@ export default function Checkout() {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [showGuestPromo, setShowGuestPromo] = useState(false);
 
-  // 1. Redirect if cart is empty on mount
+  // 1. Redirect if cart is empty on mount (but bypass if order was just placed)
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !orderPlaced) {
       router.replace('/shop');
     }
-  }, [cart, router]);
+  }, [cart, router, orderPlaced]);
 
   // 2. Pre-populate user details if logged in
   useEffect(() => {
@@ -301,10 +302,20 @@ export default function Checkout() {
         const encodedText = encodeURIComponent(messageText);
         const waUrl = `https://wa.me/${whatsappNumber}?text=${encodedText}`;
         
+        setOrderPlaced(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('last_placed_order_id', String(order.id));
+          localStorage.setItem('last_placed_order_phone', phone.trim());
+        }
         clearCart();
         window.open(waUrl, '_blank');
         router.replace(`/checkout/success?id=${order.id}`);
       } else {
+        setOrderPlaced(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('last_placed_order_id', String(order.id));
+          localStorage.setItem('last_placed_order_phone', phone.trim());
+        }
         clearCart();
         router.replace(`/checkout/success?id=${order.id}`);
       }

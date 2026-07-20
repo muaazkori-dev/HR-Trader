@@ -41,6 +41,57 @@ try {
     }
 
     if ($result) {
+        // Fetch order details for notification
+        $stmt_cust = $pdo->prepare("SELECT customer_name, customer_phone FROM orders WHERE id = :id");
+        $stmt_cust->execute(['id' => $order_id]);
+        $orderObj = $stmt_cust->fetch();
+        
+        if ($orderObj) {
+            $name = $orderObj['customer_name'];
+            $phone = $orderObj['customer_phone'];
+            $padRef = str_pad($order_id, 5, '0', STR_PAD_LEFT);
+            
+            $messageBody = '';
+            switch ($new_status) {
+                case 'packaging':
+                    $messageBody = "Hi {$name}, your order #HRT-{$padRef} is currently being packed!";
+                    break;
+                case 'out_for_delivery':
+                    $messageBody = "Hi {$name}, your order #HRT-{$padRef} is out for delivery! Our rider is on their way.";
+                    break;
+                case 'delivered':
+                    $messageBody = "Hi {$name}, your order #HRT-{$padRef} has been successfully delivered! Thank you.";
+                    break;
+                case 'cancelled':
+                    $messageBody = "Hi {$name}, your order #HRT-{$padRef} has been cancelled.";
+                    break;
+                default:
+                    $messageBody = "Hi {$name}, your order #HRT-{$padRef} status updated to: {$new_status}";
+            }
+            
+            // Call next-store api using curl
+            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost:3000';
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+            $notify_url = $protocol . $host . '/api/push-notify';
+            if ($host === 'localhost' || strpos($host, '127.0.0.1') !== false) {
+                $notify_url = 'http://localhost:3000/api/push-notify';
+            }
+            
+            $ch = curl_init($notify_url);
+            $payload = json_encode([
+                'phone' => $phone,
+                'title' => 'Order Update - HR Traders',
+                'body' => $messageBody,
+                'url' => '/my-account'
+            ]);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+            curl_exec($ch);
+            curl_close($ch);
+        }
+
         echo json_encode(['success' => true, 'message' => "Order status updated to '" . ucfirst($new_status) . "' successfully."]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to update order status.']);
