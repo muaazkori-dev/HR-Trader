@@ -25,6 +25,8 @@ interface Product {
   description: string;
   price: number;
   purchase_price: number;
+  old_price?: number | null;
+  discount_percentage?: number | null;
   stock_quantity: number;
   weight?: string;
   unit: string;
@@ -81,6 +83,8 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<string>('');
   const [purchasePrice, setPurchasePrice] = useState<string>('');
+  const [oldPrice, setOldPrice] = useState<string>('');
+  const [discountPercentage, setDiscountPercentage] = useState<string>('');
   const [stockQuantity, setStockQuantity] = useState<string>('');
   const [weight, setWeight] = useState('');
   const [unit, setUnit] = useState('pcs');
@@ -113,6 +117,8 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
     setDescription('');
     setPrice('');
     setPurchasePrice('');
+    setOldPrice('');
+    setDiscountPercentage('');
     setStockQuantity('');
     setWeight('');
     setUnit('pcs');
@@ -131,6 +137,8 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
     setDescription(p.description || '');
     setPrice(p.price !== undefined && p.price !== null ? String(p.price) : '');
     setPurchasePrice(p.purchase_price !== undefined && p.purchase_price !== null ? String(p.purchase_price) : '');
+    setOldPrice(p.old_price !== undefined && p.old_price !== null ? String(p.old_price) : '');
+    setDiscountPercentage(p.discount_percentage !== undefined && p.discount_percentage !== null ? String(p.discount_percentage) : '');
     setStockQuantity(p.stock_quantity !== undefined && p.stock_quantity !== null ? String(p.stock_quantity) : '');
     setWeight(p.weight || '');
     setUnit(p.unit);
@@ -178,12 +186,24 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
         finalImageUrl = await uploadImage(imageFile);
       }
 
+      let numericPrice = price === '' ? 0 : parseFloat(price);
+      let calculatedOldPrice = oldPrice === '' ? null : parseFloat(oldPrice);
+      let calculatedDiscountPercent = discountPercentage === '' ? null : parseInt(discountPercentage, 10);
+
+      if (calculatedOldPrice !== null && calculatedOldPrice > numericPrice && !calculatedDiscountPercent) {
+        calculatedDiscountPercent = Math.round(((calculatedOldPrice - numericPrice) / calculatedOldPrice) * 100);
+      } else if (calculatedDiscountPercent && calculatedDiscountPercent > 0 && (!calculatedOldPrice || calculatedOldPrice === 0)) {
+        calculatedOldPrice = parseFloat((numericPrice / (1 - (calculatedDiscountPercent / 100))).toFixed(2));
+      }
+
       const payload = {
         barcode: barcode.trim(),
         name: name.trim(),
         description: description.trim() || null,
-        price: price === '' ? 0 : parseFloat(price),
+        price: numericPrice,
         purchase_price: purchasePrice === '' ? 0 : parseFloat(purchasePrice),
+        old_price: calculatedOldPrice,
+        discount_percentage: calculatedDiscountPercent,
         stock_quantity: stockQuantity === '' ? 0 : parseInt(stockQuantity, 10),
         weight: weight.trim() || null,
         unit,
@@ -560,32 +580,64 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                 />
               </div>
 
-              {/* Grid 2: Pricing, Cost */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
+              {/* Row 1: Purchase Price & Selling Price */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1 text-left">
                   <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Purchase Price (Cost)</label>
                   <input
                     type="number"
                     value={purchasePrice}
                     onChange={(e) => setPurchasePrice(e.target.value)}
                     min={0}
-                    placeholder="e.g. 250"
+                    placeholder="0.00"
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                   <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Selling Price</label>
                   <input
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     min={0}
-                    placeholder="e.g. 300"
+                    required
+                    placeholder="e.g. 220"
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Stock Register</label>
+              </div>
+
+              {/* Row 2: Original Price & Discount Percentage */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1 text-left">
+                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Original Price (Old Price)</label>
+                  <input
+                    type="number"
+                    value={oldPrice}
+                    onChange={(e) => setOldPrice(e.target.value)}
+                    min={0}
+                    placeholder="e.g. 1000.00"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1 text-left">
+                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Discount Percentage (%)</label>
+                  <input
+                    type="number"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                    min={0}
+                    max={100}
+                    placeholder="e.g. 15"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Stock Quantity & Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1 text-left">
+                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Stock Quantity</label>
                   <input
                     type="number"
                     value={stockQuantity}
@@ -595,24 +647,24 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-mono font-bold"
                   />
                 </div>
-              </div>
-
-              {/* Grid 3: Category, Weight, Unit */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Category Category</label>
+                <div className="space-y-1 text-left">
+                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Category</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-bold"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-bold text-left"
                   >
                     {Object.entries(CATEGORIES).map(([key, name]) => (
                       <option key={key} value={key}>{name}</option>
                     ))}
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Weight / Vol</label>
+              </div>
+
+              {/* Row 4: Unit Weight & Unit */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1 text-left">
+                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Unit Weight (e.g. 1 kg)</label>
                   <input
                     type="text"
                     value={weight}
@@ -621,17 +673,17 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-semibold"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Unit Measurement</label>
+                <div className="space-y-1 text-left">
+                  <label className="block text-[9px] font-bold text-slate-405 uppercase tracking-wider">Unit</label>
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-bold"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-bold text-left"
                   >
                     <option value="pcs">Pcs (Individual)</option>
-                    <option value="kg">Kg (Kilograms)</option>
-                    <option value="pack">Pack (Box/Bundle)</option>
-                    <option value="litre">Litre (Liquid)</option>
+                    <option value="kg">kg (Kilograms)</option>
+                    <option value="pack">pack (Box/Bundle)</option>
+                    <option value="litre">litre (Liquid)</option>
                   </select>
                 </div>
               </div>
