@@ -39,7 +39,7 @@ interface InventoryContentProps {
   initialProducts: Product[];
 }
 
-const CATEGORIES: Record<string, string> = {
+const DEFAULT_CATEGORIES: Record<string, string> = {
   anaj: 'Grains & Rice',
   shampoo: 'Hair Care',
   soap: 'Soaps & Care',
@@ -55,6 +55,45 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
   const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [dbCategories, setDbCategories] = useState<Record<string, any>>({
+    anaj: { name: 'Grains & Rice' },
+    shampoo: { name: 'Hair Care' },
+    soap: { name: 'Soaps & Care' },
+    cold_drinks: { name: 'Beverages' },
+    water: { name: 'Mineral Water' },
+    ice_cream: { name: 'Ice Creams' },
+    milk: { name: 'Dairy & Milk' },
+  });
+
+  const getCategoryName = (key: string) => {
+    const cat = dbCategories[key];
+    if (!cat) return key.replace(/_/g, ' ');
+    if (typeof cat === 'object') return cat.name || key.replace(/_/g, ' ');
+    return cat;
+  };
+
+  useEffect(() => {
+    const fetchDbCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('val_value')
+          .eq('key_name', 'store_categories')
+          .maybeSingle();
+
+        if (!error && data?.val_value) {
+          const parsed = JSON.parse(data.val_value);
+          if (parsed && typeof parsed === 'object') {
+            setDbCategories(parsed);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading db categories:', err);
+      }
+    };
+
+    fetchDbCategories();
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   
@@ -362,9 +401,10 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
             className="bg-white border border-slate-200 px-3.5 py-2 rounded-xl text-xs text-slate-650 focus:outline-none focus:border-emerald-500 shadow-sm w-full sm:w-auto font-semibold"
           >
             <option value="">All Categories</option>
-            {Object.entries(CATEGORIES).map(([key, name]) => (
-              <option key={key} value={key}>{name}</option>
-            ))}
+            {Object.entries(dbCategories).map(([key, val]) => {
+              const name = typeof val === 'object' ? val.name : val;
+              return <option key={key} value={key}>{name}</option>;
+            })}
           </select>
         </div>
 
@@ -455,7 +495,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                         </div>
                       </td>
                       <td className="p-4 font-semibold text-slate-650 capitalize">
-                        {CATEGORIES[p.category] || p.category.replace('_', ' ')}
+                        {getCategoryName(p.category)}
                       </td>
                       <td className="p-4 text-right font-mono font-bold text-slate-500">
                         {p.purchase_price > 0 ? `Rs. ${p.purchase_price.toFixed(0)}` : '-'}
@@ -654,9 +694,10 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-bold text-left"
                   >
-                    {Object.entries(CATEGORIES).map(([key, name]) => (
-                      <option key={key} value={key}>{name}</option>
-                    ))}
+                    {Object.entries(dbCategories).map(([key, val]) => {
+                      const name = typeof val === 'object' ? val.name : val;
+                      return <option key={key} value={key}>{name}</option>;
+                    })}
                   </select>
                 </div>
               </div>
