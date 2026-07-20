@@ -32,6 +32,89 @@ try {
 $success_message = "";
 $error_message = "";
 
+function sync_product_to_supabase($product_id, $action = 'upsert') {
+    global $pdo;
+    
+    // 1. Get Supabase URL and Anon Key from .env.local
+    $supabase_url = '';
+    $supabase_key = '';
+    $env_path = __DIR__ . '/../next-store/.env.local';
+    if (file_exists($env_path)) {
+        $lines = file($env_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
+                list($key, $val) = explode('=', $line, 2);
+                $key = trim($key);
+                $val = trim($val, " '\"");
+                if ($key === 'NEXT_PUBLIC_SUPABASE_URL') {
+                    $supabase_url = $val;
+                } elseif ($key === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
+                    $supabase_key = $val;
+                }
+            }
+        }
+    }
+    
+    if (empty($supabase_url) || empty($supabase_key)) {
+        return false;
+    }
+    
+    if ($action === 'delete') {
+        // Send DELETE request to Supabase
+        $url = $supabase_url . '/rest/v1/products?id=eq.' . intval($product_id);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'apikey: ' . $supabase_key,
+            'Authorization: Bearer ' . $supabase_key,
+            'Content-Type: application/json'
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
+        return true;
+    }
+    
+    // Fetch product details from MySQL
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE id = :id");
+    $stmt->execute(['id' => $product_id]);
+    $p = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$p) return false;
+    
+    // Prepare Supabase Payload
+    $payload = [
+        'id' => intval($p['id']),
+        'barcode' => strval($p['barcode']),
+        'name' => strval($p['name']),
+        'description' => strval($p['description']),
+        'price' => floatval($p['price']),
+        'purchase_price' => floatval($p['purchase_price']),
+        'stock_quantity' => intval($p['stock_quantity']),
+        'weight' => $p['weight'] !== null ? strval($p['weight']) : null,
+        'unit' => strval($p['unit']),
+        'category' => strval($p['category']),
+        'image' => $p['image'] !== null ? strval($p['image']) : null,
+        'old_price' => $p['old_price'] !== null ? floatval($p['old_price']) : null,
+        'discount_percentage' => $p['discount_percentage'] !== null ? intval($p['discount_percentage']) : null
+    ];
+    
+    // Send UPSERT (POST with Prefer: resolution=merge-duplicates) request to Supabase
+    $url = $supabase_url . '/rest/v1/products';
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'apikey: ' . $supabase_key,
+        'Authorization: Bearer ' . $supabase_key,
+        'Content-Type: application/json',
+        'Prefer: resolution=merge-duplicates'
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+    return true;
+}
+
 function compressAndSaveUploadedImage($file_tmp, $dest_path, $ext) {
     if (!extension_loaded('gd')) {
         return move_uploaded_file($file_tmp, $dest_path);
@@ -95,10 +178,21 @@ function compressAndSaveUploadedImage($file_tmp, $dest_path, $ext) {
 
 // 1. PROCESS ACTIONS (ADD / EDIT / DELETE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    if (isset($_POST['sync_all_products'])) {
+        $stmt = $pdo->query("SELECT id FROM products");
+        $all_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $synced_count = 0;
+        foreach ($all_ids as $p_id) {
+            if (sync_product_to_supabase($p_id, 'upsert')) {
+                $synced_count++;
+            }
+        }
+        $success_message = "Successfully synced {$synced_count} products to the storefront cloud database!";
+    } else {
+        $action = $_POST['action'] ?? '';
 
-    // ADD PRODUCT ACTION
-    if ($action === 'add') {
+        // ADD PRODUCT ACTION
+        if ($action === 'add') {
         $barcode = trim($_POST['barcode'] ?? '');
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
@@ -198,7 +292,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'old_price' => $old_price,
                             'discount_percentage' => $discount_percentage
                         ]);
+                        $new_id = $pdo->lastInsertId();
                         $success_message = "Product '{$name}' created successfully.";
+                        sync_product_to_supabase($new_id, 'upsert');
                     }
                 }
             } catch (PDOException $e) {
@@ -336,6 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'id' => $id
                         ]);
                         $success_message = "Product '{$name}' updated successfully.";
+                        sync_product_to_supabase($id, 'upsert');
                     }
                 }
             } catch (PDOException $e) {
@@ -365,6 +462,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare("DELETE FROM products WHERE id = :id");
                     $stmt->execute(['id' => $id]);
                     $success_message = "Product successfully removed from inventory.";
+                    sync_product_to_supabase($id, 'delete');
                 } catch (PDOException $e) {
                     $error_message = "Failed to delete product. It might be referenced in sales logs.";
                 }
@@ -398,6 +496,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt_del = $pdo->prepare("DELETE FROM products WHERE id IN ($in_clause)");
                     $stmt_del->execute($ids);
                     $success_message = "Selected products and their images were successfully deleted from inventory.";
+                    foreach ($ids as $id_del) {
+                        sync_product_to_supabase($id_del, 'delete');
+                    }
                 } catch (PDOException $e) {
                     $error_message = "Failed to delete selected products. Some items might be referenced in sales logs.";
                 }
@@ -583,11 +684,21 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
             <?php endif; ?>
         </form>
 
-        <!-- Add product button -->
-        <button onclick="toggleModal('add-product-modal', true)" 
-                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-600/10 self-start md:self-auto">
-            <i class="fas fa-plus"></i> Add New Product
-        </button>
+        <div class="flex items-center gap-2 self-start md:self-auto">
+            <!-- Sync to Storefront button -->
+            <form method="POST" class="inline">
+                <button type="submit" name="sync_all_products"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-lg shadow-blue-600/10">
+                    <i class="fas fa-sync"></i> Sync Storefront Cloud
+                </button>
+            </form>
+            
+            <!-- Add product button -->
+            <button onclick="toggleModal('add-product-modal', true)" 
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-600/10">
+                <i class="fas fa-plus"></i> Add New Product
+            </button>
+        </div>
     </div>
 
     <!-- PRODUCTS DATA GRID TABLE -->
