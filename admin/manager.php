@@ -342,5 +342,133 @@ function sendWhatsAppNotification(name, ref, total, address, phone) {
     window.open(url, '_blank');
 }
 </script>
+
+<?php
+$supabase_url = 'https://placeholder-xarwwlbbaevclyljkvzt.supabase.co';
+$supabase_key = 'placeholder-anon-key-WUAhugqCtckYHXxcQNg';
+
+$env_file = __DIR__ . '/../next-store/.env.local';
+if (file_exists($env_file)) {
+    $env_content = file_get_contents($env_file);
+    if ($env_content) {
+        $lines = explode("\n", $env_content);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line) || strpos($line, '#') === 0) continue;
+            $parts = explode('=', $line, 2);
+            if (count($parts) === 2) {
+                $key = trim($parts[0]);
+                $val = trim(trim($parts[1]), '"\'');
+                if ($key === 'NEXT_PUBLIC_SUPABASE_URL') {
+                    $supabase_url = $val;
+                } elseif ($key === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
+                    $supabase_key = $val;
+                }
+            }
+        }
+    }
+}
+?>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        const sbUrl = "<?php echo $supabase_url; ?>";
+        const sbKey = "<?php echo $supabase_key; ?>";
+        if (!sbUrl || !sbKey || sbUrl.includes('placeholder')) return;
+        
+        const supabaseClient = window.supabase.createClient(sbUrl, sbKey);
+        
+        function playChime() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                const ctx = new AudioContextClass();
+                
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+                gain1.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start();
+                osc1.stop(ctx.currentTime + 0.4);
+
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+                gain2.gain.setValueAtTime(0.08, ctx.currentTime + 0.12);
+                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.62);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(ctx.currentTime + 0.12);
+                osc2.stop(ctx.currentTime + 0.62);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function showOrderToast(orderId, name, amount) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto p-4 rounded-xl shadow-2xl flex flex-col gap-2 border bg-slate-900 text-white text-sm max-w-sm w-full animate-bounce';
+            toast.style.borderColor = '#1e293b';
+            
+            toast.innerHTML = `
+                <div class="flex items-start justify-between gap-3 text-left">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🔔</span>
+                        <div>
+                            <strong class="text-emerald-500 font-extrabold block text-xs uppercase">New Order Received!</strong>
+                            <span class="font-bold text-xs block mt-0.5">Order #HRT-${String(orderId).padStart(5, '0')}</span>
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-slate-400 hover:text-white font-bold">&times;</button>
+                </div>
+                <div class="text-[11px] text-slate-300 leading-normal text-left">
+                    New order placed by <strong>${name}</strong> for <strong>Rs. ${parseFloat(amount).toFixed(0)}</strong>.
+                </div>
+                <div class="flex gap-2 mt-1">
+                    <a href="manager.php" class="flex-grow py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center text-[10px] uppercase rounded-lg">View Queue</a>
+                    <button onclick="this.parentElement.parentElement.remove()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-350 text-[10px] font-bold uppercase rounded-lg">Dismiss</button>
+                </div>
+            `;
+            container.appendChild(toast);
+        }
+
+        supabaseClient
+            .channel('schema-insert-realtime-php')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'orders'
+                },
+                (payload) => {
+                    if (payload.new) {
+                        const newOrder = payload.new;
+                        showOrderToast(newOrder.id, newOrder.customer_name || 'Guest', newOrder.total_amount || 0);
+                        playChime();
+                    }
+                }
+            )
+            .subscribe();
+
+    } catch (err) {
+        console.error(err);
+    }
+});
+</script>
 </body>
 </html>

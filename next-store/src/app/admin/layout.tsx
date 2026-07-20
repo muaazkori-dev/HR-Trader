@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { 
   Home, 
   ShoppingBag, 
@@ -18,7 +19,8 @@ import {
   UserCheck,
   Layers,
   Sparkles,
-  Ticket
+  Ticket,
+  X
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -29,6 +31,74 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, profile, loading, signOut } = useAuth();
+
+  const [newOrderNotification, setNewOrderNotification] = useState<{
+    id: number;
+    customer_name: string;
+    total_amount: number;
+  } | null>(null);
+
+  const playChime = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+      gain1.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start();
+      osc1.stop(ctx.currentTime + 0.4);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+      gain2.gain.setValueAtTime(0.08, ctx.currentTime + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.62);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(ctx.currentTime + 0.12);
+      osc2.stop(ctx.currentTime + 0.62);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || (profile?.role !== 'owner' && profile?.role !== 'manager')) return;
+
+    const channel = supabase
+      .channel('schema-insert-order')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+        },
+        (payload) => {
+          if (payload.new) {
+            setNewOrderNotification({
+              id: payload.new.id,
+              customer_name: payload.new.customer_name || 'Guest',
+              total_amount: payload.new.total_amount || 0,
+            });
+            playChime();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, profile]);
 
   // Guard: Redirect unauthorized users
   useEffect(() => {
@@ -141,6 +211,47 @@ export default function AdminLayout({
       <main className="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col">
         {children}
       </main>
+
+      {/* Real-time Order Alert Toast */}
+      {newOrderNotification && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-800 text-white p-4 rounded-2xl shadow-2xl flex flex-col gap-3 animate-in slide-in-from-bottom-5 max-w-sm w-full select-none text-left">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-base animate-bounce">
+                🔔
+              </div>
+              <div>
+                <h4 className="text-xs font-black uppercase text-emerald-500 tracking-wider">New Order Placed!</h4>
+                <p className="text-xs font-bold mt-0.5">Order #HRT-{String(newOrderNotification.id).padStart(5, '0')}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setNewOrderNotification(null)}
+              className="p-1 text-slate-400 hover:text-white transition-colors animate-in"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="text-xs text-slate-350">
+            Received a new COD order from <strong className="text-white font-bold">{newOrderNotification.customer_name}</strong> for <strong className="text-emerald-550 font-mono font-bold">Rs. {newOrderNotification.total_amount.toFixed(0)}</strong>.
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Link
+              href="/admin/orders"
+              onClick={() => setNewOrderNotification(null)}
+              className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-center text-[10px] uppercase rounded-xl transition-all shadow-md"
+            >
+              Open Orders Register
+            </Link>
+            <button
+              onClick={() => setNewOrderNotification(null)}
+              className="px-3 py-2 bg-slate-850 hover:bg-slate-800 active:scale-95 text-slate-350 font-semibold text-center text-[10px] uppercase rounded-xl transition-all"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
