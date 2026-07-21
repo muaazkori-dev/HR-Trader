@@ -67,6 +67,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
   const [minOrderValue, setMinOrderValue] = useState(getValue('min_order_value', '0'));
   const [shippingFee, setShippingFee] = useState(getValue('shipping_fee', '0'));
   const [storeCurrency, setStoreCurrency] = useState(getValue('store_currency', 'Rs.'));
+  const [minOrderLimitEnabled, setMinOrderLimitEnabled] = useState(getValue('min_order_limit_enabled', 'true'));
+  const [firstOrderFreeDelivery, setFirstOrderFreeDelivery] = useState(getValue('first_order_free_delivery', 'true'));
 
   // Branch 1 locations
   const [branch1Address, setBranch1Address] = useState(getValue('branch_1_address', 'Toor Colony, Front of Hira Public School, Tando Adam'));
@@ -142,6 +144,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
         { key_name: 'min_order_value', val_value: minOrderValue },
         { key_name: 'shipping_fee', val_value: shippingFee },
         { key_name: 'store_currency', val_value: storeCurrency },
+        { key_name: 'min_order_limit_enabled', val_value: minOrderLimitEnabled },
+        { key_name: 'first_order_free_delivery', val_value: firstOrderFreeDelivery },
         { key_name: 'promo_ad_enabled', val_value: promoAdEnabled },
         { key_name: 'promo_ad_image', val_value: finalPromoImage },
         { key_name: 'promo_ad_link', val_value: promoAdLink },
@@ -533,6 +537,30 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                     required
                     className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Minimum Order Limit</label>
+                  <select
+                    value={minOrderLimitEnabled}
+                    onChange={(e) => setMinOrderLimitEnabled(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-850 font-semibold"
+                  >
+                    <option value="true">Enabled (Apply Limit)</option>
+                    <option value="false">Disabled (No Minimum Limit)</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">First-time Free Delivery</label>
+                  <select
+                    value={firstOrderFreeDelivery}
+                    onChange={(e) => setFirstOrderFreeDelivery(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-850 font-semibold"
+                  >
+                    <option value="true">Enabled (First Order Free)</option>
+                    <option value="false">Disabled (Always Charge Delivery)</option>
+                  </select>
                 </div>
               </div>
             </div>

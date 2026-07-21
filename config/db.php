@@ -421,6 +421,16 @@ try {
         if ($min_val === '' || (float)$min_val === 0.00) {
             update_setting('min_order_value', '250.00');
         }
+        
+        $min_limit_enabled = get_setting('min_order_limit_enabled', '');
+        if ($min_limit_enabled === '') {
+            update_setting('min_order_limit_enabled', 'true');
+        }
+        
+        $first_free_enabled = get_setting('first_order_free_delivery', '');
+        if ($first_free_enabled === '') {
+            update_setting('first_order_free_delivery', 'true');
+        }
     } catch (Exception $e) {
         // Ignore
     }

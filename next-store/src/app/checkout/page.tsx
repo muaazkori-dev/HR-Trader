@@ -33,6 +33,8 @@ export default function Checkout() {
   const [notes, setNotes] = useState('');
 
   const [minOrder, setMinOrder] = useState(0);
+  const [minOrderLimitEnabled, setMinOrderLimitEnabled] = useState(true);
+  const [firstOrderFreeDelivery, setFirstOrderFreeDelivery] = useState(true);
   const [defaultShipping, setDefaultShipping] = useState(180);
   const [shippingFee, setShippingFee] = useState(180);
   const [shopStatus, setShopStatus] = useState('open');
@@ -85,6 +87,14 @@ export default function Checkout() {
           setDefaultShipping(defaultShipVal);
           setShippingFee(defaultShipVal); // Default initially
 
+          const minLimit = settingsData.find((s) => s.key_name === 'min_order_limit_enabled');
+          const isMinLimitEnabled = minLimit ? minLimit.val_value === 'true' : true;
+          setMinOrderLimitEnabled(isMinLimitEnabled);
+
+          const firstFree = settingsData.find((s) => s.key_name === 'first_order_free_delivery');
+          const isFirstFreeEnabled = firstFree ? firstFree.val_value === 'true' : true;
+          setFirstOrderFreeDelivery(isFirstFreeEnabled);
+
           const status = settingsData.find((s) => s.key_name === 'shop_status');
           if (status) setShopStatus(status.val_value);
 
@@ -94,15 +104,21 @@ export default function Checkout() {
 
         // Determine if first order for free shipping
         if (user) {
-          const { count, error } = await supabase
-            .from('orders')
-            .select('*', { count: 'exact', head: true })
-            .eq('customer_id', user.id)
-            .neq('status', 'cancelled');
+          // Re-fetch isFirstFreeEnabled dynamically to be safe
+          const firstFreeVal = settingsData?.find((s) => s.key_name === 'first_order_free_delivery')?.val_value;
+          const isFirstFreeEnabled = firstFreeVal !== undefined ? firstFreeVal === 'true' : true;
 
-          if (!error && count !== null && count === 0) {
-            // First order has free shipping!
-            setShippingFee(0);
+          if (isFirstFreeEnabled) {
+            const { count, error } = await supabase
+              .from('orders')
+              .select('*', { count: 'exact', head: true })
+              .eq('customer_id', user.id)
+              .neq('status', 'cancelled');
+
+            if (!error && count !== null && count === 0) {
+              // First order has free shipping!
+              setShippingFee(0);
+            }
           }
         }
       } catch (err) {
@@ -177,7 +193,7 @@ export default function Checkout() {
     }
 
     const subtotal = getCartTotal();
-    if (subtotal < minOrder) {
+    if (minOrderLimitEnabled && subtotal < minOrder) {
       setErrorMsg(`Order subtotal must be at least Rs. ${minOrder} to place an order.`);
       return;
     }
@@ -374,7 +390,7 @@ export default function Checkout() {
         )}
 
         {/* Minimum Order Warning */}
-        {subtotal < minOrder && (
+        {minOrderLimitEnabled && subtotal < minOrder && (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-xs font-semibold flex items-center gap-2 text-left">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>
@@ -468,7 +484,7 @@ export default function Checkout() {
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button
                     type="button"
-                    disabled={submitting || subtotal < minOrder || loadingSettings}
+                    disabled={submitting || (minOrderLimitEnabled && subtotal < minOrder) || loadingSettings}
                     onClick={() => processCheckout('COD')}
                     className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
                   >
@@ -477,7 +493,7 @@ export default function Checkout() {
                   </button>
                   <button
                     type="button"
-                    disabled={submitting || subtotal < minOrder || loadingSettings}
+                    disabled={submitting || (minOrderLimitEnabled && subtotal < minOrder) || loadingSettings}
                     onClick={() => processCheckout('WhatsApp')}
                     className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md shadow-emerald-600/10 active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
                   >

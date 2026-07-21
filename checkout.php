@@ -10,6 +10,8 @@ $checkout_error = "";
 
 $min_order_value = (float)get_setting('min_order_value', '0.00');
 $shipping_fee = (float)get_setting('shipping_fee', '0.00');
+$min_order_limit_enabled = get_setting('min_order_limit_enabled', 'true') === 'true';
+$first_order_free_delivery = get_setting('first_order_free_delivery', 'true') === 'true';
 
 // Initialize cart if empty
 if (empty($_SESSION['cart'])) {
@@ -166,13 +168,13 @@ if (is_logged_in()) {
         } catch (PDOException $e) {}
     }
 }
-$shipping_fee = $is_first_order ? 0.00 : (float)get_setting('shipping_fee', '180.00');
+$shipping_fee = ($is_first_order && $first_order_free_delivery) ? 0.00 : (float)get_setting('shipping_fee', '180.00');
 
 // 2. Handle COD checkout form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
     if (get_setting('shop_status', 'open') === 'closed') {
         $checkout_error = htmlspecialchars(STORE_NAME) . " is temporarily CLOSED. We cannot accept orders at this time.";
-    } elseif ($subtotal < $min_order_value) {
+    } elseif ($min_order_limit_enabled && $subtotal < $min_order_value) {
         $checkout_error = "Order subtotal is below the minimum required order value of " . format_price($min_order_value) . ".";
     } else {
         $customer_name = trim($_POST['customer_name'] ?? '');
@@ -257,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
                     } catch (PDOException $e) {}
                 }
             }
-            $shipping_fee = $post_is_first ? 0.00 : (float)get_setting('shipping_fee', '180.00');
+            $shipping_fee = ($post_is_first && $first_order_free_delivery) ? 0.00 : (float)get_setting('shipping_fee', '180.00');
 
             // Run database transaction to record order and lock stock levels
             $pdo->beginTransaction();
@@ -335,7 +337,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 
-    <?php if ($subtotal < $min_order_value): ?>
+    <?php if ($min_order_limit_enabled && $subtotal < $min_order_value): ?>
         <div class="mb-6 p-4 bg-amber-50 border border-amber-250 text-amber-800 rounded-2xl text-xs flex items-center gap-3">
             <i class="fas fa-circle-exclamation text-base"></i>
             <span>
@@ -448,7 +450,7 @@ require_once __DIR__ . '/includes/header.php';
                         <button type="button" disabled class="w-full py-3 bg-slate-200 text-slate-400 font-bold border border-slate-300 rounded-xl text-sm uppercase tracking-widest mt-4 cursor-not-allowed flex items-center justify-center gap-1.5">
                             <i class="fas fa-lock"></i> Store Closed Today
                         </button>
-                    <?php elseif ($subtotal < $min_order_value): ?>
+                    <?php elseif ($min_order_limit_enabled && $subtotal < $min_order_value): ?>
                         <button type="button" disabled class="w-full py-3 bg-slate-105 text-slate-400 font-bold border border-slate-200 rounded-xl text-sm uppercase tracking-widest mt-4 cursor-not-allowed flex items-center justify-center gap-1.5">
                             <i class="fas fa-ban"></i> Below Min. Order (<?php echo format_price($min_order_value); ?>)
                         </button>
