@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { ShoppingCart, Star, Eye, Tag, Sparkles, Loader2 } from 'lucide-react';
 import { HomeSlider } from '@/components/HomeSlider';
 import { AddToCartButton } from '@/components/AddToCartButton';
+import { getProductImageUrl } from '@/lib/utils';
 
 // Default Categories list
 const DEFAULT_CATEGORIES = [
@@ -242,7 +243,7 @@ export default function Home() {
                     {/* Image Link */}
                     <Link href={`/product/${p.id}`} className="block relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 mb-4 flex-shrink-0">
                       <Image
-                        src={p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : `/${p.image}`) : '/assets/images/placeholder.svg'}
+                        src={getProductImageUrl(p.image)}
                         alt={p.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"

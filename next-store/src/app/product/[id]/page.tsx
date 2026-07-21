@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer';
 import { ProductReviews } from '@/components/ProductReviews';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { supabase } from '@/lib/supabase';
+import { getProductImageUrl } from '@/lib/utils';
 import { 
   ArrowLeft, 
   ShoppingBag, 
@@ -141,7 +142,7 @@ export default async function ProductDetails({ params }: ProductPageProps) {
             <div className="p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center relative min-h-[300px] sm:min-h-[400px] w-full">
               <div className="relative w-full h-[280px] sm:h-[360px]">
                 <Image
-                  src={product.image ? (product.image.startsWith('http') || product.image.startsWith('/') ? product.image : `/${product.image}`) : '/assets/images/placeholder.svg'}
+                  src={getProductImageUrl(product.image)}
                   alt={product.name}
                   fill
                   className="object-contain rounded-2xl drop-shadow-md hover:scale-105 transition-transform duration-300"
@@ -304,7 +305,7 @@ export default async function ProductDetails({ params }: ProductPageProps) {
                       className="block relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 mb-3 flex-shrink-0"
                     >
                       <Image
-                        src={p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : `/${p.image}`) : '/assets/images/placeholder.svg'}
+                        src={getProductImageUrl(p.image)}
                         alt={p.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
