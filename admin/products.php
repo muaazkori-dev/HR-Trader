@@ -32,6 +32,47 @@ try {
 $success_message = "";
 $error_message = "";
 
+function upload_image_to_supabase_storage($local_file_path, $filename, $supabase_url, $supabase_key) {
+    if (!file_exists($local_file_path)) {
+        return false;
+    }
+    
+    $url = rtrim($supabase_url, '/') . '/storage/v1/object/product-images/products/' . $filename;
+    
+    $mime = 'image/png';
+    $ext = strtolower(pathinfo($local_file_path, PATHINFO_EXTENSION));
+    if ($ext === 'jpg' || $ext === 'jpeg') {
+        $mime = 'image/jpeg';
+    } elseif ($ext === 'webp') {
+        $mime = 'image/webp';
+    } elseif ($ext === 'svg') {
+        $mime = 'image/svg+xml';
+    }
+    
+    $file_data = file_get_contents($local_file_path);
+    if (!$file_data) return false;
+    
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $file_data);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'apikey: ' . $supabase_key,
+        'Authorization: Bearer ' . $supabase_key,
+        'Content-Type: ' . $mime,
+        'x-upsert: true'
+    ]);
+    
+    $res = curl_exec($ch);
+    $info = curl_getinfo($ch);
+    curl_close($ch);
+    
+    if ($info['http_code'] === 200 || $info['http_code'] === 201) {
+        return rtrim($supabase_url, '/') . '/storage/v1/object/public/product-images/products/' . $filename;
+    }
+    return false;
+}
+
 function sync_product_to_supabase($product_id, $action = 'upsert') {
     global $pdo;
     
@@ -81,6 +122,22 @@ function sync_product_to_supabase($product_id, $action = 'upsert') {
     $p = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$p) return false;
     
+    $final_image_url = null;
+    if ($p['image'] !== null && $p['image'] !== '') {
+        if (strpos($p['image'], 'http://') === 0 || strpos($p['image'], 'https://') === 0) {
+            $final_image_url = $p['image'];
+        } else {
+            // Local path, upload to Supabase Storage
+            $local_path = __DIR__ . '/../' . ltrim($p['image'], '/');
+            $uploaded_url = upload_image_to_supabase_storage($local_path, basename($p['image']), $supabase_url, $supabase_key);
+            if ($uploaded_url) {
+                $final_image_url = $uploaded_url;
+            } else {
+                $final_image_url = $p['image'];
+            }
+        }
+    }
+    
     // Prepare Supabase Payload
     $payload = [
         'id' => intval($p['id']),
@@ -93,7 +150,7 @@ function sync_product_to_supabase($product_id, $action = 'upsert') {
         'weight' => $p['weight'] !== null ? strval($p['weight']) : null,
         'unit' => strval($p['unit']),
         'category' => strval($p['category']),
-        'image' => $p['image'] !== null ? strval($p['image']) : null,
+        'image' => $final_image_url,
         'old_price' => $p['old_price'] !== null ? floatval($p['old_price']) : null,
         'discount_percentage' => $p['discount_percentage'] !== null ? intval($p['discount_percentage']) : null
     ];
