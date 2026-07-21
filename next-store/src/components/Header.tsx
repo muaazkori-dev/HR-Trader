@@ -205,6 +205,9 @@ export const Header: React.FC = () => {
 
         if (!error && data) {
           setSuggestions(data as ProductSuggestion[]);
+          if (data.length === 0) {
+            setDemandDetails(searchQuery.trim());
+          }
         }
       } catch (err) {
         console.error('Search query error:', err);
@@ -213,6 +216,14 @@ export const Header: React.FC = () => {
 
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
+
+  // Auto-fill demand name & phone if profile changes
+  useEffect(() => {
+    if (profile) {
+      if (profile.name) setDemandName(profile.name);
+      if (profile.phone) setDemandPhone(profile.phone);
+    }
+  }, [profile]);
 
   // Click outside handlers
   useEffect(() => {
@@ -417,49 +428,119 @@ export const Header: React.FC = () => {
             </form>
 
             {/* Suggestions list */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
-                {suggestions.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleSuggestionClick(p.id)}
-                    className="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={getProductImageUrl(p.image)}
-                        alt={p.name}
-                        className="w-9 h-9 object-cover rounded-lg border border-slate-200/80 bg-slate-50 flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-semibold text-slate-800 leading-tight truncate">{p.name}</h4>
-                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.barcode}</p>
+            {/* Suggestions list */}
+            {showSuggestions && (suggestions.length > 0 || searchQuery.trim().length >= 2) && (
+              <>
+                {suggestions.length > 0 ? (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {suggestions.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => handleSuggestionClick(p.id)}
+                        className="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={getProductImageUrl(p.image)}
+                            alt={p.name}
+                            className="w-9 h-9 object-cover rounded-lg border border-slate-200/80 bg-slate-50 flex-shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-semibold text-slate-800 leading-tight truncate">{p.name}</h4>
+                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.barcode}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">
+                            Rs. {p.price.toFixed(0)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent suggestion redirect click
+                               addToCart({
+                                 id: p.id,
+                                 name: p.name,
+                                 price: p.price,
+                                 image: p.image || ''
+                               });
+                            }}
+                            className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all hover:scale-105 active:scale-95 shadow-sm"
+                            title="Add to Cart"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-3xl shadow-2xl z-50 p-5 text-left animate-in fade-in slide-in-from-top-2 duration-200 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 bg-amber-50 rounded-2xl text-amber-600 flex-shrink-0">
+                        <ClipboardList className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-extrabold text-slate-850">Product Not Found?</h4>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5 leading-relaxed">
+                          Tell us what you are looking for, and we will try to make it available for you!
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">
-                        Rs. {p.price.toFixed(0)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation(); // prevent suggestion redirect click
-                           addToCart({
-                             id: p.id,
-                             name: p.name,
-                             price: p.price,
-                             image: p.image || ''
-                           });
-                        }}
-                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all hover:scale-105 active:scale-95 shadow-sm"
-                        title="Add to Cart"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+
+                    {demandSuccess ? (
+                      <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-center text-emerald-800 text-[10px] font-bold animate-pulse">
+                        Request submitted successfully! We will contact you soon.
+                      </div>
+                    ) : (
+                      <form onSubmit={handleDemandSubmit} className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Product Name / Details</label>
+                          <input
+                            type="text"
+                            value={demandDetails}
+                            onChange={(e) => setDemandDetails(e.target.value)}
+                            placeholder="e.g. Meclay Shampoo 400ml"
+                            required
+                            className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Your Name</label>
+                            <input
+                              type="text"
+                              value={demandName}
+                              onChange={(e) => setDemandName(e.target.value)}
+                              placeholder="Your name"
+                              required
+                              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-semibold"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                            <input
+                              type="tel"
+                              value={demandPhone}
+                              onChange={(e) => setDemandPhone(e.target.value)}
+                              placeholder="03xxxxxxxxx"
+                              required
+                              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-800 font-mono font-bold"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isSubmittingDemand}
+                          className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white font-extrabold rounded-xl text-[10px] shadow-md shadow-emerald-600/5 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          {isSubmittingDemand ? 'Submitting...' : 'Submit Demand Request'}
+                        </button>
+                      </form>
+                    )}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
 
