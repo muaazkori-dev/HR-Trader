@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, SlidersHorizontal, Tag, Eye } from 'lucide-react';
+import { Search, SlidersHorizontal, Tag, Eye, ClipboardList, CheckCircle2, Send } from 'lucide-react';
 import { AddToCartButton } from './AddToCartButton';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { getProductImageUrl } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 interface Product {
   id: number;
@@ -74,6 +75,58 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  // Demand Box Form state
+  const { profile } = useAuth();
+  const [demandName, setDemandName] = useState('');
+  const [demandPhone, setDemandPhone] = useState('');
+  const [demandDetails, setDemandDetails] = useState(initialSearch);
+  const [isSubmittingDemand, setIsSubmittingDemand] = useState(false);
+  const [demandSuccess, setDemandSuccess] = useState(false);
+
+  // Sync demandDetails with searchQuery when searchQuery changes
+  useEffect(() => {
+    if (searchQuery) {
+      setDemandDetails(searchQuery);
+    }
+  }, [searchQuery]);
+
+  // Auto-fill user profile if logged in
+  useEffect(() => {
+    if (profile) {
+      if (profile.name) setDemandName(profile.name);
+      if (profile.phone) setDemandPhone(profile.phone);
+    }
+  }, [profile]);
+
+  const handleDemandSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!demandName.trim() || !demandPhone.trim() || !demandDetails.trim()) return;
+
+    setIsSubmittingDemand(true);
+    try {
+      const { error } = await supabase
+        .from('product_demands')
+        .insert({
+          customer_name: demandName.trim(),
+          customer_phone: demandPhone.trim(),
+          demand_details: demandDetails.trim(),
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      setDemandSuccess(true);
+      setTimeout(() => {
+        setDemandSuccess(false);
+      }, 6000);
+    } catch (err) {
+      console.error('Error submitting product demand:', err);
+      alert('Failed to submit demand request. Please try again.');
+    } finally {
+      setIsSubmittingDemand(false);
+    }
+  };
 
   useEffect(() => {
     const fetchFreshProducts = async () => {
@@ -214,14 +267,100 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
 
         {/* Catalog Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-3xl p-16 text-center shadow-sm">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-350 mx-auto mb-4 border border-dashed border-slate-300">
-              <Search className="w-8 h-8" />
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 text-center shadow-sm space-y-6">
+            <div className="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center text-amber-600 mx-auto border border-amber-200 shadow-xs">
+              <ClipboardList className="w-7 h-7" />
             </div>
-            <h4 className="font-extrabold text-slate-800 text-sm">No Matching Products</h4>
-            <p className="text-xs text-slate-400 mt-1">
-              We couldn't find any products matching your active filter criteria. Try adjusting your search query!
-            </p>
+            <div>
+              <h4 className="font-extrabold text-slate-850 text-base">No Matching Products Found</h4>
+              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                We couldn't find any products matching {searchQuery ? <strong className="text-slate-800">"{searchQuery}"</strong> : 'your active filter criteria'}.
+              </p>
+            </div>
+
+            {/* Inline Demand Form Card */}
+            <div className="max-w-md mx-auto bg-slate-50 border border-slate-200/90 rounded-3xl p-5 text-left shadow-sm space-y-4">
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-200/80">
+                <div className="p-2 bg-emerald-100/80 rounded-xl text-emerald-700">
+                  <ClipboardList className="w-5 h-5" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-extrabold text-slate-850 uppercase tracking-wider">Product Demand Box</h5>
+                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Apni demand yahan darj karein! Hum is product ko jaldi ready kar denge.</p>
+                </div>
+              </div>
+
+              {demandSuccess ? (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center text-emerald-800 text-xs font-bold space-y-1.5 animate-in fade-in zoom-in-95 duration-200">
+                  <p className="flex items-center justify-center gap-1.5 text-sm font-extrabold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Demand Request Submitted!
+                  </p>
+                  <p className="text-[11px] font-medium text-emerald-700">
+                    Aap ki demand "<strong>{demandDetails}</strong>" record ho gayi hai. Product available hote hi hum aap se rabta karein ge!
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleDemandSubmit} className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Product Name / Details</label>
+                    <input
+                      type="text"
+                      value={demandDetails}
+                      onChange={(e) => setDemandDetails(e.target.value)}
+                      placeholder="e.g. Shan Chana Masala, MilkPak 1L..."
+                      required
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-semibold shadow-xs"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Your Name</label>
+                      <input
+                        type="text"
+                        value={demandName}
+                        onChange={(e) => setDemandName(e.target.value)}
+                        placeholder="Aap ka naam"
+                        required
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-semibold shadow-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={demandPhone}
+                        onChange={(e) => setDemandPhone(e.target.value)}
+                        placeholder="03xxxxxxxxx"
+                        required
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-xs text-slate-800 font-mono font-bold shadow-xs"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingDemand}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-extrabold rounded-xl text-xs shadow-md shadow-emerald-600/10 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {isSubmittingDemand ? 'Submitting Request...' : 'Submit Demand Request'}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('');
+                  setSearchQuery('');
+                  updateUrl('', '');
+                }}
+                className="text-xs font-bold text-slate-500 hover:text-emerald-600 underline transition-colors"
+              >
+                Clear all search & filter criteria
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
