@@ -251,10 +251,20 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
       };
 
       if (modalMode === 'add') {
+        // Fetch current maximum product ID to prevent out-of-sync sequence errors
+        const { data: maxIdData } = await supabase
+          .from('products')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1);
+
+        const nextId = maxIdData && maxIdData.length > 0 ? maxIdData[0].id + 1 : 1;
+        const addPayload = { ...payload, id: nextId };
+
         // Insert product
         const { data, error } = await supabase
           .from('products')
-          .insert([payload])
+          .insert([addPayload])
           .select()
           .single();
 
