@@ -67,7 +67,7 @@ if ($method === 'GET') {
                 'weight' => sanitize($product['weight']),
                 'barcode' => sanitize($product['barcode']),
                 'stock_quantity' => (int)$product['stock_quantity'],
-                'image' => $product['image'] ? $product['image'] : 'assets/images/placeholder.svg'
+                'image' => get_product_image_url($product['image'] ?? '')
             ],
             'average_rating' => (float)$average_rating,
             'total_reviews' => $total_reviews,

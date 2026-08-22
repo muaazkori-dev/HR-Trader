@@ -119,7 +119,7 @@ try {
                     <!-- Image Area -->
                     <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $product['id']; ?>" class="block h-32 sm:h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-250/60 overflow-hidden cursor-pointer group">
                         <?php 
-                        $img_src = !empty($product['image']) ? BASE_URL . $product['image'] : BASE_URL . 'assets/images/placeholder.svg';
+                        $img_src = get_product_image_url($product['image'] ?? '');
                         ?>
                         <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" loading="lazy">
 

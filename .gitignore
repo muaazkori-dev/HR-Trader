@@ -1,8 +1,4 @@
 config/db.php
-assets/images/products/*
-!assets/images/products/.gitkeep
-assets/images/categories/*
-!assets/images/categories/.gitkeep
 product_uploads/
 website.zip
 website.zip.zip
@@ -12,7 +8,7 @@ project.zip.zip
 *.tar.gz
 *.zip
 *.rar
-*.sql
+!database/*.sql
 recent_files_log.txt
 
 

@@ -136,7 +136,7 @@ switch ($action) {
                     'price' => (float)$prod['price'],
                     'weight' => $prod['weight'],
                     'category' => $prod['category'],
-                    'image_url' => $prod['image'] ? BASE_URL . $prod['image'] : BASE_URL . 'assets/images/placeholder.jpg',
+                    'image_url' => get_product_image_url($prod['image'] ?? ''),
                     'qty' => $qty,
                     'item_total' => $item_total
                 ];

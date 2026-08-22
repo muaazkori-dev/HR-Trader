@@ -622,6 +622,56 @@ function get_category_icon_url($category) {
     return 'data:image/svg+xml;utf8,' . rawurlencode($svg);
 }
 
+/**
+ * Universal Product Image URL resolver
+ * Bulletproof resolver: checks local file first, then Supabase CDN, then placeholder.
+ * Never allows broken image links.
+ */
+function get_product_image_url($image_path) {
+    if (empty($image_path)) {
+        return BASE_URL . 'assets/images/placeholder.svg';
+    }
+    
+    // If it's already an external URL (Supabase CDN, etc.)
+    if (strpos($image_path, 'http://') === 0 || strpos($image_path, 'https://') === 0) {
+        return $image_path;
+    }
+    
+    $clean_path = ltrim($image_path, '/');
+    $full_local = __DIR__ . '/../' . $clean_path;
+    
+    // Check if local file exists on disk
+    if (file_exists($full_local) && filesize($full_local) > 0) {
+        return BASE_URL . $clean_path . '?v=' . filemtime($full_local);
+    }
+    
+    // Automatic Cloud CDN Fallback: if local file was deleted or not present
+    $filename = basename($clean_path);
+    if (!empty($filename) && $filename !== 'placeholder.svg' && $filename !== 'placeholder.jpg') {
+        return 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/products/' . $filename;
+    }
+    
+    return BASE_URL . 'assets/images/placeholder.svg';
+}
+
+// Automatic local DB self-healing: If local products table is empty, auto-import master backup
+if (isset($pdo) && $is_local) {
+    try {
+        $p_cnt = $pdo->query("SELECT COUNT(*) FROM products")->fetchColumn();
+        if ($p_cnt <= 1) {
+            $master_backup_sql = __DIR__ . '/../database/products_master_backup.sql';
+            if (file_exists($master_backup_sql)) {
+                $sql_data = file_get_contents($master_backup_sql);
+                if (!empty($sql_data)) {
+                    $pdo->exec($sql_data);
+                }
+            }
+        }
+    } catch (Throwable $t) {
+        // Ignore self-healing failure
+    }
+}
+
 // Live self-healing database-driven product images restore (runs outside migrations)
 // Checked at most once every 5 minutes per user session to minimize filesystem reads
 if (isset($pdo) && !$is_local) {

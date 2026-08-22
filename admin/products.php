@@ -796,7 +796,7 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                                 <td class="p-4">
                                     <div class="flex items-center gap-3">
                                         <?php 
-                                        $img_src = !empty($prod['image']) ? BASE_URL . $prod['image'] : BASE_URL . 'assets/images/placeholder.svg';
+                                        $img_src = get_product_image_url($prod['image'] ?? '');
                                         ?>
                                         <img src="<?php echo $img_src; ?>" alt="Product" class="w-10 h-10 object-cover rounded-lg border border-slate-200 bg-slate-50 flex-shrink-0">
                                         <div>
@@ -1124,7 +1124,7 @@ function openEditModal(product) {
     const imgPreviewContainer = document.getElementById('edit-image-preview-container');
     const imgPreview = document.getElementById('edit-image-preview');
     if (product.image) {
-        imgPreview.src = BASE_URL + product.image;
+        imgPreview.src = (product.image.startsWith('http://') || product.image.startsWith('https://')) ? product.image : (BASE_URL + product.image.replace(/^\/+/, ''));
         imgPreviewContainer.classList.remove('hidden');
     } else {
         imgPreview.src = "";
@@ -1266,11 +1266,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         let html = '';
                         products.forEach(p => {
                             const safeName = p.name.replace(/['"\\]/g, '\\$&');
+                            const pImg = p.image ? ((p.image.startsWith('http://') || p.image.startsWith('https://')) ? p.image : (BASE_URL + p.image.replace(/^\/+/, ''))) : (BASE_URL + 'assets/images/placeholder.svg');
                             html += `
                                 <div onclick="selectAdminSearch('${safeName}')" 
                                      class="p-2.5 hover:bg-slate-50 flex items-center justify-between gap-3 border-b border-slate-100 last:border-0 cursor-pointer transition-colors">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <img src="${BASE_URL + p.image}" class="w-7 h-7 object-cover rounded-md border border-slate-200 bg-slate-50 flex-shrink-0" loading="lazy">
+                                        <img src="${pImg}" class="w-7 h-7 object-cover rounded-md border border-slate-200 bg-slate-50 flex-shrink-0" loading="lazy">
                                         <div class="min-w-0 text-left">
                                             <h5 class="text-xs font-semibold text-slate-800 leading-tight truncate">${p.name}</h5>
                                             <p class="text-[10px] text-slate-400 font-mono">${p.barcode ? p.barcode : 'No Barcode'}</p>

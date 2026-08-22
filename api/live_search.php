@@ -42,7 +42,7 @@ try {
             'name' => sanitize($prod['name']),
             'category' => sanitize($prod['category']),
             'price' => (float)$prod['price'],
-            'image' => $prod['image'] ? $prod['image'] : 'assets/images/placeholder.svg',
+            'image' => get_product_image_url($prod['image'] ?? ''),
             'barcode' => sanitize($prod['barcode'])
         ];
     }

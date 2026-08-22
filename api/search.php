@@ -34,7 +34,7 @@ try {
             'weight' => sanitize($prod['weight']),
             'category' => sanitize($prod['category']),
             'stock_quantity' => (int)$prod['stock_quantity'],
-            'image_url' => $prod['image'] ? BASE_URL . $prod['image'] : BASE_URL . 'assets/images/placeholder.jpg'
+            'image_url' => get_product_image_url($prod['image'] ?? '')
         ];
     }
 

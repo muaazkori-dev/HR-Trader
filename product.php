@@ -82,13 +82,7 @@ require_once __DIR__ . '/includes/header.php';
 
 $is_frozen = ($product['category'] === 'ice_cream');
 $is_out_of_stock = ($product['stock_quantity'] <= 0);
-$img_src = BASE_URL . 'assets/images/placeholder.svg';
-if (!empty($product['image'])) {
-    $real_path = __DIR__ . '/' . ltrim($product['image'], '/');
-    if (file_exists($real_path)) {
-        $img_src = BASE_URL . ltrim($product['image'], '/');
-    }
-}
+$img_src = get_product_image_url($product['image'] ?? '');
 ?>
 
 <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">

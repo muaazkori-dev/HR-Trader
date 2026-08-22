@@ -378,11 +378,14 @@ function setupStorefrontSearch(inputId, suggestionsId) {
 
                     let html = '';
                     products.forEach(p => {
+                        const pImg = (p.image && (p.image.startsWith('http://') || p.image.startsWith('https://') || p.image.startsWith('/'))) 
+                            ? p.image 
+                            : (BASE_URL + (p.image ? p.image.replace(/^\/+/, '') : 'assets/images/placeholder.svg'));
                         html += `
                             <a href="${BASE_URL}product.php?id=${p.id}" 
                                  class="p-3 hover:bg-slate-50 flex items-center justify-between gap-3 border-b border-slate-100 last:border-0 cursor-pointer transition-colors block">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <img src="${BASE_URL + p.image}" class="w-8 h-8 object-cover rounded-lg border border-slate-200 bg-slate-50 flex-shrink-0" loading="lazy">
+                                    <img src="${pImg}" class="w-8 h-8 object-cover rounded-lg border border-slate-200 bg-slate-50 flex-shrink-0" loading="lazy">
                                     <div class="min-w-0">
                                         <h5 class="text-sm font-semibold text-slate-805 leading-tight truncate">${p.name}</h5>
                                         <p class="text-xs text-slate-500 font-mono">Rs. ${p.price.toFixed(2)}</p>
