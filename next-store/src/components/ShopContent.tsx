@@ -174,8 +174,11 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
 
   // Perform instant client-side filtering
   const filteredProducts = products.filter((p) => {
+    const activeCatIdx = categoriesList.findIndex(c => c.id === selectedCategory);
     const matchesCategory =
-      selectedCategory === '' || p.category === selectedCategory;
+      selectedCategory === '' ||
+      p.category === selectedCategory ||
+      (activeCatIdx > 0 && p.category === String(activeCatIdx - 1)); // index fallback (excluding 'All Categories' at 0)
     const matchesSearch =
       searchQuery.trim() === '' ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -260,7 +263,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
           </div>
           {selectedCategory && (
             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold border border-emerald-150 uppercase text-[9px] tracking-wider">
-              {CATEGORIES.find((c) => c.id === selectedCategory)?.name}
+              {categoriesList.find((c) => c.id === selectedCategory)?.name || selectedCategory.replace(/_/g, ' ')}
             </span>
           )}
         </div>

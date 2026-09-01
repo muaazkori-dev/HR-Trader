@@ -515,26 +515,38 @@ function update_setting($key, $value) {
     }
 }
 $categories_json = get_setting('store_categories', '');
-if (empty($categories_json)) {
+$CATEGORIES = [];
+if (!empty($categories_json)) {
+    $parsed_cats = json_decode($categories_json, true);
+    if (is_array($parsed_cats)) {
+        foreach ($parsed_cats as $k => $c) {
+            $cat_id = $c['id'] ?? $c['key'] ?? (is_string($k) ? $k : '');
+            if (!empty($cat_id)) {
+                $CATEGORIES[$cat_id] = [
+                    'id' => $cat_id,
+                    'name' => $c['name'] ?? $cat_id,
+                    'urdu' => $c['urdu'] ?? '',
+                    'image' => $c['image'] ?? '',
+                    'alert' => $c['alert'] ?? ($cat_id === 'ice_cream' ? 'Available for nearby locations only' : null)
+                ];
+            }
+        }
+    }
+}
+if (empty($CATEGORIES)) {
     $CATEGORIES = [
-        'anaj' => ['name' => 'Anaj', 'urdu' => 'اناج'],
-        'grocery' => ['name' => 'Grocery', 'urdu' => 'گروسری'],
-        'ice_cream' => ['name' => 'Ice Cream', 'urdu' => 'آئس کریم', 'alert' => 'Available for nearby locations only'],
-        'beverages' => ['name' => 'Beverages', 'urdu' => 'مشروبات'],
-        'milk' => ['name' => 'Milk', 'urdu' => 'دودھ'],
-        'cosmetics' => ['name' => 'Cosmetics', 'urdu' => 'کاسمیٹکس'],
-        'snacks' => ['name' => 'Snacks', 'urdu' => 'سنیکس'],
-        'bakery' => ['name' => 'Bakery', 'urdu' => 'بیکری'],
-        'sauce' => ['name' => 'Sauces', 'urdu' => 'سوس'],
-        'shampoo' => ['name' => 'Cosmetics (Shampoo)', 'urdu' => 'کاسمیٹکس (شیمپو)', 'parent' => 'cosmetics'],
-        'soap' => ['name' => 'Cosmetics (Soap)', 'urdu' => 'کاسمیٹکس (صابن)', 'parent' => 'cosmetics'],
-        'toothpaste' => ['name' => 'Cosmetics (Toothpaste)', 'urdu' => 'کاسمیٹکس (ٹوتھ پیسٹ)', 'parent' => 'cosmetics'],
-        'body_wash' => ['name' => 'Cosmetics (Body Wash)', 'urdu' => 'کاسمیٹکس (باڈی واش)', 'parent' => 'cosmetics'],
-        'deodorant' => ['name' => 'Cosmetics (Deodorant)', 'urdu' => 'کاسمیٹکس (ڈیوڈرینٹ)', 'parent' => 'cosmetics']
+        'anaj' => ['id' => 'anaj', 'name' => 'BAKING AND COOKING', 'urdu' => ''],
+        'ice_cream' => ['id' => 'ice_cream', 'name' => 'ICE CREAM', 'urdu' => '', 'alert' => 'Available for nearby locations only'],
+        'beverages' => ['id' => 'beverages', 'name' => 'BEVERAGE', 'urdu' => ''],
+        'milk' => ['id' => 'milk', 'name' => 'HERBAL AND NUTRITION', 'urdu' => ''],
+        'cosmetics' => ['id' => 'cosmetics', 'name' => 'COSMETICS', 'urdu' => ''],
+        'confectionary' => ['id' => 'confectionary', 'name' => 'SNACKS AND CHIPS', 'urdu' => ''],
+        'bakery' => ['id' => 'bakery', 'name' => 'DAIRY AND BREAK FAST', 'urdu' => ''],
+        'sauce' => ['id' => 'sauce', 'name' => 'PASTA AND SAUCES', 'urdu' => ''],
+        'stationary' => ['id' => 'stationary', 'name' => 'STATIONARY', 'urdu' => ''],
+        'confectionary_8864' => ['id' => 'confectionary_8864', 'name' => 'CONFECTIONARY', 'urdu' => ''],
+        'household_and_laundry' => ['id' => 'household_and_laundry', 'name' => 'HOUSEHOLD AND LAUNDRY', 'urdu' => '']
     ];
-    update_setting('store_categories', json_encode($CATEGORIES));
-} else {
-    $CATEGORIES = json_decode($categories_json, true);
 }
 
 // Define dynamic global metadata configurations (with database settings override)
@@ -542,10 +554,20 @@ define('STORE_NAME', get_setting('store_name', 'HR Traders'));
 define('CURRENCY', get_setting('store_currency', 'Rs.'));
 define('WHATSAPP_NUMBER', get_setting('whatsapp_number', '923033943814')); // WhatsApp shop number (international format without +)
 
-/**
- * Get category icon URL, with clean SVG fallback data URI if file is missing from disk
- */
 function get_category_icon_url($category) {
+    global $CATEGORIES;
+    if (isset($CATEGORIES[$category]['image']) && !empty($CATEGORIES[$category]['image'])) {
+        $cat_img = $CATEGORIES[$category]['image'];
+        if (strpos($cat_img, 'http://') === 0 || strpos($cat_img, 'https://') === 0 || strpos($cat_img, 'data:') === 0) {
+            return $cat_img;
+        }
+        $clean_cat_img = ltrim($cat_img, '/');
+        $full_cpath = __DIR__ . '/../' . $clean_cat_img;
+        if (file_exists($full_cpath)) {
+            return BASE_URL . $clean_cat_img . '?v=' . filemtime($full_cpath);
+        }
+    }
+
     // Check if a direct custom icon for this category key has been uploaded and exists
     $direct_path = 'assets/images/categories/' . $category . '.png';
     $full_direct_path = __DIR__ . '/../' . $direct_path;

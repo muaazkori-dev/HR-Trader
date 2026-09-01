@@ -55,21 +55,28 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
   const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [dbCategories, setDbCategories] = useState<Record<string, any>>({
-    anaj: { name: 'Grains & Rice' },
-    shampoo: { name: 'Hair Care' },
-    soap: { name: 'Soaps & Care' },
-    cold_drinks: { name: 'Beverages' },
-    water: { name: 'Mineral Water' },
-    ice_cream: { name: 'Ice Creams' },
-    milk: { name: 'Dairy & Milk' },
-  });
+  const [categoryList, setCategoryList] = useState<{ id: string; name: string }[]>([
+    { id: 'anaj', name: 'BAKING AND COOKING' },
+    { id: 'ice_cream', name: 'ICE CREAM' },
+    { id: 'beverages', name: 'BEVERAGE' },
+    { id: 'milk', name: 'HERBAL AND NUTRITION' },
+    { id: 'cosmetics', name: 'COSMETICS' },
+    { id: 'confectionary', name: 'SNACKS AND CHIPS' },
+    { id: 'bakery', name: 'DAIRY AND BREAK FAST' },
+    { id: 'sauce', name: 'PASTA AND SAUCES' },
+    { id: 'stationary', name: 'STATIONARY' },
+    { id: 'confectionary_8864', name: 'CONFECTIONARY' },
+    { id: 'household_and_laundry', name: 'HOUSEHOLD AND LAUNDRY' },
+  ]);
 
   const getCategoryName = (key: string) => {
-    const cat = dbCategories[key];
-    if (!cat) return key.replace(/_/g, ' ');
-    if (typeof cat === 'object') return cat.name || key.replace(/_/g, ' ');
-    return cat;
+    const found = categoryList.find(c => c.id === key);
+    if (found) return found.name;
+    const num = parseInt(key, 10);
+    if (!isNaN(num) && categoryList[num]) {
+      return categoryList[num].name;
+    }
+    return key ? key.replace(/_/g, ' ') : '';
   };
 
   useEffect(() => {
@@ -83,8 +90,16 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
 
         if (!error && data?.val_value) {
           const parsed = JSON.parse(data.val_value);
-          if (parsed && typeof parsed === 'object') {
-            setDbCategories(parsed);
+          if (Array.isArray(parsed)) {
+            setCategoryList(parsed.map((c: any) => ({
+              id: c.id || c.key,
+              name: c.name || c.id
+            })));
+          } else if (parsed && typeof parsed === 'object') {
+            setCategoryList(Object.entries(parsed).map(([id, val]: any) => ({
+              id,
+              name: val.name || id
+            })));
           }
         }
       } catch (err) {
@@ -144,7 +159,10 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.barcode.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
-      categoryFilter === '' || p.category === categoryFilter;
+      categoryFilter === '' ||
+      p.category === categoryFilter ||
+      (categoryList.findIndex(c => c.id === categoryFilter) !== -1 &&
+        p.category === String(categoryList.findIndex(c => c.id === categoryFilter)));
     return matchesSearch && matchesCategory;
   });
 
@@ -411,10 +429,9 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
             className="bg-white border border-slate-200 px-3.5 py-2 rounded-xl text-xs text-slate-650 focus:outline-none focus:border-emerald-500 shadow-sm w-full sm:w-auto font-semibold"
           >
             <option value="">All Categories</option>
-            {Object.entries(dbCategories).map(([key, val]) => {
-              const name = typeof val === 'object' ? val.name : val;
-              return <option key={key} value={key}>{name}</option>;
-            })}
+            {categoryList.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
           </select>
         </div>
 
@@ -704,10 +721,9 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-slate-800 font-bold text-left"
                   >
-                    {Object.entries(dbCategories).map(([key, val]) => {
-                      const name = typeof val === 'object' ? val.name : val;
-                      return <option key={key} value={key}>{name}</option>;
-                    })}
+                    {categoryList.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
