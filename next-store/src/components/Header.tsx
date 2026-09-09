@@ -441,7 +441,7 @@ export const Header: React.FC = () => {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <img
-                            src={getProductImageUrl(p.image)}
+                            src={getProductImageUrl(p.image, { width: 100, quality: 75 })}
                             alt={p.name}
                             className="w-9 h-9 object-cover rounded-lg border border-slate-200/80 bg-slate-50 flex-shrink-0"
                           />
@@ -746,7 +746,7 @@ export const Header: React.FC = () => {
                     className="flex gap-3 p-3 bg-slate-50 border border-slate-200/65 rounded-2xl transition-all"
                   >
                     <img
-                      src={getProductImageUrl(item.image)}
+                      src={getProductImageUrl(item.image, { width: 160, quality: 75 })}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-xl border border-slate-200 bg-white flex-shrink-0"
                     />

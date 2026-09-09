@@ -649,12 +649,18 @@ function get_category_icon_url($category) {
  * Bulletproof resolver: checks local file first, then Supabase CDN, then placeholder.
  * Never allows broken image links.
  */
-function get_product_image_url($image_path) {
+function get_product_image_url($image_path, $width = 400) {
     if (empty($image_path)) {
         return BASE_URL . 'assets/images/placeholder.svg';
     }
     
-    // If it's already an external URL (Supabase CDN, etc.)
+    // If it's already a Supabase Storage URL
+    if (strpos($image_path, 'supabase.co/storage/v1/object/public/') !== false) {
+        return str_replace('/storage/v1/object/public/', '/storage/v1/render/image/public/', $image_path) . '?width=' . $width . '&quality=80';
+    }
+    if (strpos($image_path, 'supabase.co/storage/v1/render/image/public/') !== false) {
+        return $image_path;
+    }
     if (strpos($image_path, 'http://') === 0 || strpos($image_path, 'https://') === 0) {
         return $image_path;
     }
@@ -670,7 +676,7 @@ function get_product_image_url($image_path) {
     // Automatic Cloud CDN Fallback: if local file was deleted or not present
     $filename = basename($clean_path);
     if (!empty($filename) && $filename !== 'placeholder.svg' && $filename !== 'placeholder.jpg') {
-        return 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/products/' . $filename;
+        return 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/render/image/public/product-images/products/' . $filename . '?width=' . $width . '&quality=80';
     }
     
     return BASE_URL . 'assets/images/placeholder.svg';

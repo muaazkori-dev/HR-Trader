@@ -142,7 +142,7 @@ export default async function ProductDetails({ params }: ProductPageProps) {
             <div className="p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center relative min-h-[300px] sm:min-h-[400px] w-full">
               <div className="relative w-full h-[280px] sm:h-[360px]">
                 <Image
-                  src={getProductImageUrl(product.image)}
+                  src={getProductImageUrl(product.image, { width: 700, quality: 85 })}
                   alt={product.name}
                   fill
                   className="object-contain rounded-2xl drop-shadow-md hover:scale-105 transition-transform duration-300"
