@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getProductImageUrl } from '@/lib/utils';
 import { 
   Plus, 
   Search, 
@@ -201,7 +202,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
     setUnit(p.unit);
     setCategory(p.category);
     setImageFile(null);
-    setImageUrl(p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : '/' + p.image) : '');
+    setImageUrl(p.image ? getProductImageUrl(p.image) : '');
     setMessage('');
     setIsModalOpen(true);
   };
@@ -509,7 +510,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={p.image ? (p.image.startsWith('http') || p.image.startsWith('/') ? p.image : '/' + p.image) : '/assets/images/placeholder.svg'}
+                            src={getProductImageUrl(p.image)}
                             alt={p.name}
                             className="w-10 h-10 object-cover rounded-xl border border-slate-200 bg-slate-50 flex-shrink-0"
                           />

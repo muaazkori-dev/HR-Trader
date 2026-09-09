@@ -109,7 +109,7 @@ $img_src = get_product_image_url($product['image'] ?? '');
         <div class="lg:col-span-5">
             <!-- Image Card -->
             <div class="glass-panel p-6 rounded-3xl border border-slate-200 bg-white shadow-sm flex items-center justify-center relative min-h-[300px] sm:min-h-[400px]">
-                <img src="<?php echo $img_src; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="max-h-[280px] sm:max-h-[360px] max-w-full object-contain rounded-2xl drop-shadow-lg transition-transform hover:scale-105 duration-350">
+                <img src="<?php echo $img_src; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="max-h-[280px] sm:max-h-[360px] max-w-full object-contain rounded-2xl drop-shadow-lg transition-transform hover:scale-105 duration-350" onerror="this.onerror=null;this.src='<?php echo BASE_URL; ?>assets/images/placeholder.svg';">
                 
                 <!-- Category Label -->
                 <span class="absolute top-4 left-4 px-3 py-1 rounded-xl text-[10px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-655 shadow-sm">

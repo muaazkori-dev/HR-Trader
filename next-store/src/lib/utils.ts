@@ -1,13 +1,31 @@
 export const getProductImageUrl = (imagePath: string | null | undefined): string => {
-  if (!imagePath) return '/assets/images/placeholder.svg';
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
+  if (!imagePath || imagePath === '' || imagePath === 'null' || imagePath === 'undefined') {
+    return '/assets/images/placeholder.svg';
   }
-  // If it's a local static asset like a category or default badge
-  if (imagePath.startsWith('/') && !imagePath.startsWith('/assets/images/products/')) {
-    return imagePath;
+  
+  const trimmed = imagePath.trim();
+  
+  // If it's already an external HTTPS/HTTP URL (e.g. direct Supabase CDN or remote image)
+  if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+    if (trimmed.startsWith('http://xarwwlbbaevclyljkvzt.supabase.co')) {
+      return trimmed.replace('http://', 'https://');
+    }
+    return trimmed;
   }
-  // For PHP uploaded product images residing on the Hostinger server
-  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-  return `http://216.198.79.1/${cleanPath}`;
+  
+  // If it's a static SVG / PNG asset in public/
+  if (trimmed.startsWith('/') && !trimmed.startsWith('/assets/images/products/')) {
+    return trimmed;
+  }
+  
+  // For relative paths like "assets/images/products/foo.png" or "foo.png"
+  const cleanPath = trimmed.replace(/^\/+/, '');
+  const filename = cleanPath.split('/').pop() || cleanPath;
+  
+  if (!filename || filename === 'placeholder.svg' || filename === 'placeholder.jpg') {
+    return '/assets/images/placeholder.svg';
+  }
+  
+  // Fallback to Supabase Cloud Storage CDN
+  return `https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/products/${filename}`;
 };
