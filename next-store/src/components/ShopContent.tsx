@@ -386,13 +386,13 @@ export const ShopContent: React.FC<ShopContentProps> = ({ initialProducts, categ
                   {/* Image wrapper */}
                   <Link
                     href={`/product/${p.id}`}
-                    className="block relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 mb-4 flex-shrink-0"
+                    className="block relative aspect-square rounded-2xl overflow-hidden bg-white border border-slate-100 mb-4 flex-shrink-0 p-2 flex items-center justify-center"
                   >
                     <Image
-                      src={getProductImageUrl(p.image)}
+                      src={getProductImageUrl(p.image, { width: 500, quality: 80, resize: 'contain' })}
                       alt={p.name}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                     />
                   </Link>

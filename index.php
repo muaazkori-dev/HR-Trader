@@ -201,11 +201,11 @@ if (empty($hero_banners_json)) {
                 ?>
                 <div class="glass-card rounded-2xl overflow-hidden flex flex-col border <?php echo $is_frozen ? 'frozen-alert-border border-rose-500/20' : 'border-slate-200'; ?> hover:shadow-md transition-shadow">
                     <!-- Image Area -->
-                    <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $product['id']; ?>" class="block h-32 sm:h-48 bg-slate-50 flex items-center justify-center relative border-b border-slate-250/60 overflow-hidden cursor-pointer group">
+                    <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $product['id']; ?>" class="block h-32 sm:h-48 bg-white flex items-center justify-center relative border-b border-slate-100 overflow-hidden cursor-pointer group p-2">
                         <?php 
                         $img_src = get_product_image_url($product['image'] ?? '');
                         ?>
-                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" loading="lazy" onerror="this.onerror=null;this.src='<?php echo BASE_URL; ?>assets/images/placeholder.svg';">
+                        <img src="<?php echo $img_src; ?>" alt="<?php echo sanitize($product['name']); ?>" class="w-full h-full object-contain p-1 transition-transform group-hover:scale-105 duration-300" loading="lazy" onerror="this.onerror=null;this.src='<?php echo BASE_URL; ?>assets/images/placeholder.svg';">
                         
                         <!-- Floating Labels (Smaller on mobile) -->
                         <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded-md text-[8px] sm:text-[10px] uppercase font-bold bg-white/90 backdrop-blur-sm border border-slate-200 text-slate-600 shadow-sm">

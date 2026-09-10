@@ -302,13 +302,13 @@ export default async function ProductDetails({ params }: ProductPageProps) {
                     )}
                     <Link
                       href={`/product/${p.id}`}
-                      className="block relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 mb-3 flex-shrink-0"
+                      className="block relative aspect-square rounded-2xl overflow-hidden bg-white border border-slate-100 mb-3 flex-shrink-0 p-2 flex items-center justify-center"
                     >
                       <Image
-                        src={getProductImageUrl(p.image)}
+                        src={getProductImageUrl(p.image, { width: 400, quality: 80, resize: 'contain' })}
                         alt={p.name}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 768px) 50vw, 25vw"
                       />
                     </Link>
