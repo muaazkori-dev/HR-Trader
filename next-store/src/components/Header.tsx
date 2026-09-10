@@ -443,7 +443,7 @@ export const Header: React.FC = () => {
                           <img
                             src={getProductImageUrl(p.image, { width: 100, quality: 75 })}
                             alt={p.name}
-                            className="w-9 h-9 object-cover rounded-lg border border-slate-200/80 bg-slate-50 flex-shrink-0"
+                            className="w-9 h-9 object-contain rounded-lg border border-slate-200/80 bg-white flex-shrink-0 p-0.5"
                           />
                           <div className="min-w-0">
                             <h4 className="text-xs font-semibold text-slate-800 leading-tight truncate">{p.name}</h4>
@@ -748,7 +748,7 @@ export const Header: React.FC = () => {
                     <img
                       src={getProductImageUrl(item.image, { width: 160, quality: 75 })}
                       alt={item.name}
-                      className="w-16 h-16 object-cover rounded-xl border border-slate-200 bg-white flex-shrink-0"
+                      className="w-16 h-16 object-contain rounded-xl border border-slate-200 bg-white flex-shrink-0 p-1"
                     />
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div className="text-left">

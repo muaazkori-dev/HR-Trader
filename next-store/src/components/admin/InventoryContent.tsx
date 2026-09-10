@@ -512,7 +512,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                           <img
                             src={getProductImageUrl(p.image)}
                             alt={p.name}
-                            className="w-10 h-10 object-cover rounded-xl border border-slate-200 bg-slate-50 flex-shrink-0"
+                            className="w-10 h-10 object-contain rounded-xl border border-slate-200 bg-white flex-shrink-0 p-0.5"
                           />
                           <div className="text-left">
                             <strong className="text-slate-800 text-xs block font-bold leading-tight">{p.name}</strong>
