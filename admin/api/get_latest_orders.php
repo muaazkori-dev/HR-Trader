@@ -81,7 +81,7 @@ try {
             }
             
             $orders_html .= '<tr>';
-            $orders_html .= '<td class="py-3 pr-2 font-mono font-bold">' . $ref . '</td>';
+            $orders_html .= '<td class="py-3 pr-2 font-mono font-bold"><a href="' . BASE_URL . 'admin/manager.php" class="text-emerald-700 hover:text-emerald-800 hover:underline" title="View Full Order Details">' . $ref . '</a></td>';
             $orders_html .= '<td class="py-3">';
             $orders_html .= '<span class="block font-bold text-slate-805">' . $customer_name . '</span>';
             $orders_html .= '<span class="block text-[10px] text-slate-400 font-mono">' . $customer_phone . '</span>';
@@ -118,7 +118,7 @@ try {
             
             $orders_mobile_html .= '<div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">';
             $orders_mobile_html .= '  <div class="flex items-center justify-between text-xs">';
-            $orders_mobile_html .= '    <span class="font-mono font-bold text-slate-800">' . $ref . '</span>';
+            $orders_mobile_html .= '    <a href="' . BASE_URL . 'admin/manager.php" class="font-mono font-bold text-emerald-700 hover:underline">' . $ref . '</a>';
             $orders_mobile_html .= '    <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase border ' . $status_class . '">' . $ord['status'] . '</span>';
             $orders_mobile_html .= '  </div>';
             $orders_mobile_html .= '  <div class="flex justify-between text-xs">';

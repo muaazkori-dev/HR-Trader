@@ -136,14 +136,60 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                 $is_shipping = $ord['status'] === 'out_for_delivery';
                 $is_delivered = $ord['status'] === 'delivered';
                 $is_cancelled = $ord['status'] === 'cancelled';
+
+                // Fetch items and calculate pricing breakdown
+                $stmt_items = $pdo->prepare("SELECT oi.*, COALESCE(oi.product_name, p.name) as display_name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = :id");
+                $stmt_items->execute(['id' => $ord['id']]);
+                $items = $stmt_items->fetchAll();
+                $items_arr = [];
+                $items_subtotal = 0;
+                $items_modal_data = [];
+                foreach ($items as $it) {
+                    $item_name = $it['display_name'] ?? 'Product';
+                    $item_price = (float)$it['price'];
+                    $item_qty = (int)$it['quantity'];
+                    $item_line = $item_price * $item_qty;
+                    $items_subtotal += $item_line;
+                    $items_arr[] = sanitize($item_name) . " (x" . $item_qty . ")";
+                    $items_modal_data[] = [
+                        'name' => $item_name,
+                        'price' => $item_price,
+                        'quantity' => $item_qty,
+                        'total' => $item_line
+                    ];
+                }
+                $delivery_charges = max(0, (float)$ord['total_amount'] - $items_subtotal);
+
+                $order_modal_data = [
+                    'id' => (int)$ord['id'],
+                    'ref' => $ref,
+                    'status' => $ord['status'],
+                    'created_at' => date('d-M-Y h:i A', strtotime($ord['created_at'])),
+                    'customer_name' => $ord['customer_name'],
+                    'customer_phone' => $ord['customer_phone'],
+                    'customer_address' => $ord['customer_address'],
+                    'payment_method' => $ord['payment_method'] ?? 'COD',
+                    'notes' => $ord['notes'] ?? '',
+                    'items_subtotal' => $items_subtotal,
+                    'delivery_charges' => $delivery_charges,
+                    'total_amount' => (float)$ord['total_amount'],
+                    'items' => $items_modal_data
+                ];
                 ?>
                 <!-- ORDER ROW CARD -->
                 <div class="glass-panel bg-white shadow-sm p-5 rounded-2xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all hover:border-slate-300">
                     
                     <!-- Customer and details columns -->
                     <div class="space-y-2 flex-1">
-                        <div class="flex items-center gap-3">
-                            <span class="font-mono text-sm font-bold text-slate-800"><?php echo $ref; ?></span>
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <!-- Clickable #HRT Order Number -->
+                            <button onclick='openOrderDetailsModal(<?php echo htmlspecialchars(json_encode($order_modal_data), ENT_QUOTES, "UTF-8"); ?>)'
+                                    class="font-mono text-sm font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 group"
+                                    title="Click to view complete order details & invoice slip">
+                                <span class="group-hover:underline underline-offset-2"><?php echo $ref; ?></span>
+                                <i class="fas fa-eye text-emerald-600 group-hover:scale-110 transition-transform"></i>
+                            </button>
+
                             <!-- Status pills -->
                             <span class="px-2.5 py-0.5 rounded text-[10px] uppercase font-black border <?php 
                                 switch($ord['status']) {
@@ -187,25 +233,29 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 
                         <!-- Mini Items listing preview -->
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2 text-xs text-slate-700">
-                            <span class="font-bold text-slate-500 block mb-1">Purchased Items:</span>
-                            <?php
-                            $stmt_items = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = :id");
-                            $stmt_items->execute(['id' => $ord['id']]);
-                            $items = $stmt_items->fetchAll();
-                            $items_arr = [];
-                            foreach ($items as $it) {
-                                $items_arr[] = sanitize($it['name']) . " (x" . $it['quantity'] . ")";
-                            }
-                            echo implode(', ', $items_arr);
-                            ?>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-slate-500">Purchased Items:</span>
+                                <button onclick='openOrderDetailsModal(<?php echo htmlspecialchars(json_encode($order_modal_data), ENT_QUOTES, "UTF-8"); ?>)'
+                                        class="text-[11px] text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer">
+                                    View Full Details →
+                                </button>
+                            </div>
+                            <span class="font-medium text-slate-800 leading-relaxed"><?php echo !empty($items_arr) ? implode(', ', $items_arr) : 'No items'; ?></span>
                         </div>
                     </div>
 
                     <!-- Pricing & Quick status actions column -->
                     <div class="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end justify-between gap-4 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 md:w-64">
                         <div class="text-left md:text-right">
-                            <span class="text-[10px] text-slate-450 uppercase font-semibold block">Total Invoice</span>
-                            <span class="text-lg font-black text-emerald-600"><?php echo format_price($ord['total_amount']); ?></span>
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Total Invoice</span>
+                            <span class="text-xl font-black text-emerald-600"><?php echo format_price($ord['total_amount']); ?></span>
+                            <div class="text-[11px] text-slate-500 font-medium mt-0.5">
+                                <span>Items: <?php echo format_price($items_subtotal); ?></span>
+                                <span class="text-slate-300">•</span>
+                                <span class="<?php echo $delivery_charges > 0 ? 'text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60' : 'text-slate-500 font-medium'; ?>">
+                                    Delivery: <?php echo $delivery_charges > 0 ? '+ ' . format_price($delivery_charges) : 'Free'; ?>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="flex flex-wrap gap-2 w-full md:justify-end">
@@ -257,8 +307,259 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 <!-- Toasts indicator -->
 <div id="toast-container" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none"></div>
 
+<!-- Complete Order Details & Invoice Slip Modal -->
+<div id="order-details-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm overflow-y-auto" onclick="if(event.target === this) closeOrderDetailsModal()">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh]">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between gap-4 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                    <i class="fas fa-file-invoice text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 id="modal-order-ref" class="text-lg font-black tracking-tight font-mono">#HRT-00000</h2>
+                        <span id="modal-order-status" class="px-2 py-0.5 rounded text-[10px] uppercase font-black border">PENDING</span>
+                    </div>
+                    <p id="modal-order-subtitle" class="text-xs text-slate-400 mt-0.5">Order Invoice & Customer Slip</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 print:hidden">
+                <button onclick="window.print()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i class="fas fa-print"></i> <span>Print Slip</span>
+                </button>
+                <button onclick="closeOrderDetailsModal()" class="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer text-lg leading-none">
+                    &times;
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800 text-left">
+            <!-- Customer Information Grid -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Customer & Delivery Details</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <span class="text-slate-400 block uppercase font-semibold text-[10px]">Customer Name</span>
+                        <strong id="modal-customer-name" class="text-slate-900 text-sm">Customer</strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block uppercase font-semibold text-[10px]">Phone / Contact</span>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <a id="modal-customer-phone-link" href="#" class="font-mono text-emerald-700 font-bold hover:underline">03000000000</a>
+                            <button id="modal-whatsapp-btn" class="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer">
+                                <i class="fab fa-whatsapp"></i> Alert
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block uppercase font-semibold text-[10px]">Payment Method</span>
+                        <span id="modal-payment-method" class="font-semibold text-slate-700">Cash on Delivery (COD)</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block uppercase font-semibold text-[10px]">Order Date & Time</span>
+                        <span id="modal-order-date" class="font-medium text-slate-700">Date</span>
+                    </div>
+                </div>
+
+                <!-- Delivery Address Box -->
+                <div class="pt-2 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-slate-400 uppercase font-semibold text-[10px]">Full Delivery Address</span>
+                        <button onclick="copyModalAddress()" class="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer">
+                            <i id="copy-address-icon" class="fas fa-copy"></i> <span id="copy-address-text">Copy Address</span>
+                        </button>
+                    </div>
+                    <div id="modal-customer-address" class="bg-amber-50/60 p-3 rounded-lg border border-amber-200/70 text-xs font-medium text-slate-900 leading-relaxed select-text">
+                        📍 Address
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div id="modal-notes-container" class="pt-2 border-t border-slate-200 hidden">
+                    <span class="text-slate-400 uppercase font-semibold text-[10px] block mb-0.5">Customer Notes</span>
+                    <div id="modal-notes" class="bg-blue-50/50 p-2.5 rounded-lg border border-blue-200/60 text-xs text-blue-900"></div>
+                </div>
+            </div>
+
+            <!-- Ordered Items Table -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                    <i class="fas fa-box text-slate-400"></i>
+                    <span>Ordered Items</span>
+                </h3>
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="py-2.5 px-3 w-10 text-center">#</th>
+                                <th class="py-2.5 px-3">Product Name</th>
+                                <th class="py-2.5 px-3 text-right">Price</th>
+                                <th class="py-2.5 px-3 text-center">Qty</th>
+                                <th class="py-2.5 px-3 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-items-tbody" class="divide-y divide-slate-100 bg-white">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pricing & Delivery Charges Breakdown -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2">
+                <div class="flex justify-between items-center text-xs text-slate-600">
+                    <span>Items Subtotal</span>
+                    <span id="modal-items-subtotal" class="font-mono font-semibold">Rs. 0.00</span>
+                </div>
+
+                <!-- Delivery Charges Row -->
+                <div class="flex justify-between items-center text-xs p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200">
+                    <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+                        <i class="fas fa-truck text-emerald-600"></i>
+                        Delivery Charges (شامل شدہ ڈیلیوری چارجز):
+                    </span>
+                    <span id="modal-delivery-charges" class="font-mono font-bold text-emerald-700 text-sm">+ Rs. 0.00</span>
+                </div>
+
+                <div class="pt-2.5 border-t border-slate-200 flex justify-between items-center">
+                    <div>
+                        <span class="text-xs uppercase font-black text-slate-800 block">Total Bill / Net Payable</span>
+                        <span class="text-[10px] text-slate-400">Amount to collect upon delivery (COD)</span>
+                    </div>
+                    <span id="modal-total-amount" class="text-2xl font-black text-emerald-600 font-mono">Rs. 0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
+            <div id="modal-status-actions" class="flex items-center gap-2 w-full sm:w-auto"></div>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button onclick="window.print()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-print"></i> <span>Print Invoice</span>
+                </button>
+                <button onclick="closeOrderDetailsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg cursor-pointer">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- AJAX Status Updater Script -->
 <script>
+let currentModalAddress = "";
+
+function openOrderDetailsModal(order) {
+    currentModalAddress = order.customer_address;
+    document.getElementById('modal-order-ref').innerText = order.ref;
+    document.getElementById('modal-order-status').innerText = order.status.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('modal-order-subtitle').innerText = `Order Invoice & Customer Slip • ${order.created_at}`;
+    
+    document.getElementById('modal-customer-name').innerText = order.customer_name;
+    const phoneLink = document.getElementById('modal-customer-phone-link');
+    phoneLink.innerText = order.customer_phone;
+    phoneLink.href = 'tel:' + order.customer_phone;
+    
+    document.getElementById('modal-whatsapp-btn').onclick = function() {
+        sendWhatsAppNotification(
+            encodeURIComponent(order.customer_name),
+            order.ref,
+            encodeURIComponent(order.total_amount),
+            encodeURIComponent(order.customer_address),
+            order.customer_phone
+        );
+    };
+    
+    document.getElementById('modal-payment-method').innerText = order.payment_method || 'Cash on Delivery (COD)';
+    document.getElementById('modal-order-date').innerText = order.created_at;
+    document.getElementById('modal-customer-address').innerText = `📍 ${order.customer_address}`;
+    
+    if (order.notes && order.notes.trim()) {
+        document.getElementById('modal-notes-container').classList.remove('hidden');
+        document.getElementById('modal-notes').innerText = order.notes;
+    } else {
+        document.getElementById('modal-notes-container').classList.add('hidden');
+    }
+    
+    // Items table
+    const tbody = document.getElementById('modal-items-tbody');
+    tbody.innerHTML = '';
+    if (order.items && order.items.length > 0) {
+        order.items.forEach((it, idx) => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50/60';
+            tr.innerHTML = `
+                <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
+                <td class="py-2.5 px-3 font-semibold text-slate-800">${it.name}</td>
+                <td class="py-2.5 px-3 text-right font-mono text-slate-600">Rs. ${parseFloat(it.price).toFixed(2)}</td>
+                <td class="py-2.5 px-3 text-center font-bold text-slate-800">x${it.quantity}</td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">Rs. ${parseFloat(it.total).toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-slate-400">No items recorded for this order.</td></tr>';
+    }
+    
+    // Pricing
+    document.getElementById('modal-items-subtotal').innerText = `Rs. ${parseFloat(order.items_subtotal).toFixed(2)}`;
+    const delText = order.delivery_charges > 0 
+        ? `+ Rs. ${parseFloat(order.delivery_charges).toFixed(2)}` 
+        : 'FREE DELIVERY (Rs. 0.00)';
+    document.getElementById('modal-delivery-charges').innerText = delText;
+    document.getElementById('modal-total-amount').innerText = `Rs. ${parseFloat(order.total_amount).toFixed(2)}`;
+    
+    // Quick action buttons inside modal
+    const actionsContainer = document.getElementById('modal-status-actions');
+    actionsContainer.innerHTML = '';
+    if (order.status === 'pending') {
+        actionsContainer.innerHTML = `
+            <button onclick="updateOrderStatus(${order.id}, 'packaging')" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg">Start Packaging</button>
+            <button onclick="updateOrderStatus(${order.id}, 'cancelled')" class="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 hover:text-rose-700 text-xs rounded-lg">Cancel</button>
+        `;
+    } else if (order.status === 'packaging') {
+        actionsContainer.innerHTML = `
+            <button onclick="updateOrderStatus(${order.id}, 'out_for_delivery')" class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg">Dispatch / Ship</button>
+            <button onclick="updateOrderStatus(${order.id}, 'cancelled')" class="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 hover:text-rose-700 text-xs rounded-lg">Cancel</button>
+        `;
+    } else if (order.status === 'out_for_delivery') {
+        actionsContainer.innerHTML = `
+            <button onclick="updateOrderStatus(${order.id}, 'delivered')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg">Mark Delivered</button>
+            <button onclick="updateOrderStatus(${order.id}, 'cancelled')" class="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 border border-slate-300 hover:text-rose-700 text-xs rounded-lg">Cancel</button>
+        `;
+    } else if (order.status === 'delivered') {
+        actionsContainer.innerHTML = `<span class="text-emerald-600 text-xs font-bold"><i class="fas fa-circle-check"></i> Delivered Successfully</span>`;
+    } else if (order.status === 'cancelled') {
+        actionsContainer.innerHTML = `<span class="text-rose-600 text-xs font-bold"><i class="fas fa-ban"></i> Order Cancelled</span>`;
+    }
+    
+    const modal = document.getElementById('order-details-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeOrderDetailsModal() {
+    const modal = document.getElementById('order-details-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function copyModalAddress() {
+    if (navigator.clipboard && currentModalAddress) {
+        navigator.clipboard.writeText(currentModalAddress);
+        const icon = document.getElementById('copy-address-icon');
+        const text = document.getElementById('copy-address-text');
+        icon.className = 'fas fa-check text-emerald-600';
+        text.innerText = 'Address Copied!';
+        setTimeout(() => {
+            icon.className = 'fas fa-copy';
+            text.innerText = 'Copy Address';
+        }, 2000);
+    }
+}
 function updateOrderStatus(orderId, status) {
     let confirmMsg = "";
     if (status === 'delivered') {
