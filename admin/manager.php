@@ -181,13 +181,21 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                     
                     <!-- Customer and details columns -->
                     <div class="space-y-2 flex-1">
-                        <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex items-center gap-2.5 flex-wrap">
                             <!-- Clickable #HRT Order Number -->
                             <button onclick='openOrderDetailsModal(<?php echo htmlspecialchars(json_encode($order_modal_data), ENT_QUOTES, "UTF-8"); ?>)'
                                     class="font-mono text-sm font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 group"
                                     title="Click to view complete order details & invoice slip">
                                 <span class="group-hover:underline underline-offset-2"><?php echo $ref; ?></span>
                                 <i class="fas fa-eye text-emerald-600 group-hover:scale-110 transition-transform"></i>
+                            </button>
+
+                            <!-- Quick Print Thermal Slip Button -->
+                            <button onclick='printThermalReceiptDirect(<?php echo htmlspecialchars(json_encode($order_modal_data), ENT_QUOTES, "UTF-8"); ?>)'
+                                    class="px-2 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-slate-650 border border-slate-250 rounded-lg flex items-center gap-1 text-[11px] font-bold transition-all cursor-pointer active:scale-95"
+                                    title="Print on Cashier 80mm/58mm Thermal Printer">
+                                <i class="fas fa-print text-emerald-600"></i>
+                                <span class="hidden sm:inline">Print Slip</span>
                             </button>
 
                             <!-- Status pills -->
@@ -325,9 +333,9 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 print:hidden">
-                <button onclick="window.print()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer">
-                    <i class="fas fa-print"></i> <span>Print Slip</span>
+            <div class="flex items-center gap-2">
+                <button onclick="printThermalReceiptModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-xs" title="Print on Cashier Thermal Printer (80mm/58mm)">
+                    <i class="fas fa-print"></i> <span>Print Thermal Slip</span>
                 </button>
                 <button onclick="closeOrderDetailsModal()" class="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer text-lg leading-none">
                     &times;
@@ -437,8 +445,8 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
         <div class="px-6 py-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
             <div id="modal-status-actions" class="flex items-center gap-2 w-full sm:w-auto"></div>
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button onclick="window.print()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer">
-                    <i class="fas fa-print"></i> <span>Print Invoice</span>
+                <button onclick="printThermalReceiptModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm" title="Print on Cashier 80mm/58mm Thermal Printer">
+                    <i class="fas fa-print"></i> <span>Print Thermal Slip (کیشئر سلپ)</span>
                 </button>
                 <button onclick="closeOrderDetailsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg cursor-pointer">
                     Close
@@ -451,8 +459,167 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 <!-- AJAX Status Updater Script -->
 <script>
 let currentModalAddress = "";
+let currentModalOrder = null;
+
+function printThermalReceiptDirect(order) {
+    let printFrame = document.getElementById('thermal-print-iframe-php');
+    if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'thermal-print-iframe-php';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = 'none';
+        printFrame.style.visibility = 'hidden';
+        document.body.appendChild(printFrame);
+    }
+
+    const doc = printFrame.contentWindow?.document || printFrame.contentDocument;
+    if (!doc) return;
+
+    let itemsHtml = '';
+    if (order.items && order.items.length > 0) {
+        order.items.forEach((it, idx) => {
+            itemsHtml += `
+                <tr>
+                    <td style="padding: 3px 0; vertical-align: top; word-break: break-word;">
+                        <div style="font-weight: bold; font-size: 11px;">${idx + 1}. ${it.name}</div>
+                        <div style="font-size: 10px; color: #333;">Rs. ${parseFloat(it.price).toFixed(0)} × ${it.quantity}</div>
+                    </td>
+                    <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; font-size: 11px; white-space: nowrap;">
+                        Rs. ${parseFloat(it.total).toFixed(0)}
+                    </td>
+                </tr>
+            `;
+        });
+    } else {
+        itemsHtml = '<tr><td colspan="2" style="text-align: center; padding: 6px 0;">No items recorded</td></tr>';
+    }
+
+    const delFeeText = order.delivery_charges > 0 ? `+ Rs. ${parseFloat(order.delivery_charges).toFixed(0)}` : 'FREE';
+
+    const thermalHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Slip ${order.ref}</title>
+          <style>
+            @page { size: auto; margin: 0mm; }
+            @media print {
+              html, body {
+                width: 76mm !important;
+                max-width: 78mm !important;
+                margin: 0 !important;
+                padding: 3mm 2mm !important;
+              }
+            }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              width: 76mm;
+              max-width: 78mm;
+              background: #fff;
+              color: #000;
+              font-family: 'Courier New', Courier, monospace;
+              font-size: 11px;
+              line-height: 1.35;
+              padding: 4mm 3mm;
+            }
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+            .text-left { text-align: left; }
+            .bold { font-weight: bold; }
+            .divider { border-top: 1px dashed #000; margin: 5px 0; }
+            .double-divider { border-top: 2px solid #000; margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            .meta-table td { padding: 1.5px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="text-center" style="margin-bottom: 4px;">
+            <h2 style="font-size: 16px; font-weight: 900;">HR TRADERS</h2>
+            <p style="font-size: 10px; margin-top: 1px;">ONLINE DELIVERY ORDER SLIP</p>
+            <p style="font-size: 10px;">Ph: +92 333 7155323</p>
+          </div>
+          <div class="double-divider"></div>
+          <table class="meta-table">
+            <tr><td><strong>Order No:</strong></td><td class="text-right bold" style="font-size: 13px;">${order.ref}</td></tr>
+            <tr><td><strong>Date:</strong></td><td class="text-right">${order.created_at}</td></tr>
+            <tr><td><strong>Payment:</strong></td><td class="text-right bold">${order.payment_method || 'Cash on Delivery (COD)'}</td></tr>
+            <tr><td><strong>Status:</strong></td><td class="text-right bold" style="text-transform: uppercase;">${order.status.replace(/_/g, ' ')}</td></tr>
+          </table>
+          <div class="divider"></div>
+          <div style="margin: 4px 0;">
+            <div style="font-size: 10px; font-weight: bold; text-transform: uppercase;">RIDER / DELIVERY DISPATCH:</div>
+            <div style="font-size: 12px; font-weight: bold; margin-top: 1px;">Customer: ${order.customer_name}</div>
+            <div style="font-size: 12px; font-weight: bold; font-family: monospace;">Phone: ${order.customer_phone}</div>
+            <div style="margin-top: 3px; padding: 4px; border: 1px dashed #000; font-size: 11px; line-height: 1.35;">
+              <strong>Delivery Address:</strong><br/>
+              ${order.customer_address}
+            </div>
+            ${order.notes ? `<div style="margin-top: 3px; font-size: 10px; font-style: italic;">Note: ${order.notes}</div>` : ''}
+          </div>
+          <div class="divider"></div>
+          <table style="margin: 4px 0;">
+            <thead>
+              <tr style="border-bottom: 1px solid #000;">
+                <th class="text-left" style="padding-bottom: 3px;">ITEM</th>
+                <th class="text-right" style="padding-bottom: 3px;">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <table>
+            <tr><td>Items Subtotal:</td><td class="text-right">Rs. ${parseFloat(order.items_subtotal).toFixed(0)}</td></tr>
+            <tr><td style="font-weight: bold;">Delivery Charges:</td><td class="text-right bold">${delFeeText}</td></tr>
+          </table>
+          <div class="double-divider"></div>
+          <div style="margin: 4px 0;">
+            <table style="font-size: 14px;">
+              <tr>
+                <td style="font-weight: 900;">TOTAL PAYABLE:</td>
+                <td class="text-right" style="font-weight: 900; font-size: 15px;">Rs. ${parseFloat(order.total_amount).toFixed(0)}</td>
+              </tr>
+            </table>
+            <div class="text-right" style="font-size: 9px; font-weight: bold; margin-top: 1px;">(COLLECT CASH ON DELIVERY)</div>
+          </div>
+          <div class="divider"></div>
+          <div class="text-center" style="font-size: 10px; margin-top: 6px; line-height: 1.4;">
+            <div class="bold">Thank you for ordering with us!</div>
+            <div>HR Traders • Quality Guaranteed</div>
+            <div style="font-size: 9px; margin-top: 2px;">*** Rider Delivery Slip ***</div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    doc.open();
+    doc.write(thermalHtml);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+        } catch (e) {
+            console.error(e);
+        }
+    }, 250);
+}
+
+function printThermalReceiptModal() {
+    if (currentModalOrder) {
+        printThermalReceiptDirect(currentModalOrder);
+    }
+}
 
 function openOrderDetailsModal(order) {
+    currentModalOrder = order;
     currentModalAddress = order.customer_address;
     document.getElementById('modal-order-ref').innerText = order.ref;
     document.getElementById('modal-order-status').innerText = order.status.replace(/_/g, ' ').toUpperCase();
