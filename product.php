@@ -74,6 +74,56 @@ if ($total_reviews > 0) {
     $average_rating = round($rating_sum / $total_reviews, 1);
 }
 
+// 4. Fetch linked product variant groups (Flavours & Sizes)
+$variant_products = [];
+try {
+    $stmt = $pdo->prepare("SELECT val_value FROM settings WHERE key_name = 'product_variant_groups' LIMIT 1");
+    $stmt->execute();
+    $var_setting = $stmt->fetch();
+    if ($var_setting && !empty($var_setting['val_value'])) {
+        $parsed = json_decode($var_setting['val_value'], true);
+        $groups_list = is_array($parsed) ? (isset($parsed[0]) ? $parsed : array_values($parsed)) : [];
+        $matched_group = null;
+        foreach ($groups_list as $grp) {
+            if (isset($grp['product_ids']) && is_array($grp['product_ids']) && in_array($product_id, $grp['product_ids'])) {
+                $matched_group = $grp;
+                break;
+            }
+        }
+        if ($matched_group && count($matched_group['product_ids']) > 1) {
+            $in_placeholders = implode(',', array_fill(0, count($matched_group['product_ids']), '?'));
+            $v_stmt = $pdo->prepare("SELECT * FROM products WHERE id IN ($in_placeholders) ORDER BY price ASC");
+            $v_stmt->execute($matched_group['product_ids']);
+            $variant_products = $v_stmt->fetchAll();
+        }
+    }
+} catch (Exception $e) {
+    $variant_products = [];
+}
+
+// Fallback smart matching by brand stem
+if (empty($variant_products)) {
+    try {
+        $cleaned_name = preg_replace('/\b\d+(\.\d+)?\s*(ml|ltr|litre|liter|kg|gm|g|gram|grams|pcs|pc|pack|pouch|tin|can|box|bottle|tablet|tablets|sachet|sachets)\b/i', '', $product['name']);
+        $cleaned_name = trim(preg_replace('/[\(\)\[\]\-–\/\\,\.]/', ' ', $cleaned_name));
+        $words = array_values(array_filter(explode(' ', $cleaned_name), function($w) { return strlen($w) > 2; }));
+        $brand_stem = $words[0] ?? '';
+        if (!empty($brand_stem)) {
+            $auto_stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE :brand AND category = :cat LIMIT 8");
+            $auto_stmt->execute([
+                'brand' => '%' . $brand_stem . '%',
+                'cat' => $product['category']
+            ]);
+            $auto_prods = $auto_stmt->fetchAll();
+            if (count($auto_prods) > 1) {
+                $variant_products = $auto_prods;
+            }
+        }
+    } catch (Exception $e) {
+        // Ignore fallback error
+    }
+}
+
 // Set SEO configuration tags before requiring header
 $seo_title = htmlspecialchars($product['name']) . " - Buy Online | " . STORE_NAME;
 $seo_desc = "Order " . htmlspecialchars($product['name']) . " for only " . format_price($product['price']) . " at " . STORE_NAME . ". " . substr(strip_tags($product['description']), 0, 150) . "...";
@@ -206,6 +256,47 @@ $img_src = get_product_image_url($product['image'] ?? '');
                         </div>
                     <?php endif; ?>
                 </div>
+
+                <!-- Available Flavours & Sizes Selector Chips -->
+                <?php if (count($variant_products) > 1): ?>
+                    <div class="space-y-2.5 pt-4 border-t border-slate-100 text-left">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-layer-group text-emerald-600"></i> Available Flavours & Sizes / دستیاب فلیورز اور سائز (<?php echo count($variant_products); ?>)
+                            </span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                Tap to switch
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-0.5">
+                            <?php foreach ($variant_products as $v): 
+                                $is_curr = ((int)$v['id'] === $product_id);
+                                $v_img = get_product_image_url($v['image'] ?? '');
+                            ?>
+                                <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $v['id']; ?>" 
+                                   class="group flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all text-xs <?php echo $is_curr ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs' : 'bg-white border-slate-200 hover:border-emerald-400 hover:bg-slate-50 text-slate-700'; ?>">
+                                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200/80 p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                        <img src="<?php echo $v_img; ?>" alt="<?php echo htmlspecialchars($v['name']); ?>" class="max-h-full max-w-full object-contain" onerror="this.onerror=null;this.src='<?php echo BASE_URL; ?>assets/images/placeholder.svg';">
+                                    </div>
+                                    <div class="flex flex-col text-left leading-tight">
+                                        <span class="text-[11px] font-bold truncate max-w-[130px] sm:max-w-[170px] <?php echo $is_curr ? 'text-emerald-900 font-extrabold' : 'text-slate-800'; ?>">
+                                            <?php echo htmlspecialchars($v['weight'] ?: $v['name']); ?>
+                                        </span>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            <span class="text-[10px] font-black font-mono text-emerald-600">
+                                                <?php echo format_price($v['price']); ?>
+                                            </span>
+                                            <?php if ($is_curr): ?>
+                                                <span class="text-[8px] font-extrabold text-emerald-700 bg-emerald-100 px-1 rounded uppercase">Selected</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
             </div>
         </div>
@@ -351,6 +442,84 @@ $img_src = get_product_image_url($product['image'] ?? '');
         </div>
 
     </div>
+
+    <!-- DEDICATED FLAVOURS & SIZES SHOWCASE GRID -->
+    <?php if (count($variant_products) > 1): ?>
+        <section class="mt-8 pt-8 border-t border-slate-200 text-left space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-emerald-600"></i> All Flavours & Variations of this Product
+                    </h2>
+                    <p class="text-xs text-slate-500 font-medium urdu-text mt-0.5">
+                        اس پروڈکٹ کے تمام سائز اور فلیورز — جو چاہیں براہ راست کارٹ میں ایڈ کریں:
+                    </p>
+                </div>
+                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
+                    <?php echo count($variant_products); ?> Options Available
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <?php foreach ($variant_products as $v): 
+                    $is_curr = ((int)$v['id'] === $product_id);
+                    $is_v_sold_out = ($v['stock_quantity'] <= 0);
+                    $v_img = get_product_image_url($v['image'] ?? '');
+                ?>
+                    <div class="bg-white rounded-3xl border p-4 flex flex-col justify-between transition-all relative <?php echo $is_curr ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md' : 'border-slate-200 hover:border-emerald-300 hover:shadow-md'; ?>">
+                        <?php if ($is_curr): ?>
+                            <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10">
+                                Currently Selected
+                            </span>
+                        <?php endif; ?>
+
+                        <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $v['id']; ?>" class="block space-y-3 group">
+                            <div class="w-full h-32 sm:h-36 bg-slate-50/50 rounded-2xl flex items-center justify-center p-2 border border-slate-100 group-hover:scale-102 transition-transform">
+                                <img src="<?php echo $v_img; ?>" alt="<?php echo htmlspecialchars($v['name']); ?>" class="max-h-full max-w-full object-contain drop-shadow-sm" onerror="this.onerror=null;this.src='<?php echo BASE_URL; ?>assets/images/placeholder.svg';">
+                            </div>
+                            
+                            <div class="space-y-1 text-left">
+                                <h3 class="text-xs font-extrabold text-slate-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
+                                    <?php echo htmlspecialchars($v['name']); ?>
+                                </h3>
+                                <p class="text-[10px] text-slate-500 font-semibold">
+                                    <?php echo htmlspecialchars($v['weight'] ? $v['weight'] . ' (' . $v['unit'] . ')' : $v['unit']); ?>
+                                </p>
+                            </div>
+                        </a>
+
+                        <div class="pt-3 border-t border-slate-100 mt-3 space-y-2.5">
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-sm font-mono font-black text-slate-900">
+                                    <?php echo format_price($v['price']); ?>
+                                </span>
+                                <?php if (!empty($v['old_price']) && $v['old_price'] > $v['price']): ?>
+                                    <span class="text-[10px] text-slate-400 line-through font-mono">
+                                        <?php echo format_price($v['old_price']); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ($is_v_sold_out): ?>
+                                <div class="w-full py-2 bg-slate-100 text-slate-400 font-bold text-center text-xs rounded-xl">
+                                    Sold Out
+                                </div>
+                            <?php else: ?>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="addQtyToCart(<?php echo $v['id']; ?>)" class="flex-1 py-2 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[11px] rounded-xl border border-emerald-200 transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                        <i class="fas fa-cart-plus text-[10px]"></i> Add
+                                    </button>
+                                    <a href="<?php echo BASE_URL; ?>product.php?id=<?php echo $v['id']; ?>" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all" title="View details">
+                                        <i class="fas fa-arrow-right text-[10px]"></i>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
 
 </div>
 

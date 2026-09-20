@@ -15,7 +15,9 @@ import {
   Truck, 
   Sparkles,
   AlertTriangle,
-  Star
+  Star,
+  Layers,
+  Link2
 } from 'lucide-react';
 
 interface ProductPageProps {
@@ -86,6 +88,59 @@ export default async function ProductDetails({ params }: ProductPageProps) {
     .limit(4);
 
   const relatedProducts = related || [];
+
+  // 4. Fetch linked product variant groups (Flavours & Sizes)
+  let variantProducts: any[] = [];
+  try {
+    const { data: variantSettings } = await supabase
+      .from('settings')
+      .select('val_value')
+      .eq('key_name', 'product_variant_groups')
+      .maybeSingle();
+
+    if (variantSettings?.val_value) {
+      const parsed = JSON.parse(variantSettings.val_value);
+      const groupsList: any[] = Array.isArray(parsed) ? parsed : Object.values(parsed || {});
+      const matchedGroup = groupsList.find((g: any) => Array.isArray(g.product_ids) && g.product_ids.includes(productId));
+
+      if (matchedGroup && matchedGroup.product_ids.length > 1) {
+        const { data: vProds } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', matchedGroup.product_ids)
+          .order('price', { ascending: true });
+
+        if (vProds && vProds.length > 1) {
+          variantProducts = vProds;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching variant groups:', err);
+  }
+
+  // Smart fallback matching if not manually grouped yet
+  if (variantProducts.length === 0) {
+    const cleaned = (product.name || '')
+      .replace(/\b\d+(\.\d+)?\s*(ml|ltr|litre|liter|kg|gm|g|gram|grams|pcs|pc|pack|pouch|tin|can|box|bottle|tablet|tablets|sachet|sachets)\b/gi, '')
+      .replace(/[\(\)\[\]\-–\/\\,\.]/g, ' ')
+      .trim();
+    const words = cleaned.split(/\s+/).filter((w: string) => w.length > 2);
+    const brandStem = words[0];
+
+    if (brandStem) {
+      const { data: autoMatched } = await supabase
+        .from('products')
+        .select('*')
+        .ilike('name', `%${brandStem}%`)
+        .eq('category', product.category)
+        .limit(8);
+
+      if (autoMatched && autoMatched.length > 1) {
+        variantProducts = autoMatched;
+      }
+    }
+  }
 
   const isFrozen = product.category === 'ice_cream';
   const isOutOfStock = product.stock_quantity <= 0;
@@ -232,6 +287,65 @@ export default async function ProductDetails({ params }: ProductPageProps) {
                 </div>
               </div>
 
+              {/* Available Flavours & Sizes Selector Chips */}
+              {variantProducts.length > 1 && (
+                <div className="space-y-2 pt-3 border-t border-slate-100 text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                      Available Flavours & Sizes / فلیورز اور سائز ({variantProducts.length})
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      Tap to switch
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-0.5">
+                    {variantProducts.map((v) => {
+                      const isCurrent = v.id === productId;
+                      return (
+                        <Link
+                          key={v.id}
+                          href={`/product/${v.id}`}
+                          className={`group flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl border transition-all text-xs ${
+                            isCurrent
+                              ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                              : 'bg-white border-slate-200 hover:border-emerald-400 hover:bg-slate-50 text-slate-700 shadow-2xs'
+                          }`}
+                        >
+                          <div className="relative w-8 h-8 rounded-xl bg-white border border-slate-200/80 p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            <Image
+                              src={getProductImageUrl(v.image, { width: 100, quality: 75 })}
+                              alt={v.name}
+                              width={32}
+                              height={32}
+                              className="object-contain w-full h-full"
+                            />
+                          </div>
+                          <div className="flex flex-col text-left leading-tight">
+                            <span className={`text-[11px] font-bold truncate max-w-[130px] sm:max-w-[170px] ${
+                              isCurrent ? 'text-emerald-900 font-extrabold' : 'text-slate-800'
+                            }`}>
+                              {v.weight ? `${v.weight} (${v.name.split(' ').slice(1, 3).join(' ') || v.unit})` : v.name}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] font-black font-mono text-emerald-600">
+                                Rs. {v.price}
+                              </span>
+                              {isCurrent && (
+                                <span className="text-[8px] font-extrabold text-emerald-700 bg-emerald-100 px-1 rounded uppercase">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Add to Basket Action */}
               <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-3">
                 <div className="w-full sm:flex-1">
@@ -278,6 +392,98 @@ export default async function ProductDetails({ params }: ProductPageProps) {
           </div>
 
         </div>
+
+        {/* Dedicated Flavours & Sizes Showcase Grid */}
+        {variantProducts.length > 1 && (
+          <section className="space-y-4 pt-6 border-t border-slate-200 text-left">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-emerald-600" />
+                  All Flavours & Variations of this Product
+                </h2>
+                <p className="text-xs text-slate-500 font-medium urdu-text mt-0.5">
+                  اس پروڈکٹ کے تمام سائز اور فلیورز — جو چاہیں براہ راست کارٹ میں ایڈ کریں:
+                </p>
+              </div>
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
+                {variantProducts.length} Options Available
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {variantProducts.map((v) => {
+                const isCurrent = v.id === productId;
+                const isOutOfStock = v.stock_quantity <= 0;
+                return (
+                  <div
+                    key={v.id}
+                    className={`bg-white rounded-3xl border p-4 flex flex-col justify-between transition-all relative ${
+                      isCurrent
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
+                        : 'border-slate-200 hover:border-emerald-300 hover:shadow-md'
+                    }`}
+                  >
+                    {isCurrent && (
+                      <span className="absolute top-3 left-3 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-10">
+                        Currently Selected
+                      </span>
+                    )}
+
+                    <Link href={`/product/${v.id}`} className="block space-y-3 group">
+                      <div className="relative w-full h-32 sm:h-36 bg-slate-50/50 rounded-2xl flex items-center justify-center p-2 border border-slate-100 group-hover:scale-102 transition-transform">
+                        <Image
+                          src={getProductImageUrl(v.image, { width: 300, quality: 80 })}
+                          alt={v.name}
+                          width={140}
+                          height={140}
+                          className="object-contain max-h-full max-w-full drop-shadow-sm"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1 text-left">
+                        <h3 className="text-xs font-extrabold text-slate-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
+                          {v.name}
+                        </h3>
+                        <p className="text-[10px] text-slate-500 font-semibold">
+                          {v.weight ? `${v.weight} (${v.unit})` : v.unit}
+                        </p>
+                      </div>
+                    </Link>
+
+                    <div className="pt-3 border-t border-slate-100 mt-3 space-y-2.5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-sm font-mono font-black text-slate-900">
+                          Rs. {v.price}
+                        </span>
+                        {v.old_price > v.price && (
+                          <span className="text-[10px] text-slate-400 line-through font-mono">
+                            Rs. {v.old_price}
+                          </span>
+                        )}
+                      </div>
+
+                      {isOutOfStock ? (
+                        <div className="w-full py-2 bg-slate-100 text-slate-400 font-bold text-center text-xs rounded-xl">
+                          Sold Out
+                        </div>
+                      ) : (
+                        <AddToCartButton product={{
+                          id: v.id,
+                          name: v.name,
+                          price: v.price,
+                          image: v.image,
+                          weight: v.weight,
+                          unit: v.unit
+                        }} />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (

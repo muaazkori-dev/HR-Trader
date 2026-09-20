@@ -16,8 +16,19 @@ import {
   X,
   FileCheck,
   ChevronDown,
-  BarChart4
+  BarChart4,
+  Link2,
+  Layers,
+  Check,
+  Sparkles,
+  Unlink
 } from 'lucide-react';
+
+export interface VariantGroup {
+  id: string;
+  name?: string;
+  product_ids: number[];
+}
 
 interface Product {
   id: number;
@@ -108,8 +119,161 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
       }
     };
 
+    const fetchVariantGroups = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('val_value')
+          .eq('key_name', 'product_variant_groups')
+          .maybeSingle();
+
+        if (!error && data?.val_value) {
+          const parsed = JSON.parse(data.val_value);
+          if (Array.isArray(parsed)) {
+            setVariantGroups(parsed);
+          } else if (parsed && typeof parsed === 'object') {
+            setVariantGroups(Object.values(parsed));
+          }
+        }
+      } catch (err) {
+        console.error('Error loading variant groups:', err);
+      }
+    };
+
     fetchDbCategories();
+    fetchVariantGroups();
   }, []);
+
+  // Variant Groups State
+  const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([]);
+  const [combineModalProduct, setCombineModalProduct] = useState<Product | null>(null);
+  const [selectedProductIdsToCombine, setSelectedProductIdsToCombine] = useState<number[]>([]);
+  const [searchCombineQuery, setSearchCombineQuery] = useState('');
+  const [savingGroup, setSavingGroup] = useState(false);
+
+  const extractBrandKeywords = (productName: string): string => {
+    if (!productName) return '';
+    const cleaned = productName
+      .replace(/\b\d+(\.\d+)?\s*(ml|ltr|litre|liter|kg|gm|g|gram|grams|pcs|pc|pack|pouch|tin|can|box|bottle|tablet|tablets|sachet|sachets)\b/gi, '')
+      .replace(/[\(\)\[\]\-–\/\\,\.]/g, ' ')
+      .trim();
+    const words = cleaned.split(/\s+/).filter(w => w.length > 1);
+    return words[0] || '';
+  };
+
+  const getGroupForProduct = (productId: number): VariantGroup | undefined => {
+    return variantGroups.find(g => Array.isArray(g.product_ids) && g.product_ids.includes(productId));
+  };
+
+  const getVariantCountForProduct = (productId: number): number => {
+    const group = getGroupForProduct(productId);
+    return group ? group.product_ids.length : 0;
+  };
+
+  const getSuggestedSiblings = (targetProduct: Product, currentSelectedIds: number[]): Product[] => {
+    const brand = extractBrandKeywords(targetProduct.name).toLowerCase();
+    if (!brand || brand.length < 3) return [];
+    
+    return products.filter(p => {
+      if (p.id === targetProduct.id) return false;
+      if (currentSelectedIds.includes(p.id)) return false;
+      
+      const pBrand = extractBrandKeywords(p.name).toLowerCase();
+      const matches = p.name.toLowerCase().includes(brand) || (pBrand && pBrand === brand);
+      return matches;
+    }).slice(0, 12);
+  };
+
+  const openCombineModal = (p: Product) => {
+    setCombineModalProduct(p);
+    const group = getGroupForProduct(p.id);
+    if (group) {
+      setSelectedProductIdsToCombine(group.product_ids.filter(id => id !== p.id));
+    } else {
+      setSelectedProductIdsToCombine([]);
+    }
+    setSearchCombineQuery('');
+  };
+
+  const handleToggleProductInCombine = (productId: number) => {
+    setSelectedProductIdsToCombine(prev => 
+      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
+    );
+  };
+
+  const handleRemoveProductFromCombine = (productId: number) => {
+    setSelectedProductIdsToCombine(prev => prev.filter(id => id !== productId));
+  };
+
+  const handleAddAllSuggested = (suggested: Product[]) => {
+    const idsToAdd = suggested.map(s => s.id);
+    setSelectedProductIdsToCombine(prev => Array.from(new Set([...prev, ...idsToAdd])));
+  };
+
+  const handleSaveCombineGroup = async () => {
+    if (!combineModalProduct) return;
+    setSavingGroup(true);
+
+    try {
+      const currentId = combineModalProduct.id;
+      const allSelectedIds = Array.from(new Set([currentId, ...selectedProductIdsToCombine]));
+
+      let updatedGroups = [...variantGroups];
+
+      if (allSelectedIds.length <= 1) {
+        // User unlinked all or only 1 left -> remove from groups
+        updatedGroups = updatedGroups
+          .map(g => ({
+            ...g,
+            product_ids: g.product_ids.filter(id => id !== currentId)
+          }))
+          .filter(g => g.product_ids.length > 1);
+      } else {
+        // Auto-merge: Find all existing groups that contain any of allSelectedIds
+        const intersectingGroups = updatedGroups.filter(g =>
+          g.product_ids.some(id => allSelectedIds.includes(id))
+        );
+
+        const mergedIds = Array.from(
+          new Set([
+            ...allSelectedIds,
+            ...intersectingGroups.flatMap(g => g.product_ids)
+          ])
+        );
+
+        // Remove old intersecting groups
+        updatedGroups = updatedGroups.filter(
+          g => !intersectingGroups.some(ig => ig.id === g.id)
+        );
+
+        const existingGroupId = intersectingGroups[0]?.id;
+        const newGroupId = existingGroupId || `group_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+        updatedGroups.push({
+          id: newGroupId,
+          name: combineModalProduct.name,
+          product_ids: mergedIds
+        });
+      }
+
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          key_name: 'product_variant_groups',
+          val_value: JSON.stringify(updatedGroups)
+        }, { onConflict: 'key_name' });
+
+      if (error) throw error;
+
+      setVariantGroups(updatedGroups);
+      setCombineModalProduct(null);
+    } catch (err: any) {
+      console.error('Error saving variant group:', err);
+      alert('Failed to save variants link: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setSavingGroup(false);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   
@@ -495,6 +659,7 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                 filteredProducts.map((p) => {
                   const isLow = p.stock_quantity <= 5;
                   const isSelected = selectedIds.includes(p.id);
+                  const variantCount = getVariantCountForProduct(p.id);
 
                   return (
                     <tr key={p.id} className={`hover:bg-slate-50/50 transition-colors ${isSelected ? 'bg-emerald-50/10' : ''}`}>
@@ -519,6 +684,11 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                             <span className="text-[10px] text-slate-400 block truncate max-w-[200px] mt-0.5" title={p.description}>
                               {p.description || 'No description added'}
                             </span>
+                            {variantCount > 1 && (
+                              <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                                <Layers className="w-2.5 h-2.5 text-emerald-600" /> {variantCount} Flavours / Sizes Linked
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -549,6 +719,19 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
                       </td>
                       <td className="p-4 text-center pr-6 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openCombineModal(p)}
+                            className={`p-1.5 rounded-lg border transition-all flex items-center gap-1 text-[10px] font-bold ${
+                              variantCount > 1 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 shadow-xs' 
+                                : 'bg-slate-100 text-slate-600 border-slate-250 hover:bg-slate-200 hover:text-slate-900'
+                            }`}
+                            title="Combine / Link Flavours & Sizes (فلیور اور سائز جوڑیں)"
+                          >
+                            <Link2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{variantCount > 1 ? `${variantCount}` : 'Link'}</span>
+                          </button>
                           <button
                             onClick={() => openEditModal(p)}
                             className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 border border-slate-250 rounded-lg transition-all"
@@ -808,6 +991,312 @@ export const InventoryContent: React.FC<InventoryContentProps> = ({ initialProdu
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 4. COMBINE VARIANTS / LINK FLAVOURS & SIZES MODAL */}
+      {combineModalProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            onClick={() => !savingGroup && setCombineModalProduct(null)} 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
+          />
+          
+          <div className="relative bg-white border border-slate-200 rounded-3xl w-full max-w-3xl shadow-2xl flex flex-col z-10 max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
+                  <Link2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-800 text-sm tracking-tight flex items-center gap-2">
+                    Combine Product Variants (فلیور اور سائز جوڑیں)
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Pantene, Kisan Ghee ya kisi bhi product ke tamam flavours aur sizes ko ek sath link karein.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !savingGroup && setCombineModalProduct(null)}
+                className="p-2 hover:bg-slate-200 rounded-xl transition-colors text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)] text-left">
+              
+              {/* Target Selected Product Header */}
+              <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src={getProductImageUrl(combineModalProduct.image)}
+                    alt={combineModalProduct.name}
+                    className="w-14 h-14 object-contain rounded-xl border border-emerald-200 bg-white p-1 shadow-sm flex-shrink-0"
+                  />
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mb-1">
+                      Main Selected Product
+                    </span>
+                    <h4 className="font-extrabold text-slate-900 text-sm leading-snug">
+                      {combineModalProduct.name}
+                    </h4>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 font-mono mt-1">
+                      <span>Barcode: <strong className="text-slate-700">{combineModalProduct.barcode || 'N/A'}</strong></span>
+                      <span>•</span>
+                      <span className="text-emerald-700 font-black">Rs. {combineModalProduct.price}</span>
+                      <span>•</span>
+                      <span className="text-slate-600 font-semibold">{combineModalProduct.weight ? `${combineModalProduct.weight} (${combineModalProduct.unit})` : combineModalProduct.unit}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 1: Currently Linked Variants */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-emerald-600" />
+                    <h5 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      Currently Combined Variants ({selectedProductIdsToCombine.length + 1} Total)
+                    </h5>
+                  </div>
+                  {selectedProductIdsToCombine.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProductIdsToCombine([])}
+                      className="text-[10px] font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Unlink className="w-3 h-3" /> Unlink All
+                    </button>
+                  )}
+                </div>
+
+                {selectedProductIdsToCombine.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                    Is product ke sath abhi koi doosra flavour ya size combine nahi hai. Neeche se auto-suggested ya search karke add karein.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Main product badge */}
+                    <div className="p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <img
+                          src={getProductImageUrl(combineModalProduct.image)}
+                          alt={combineModalProduct.name}
+                          className="w-9 h-9 object-contain rounded-lg border border-emerald-200 bg-white p-0.5 flex-shrink-0"
+                        />
+                        <div className="truncate">
+                          <span className="text-[11px] font-bold text-slate-800 block truncate">{combineModalProduct.name}</span>
+                          <span className="text-[10px] text-emerald-700 font-bold">Rs. {combineModalProduct.price} • (Current)</span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Active</span>
+                    </div>
+
+                    {/* Other linked products */}
+                    {selectedProductIdsToCombine.map(id => {
+                      const item = products.find(p => p.id === id);
+                      if (!item) return null;
+                      return (
+                        <div key={item.id} className="p-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex items-center justify-between shadow-xs">
+                          <div className="flex items-center gap-2.5 overflow-hidden">
+                            <img
+                              src={getProductImageUrl(item.image)}
+                              alt={item.name}
+                              className="w-9 h-9 object-contain rounded-lg border border-slate-100 bg-slate-50 p-0.5 flex-shrink-0"
+                            />
+                            <div className="truncate">
+                              <span className="text-[11px] font-bold text-slate-800 block truncate" title={item.name}>{item.name}</span>
+                              <span className="text-[10px] text-slate-500 font-mono">Rs. {item.price} • {item.weight || item.unit}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProductFromCombine(item.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer"
+                            title="Remove from group"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 2: Auto-Suggestions */}
+              {(() => {
+                const suggested = getSuggestedSiblings(combineModalProduct, selectedProductIdsToCombine);
+                if (suggested.length === 0) return null;
+
+                return (
+                  <div className="bg-amber-50/60 border border-amber-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        <div>
+                          <h5 className="text-xs font-black text-amber-900 uppercase tracking-wider">
+                            ⚡ Auto-Suggested Matching Flavours & Sizes ({suggested.length})
+                          </h5>
+                          <span className="text-[10px] text-amber-700">
+                            Matching brand keyword: <strong className="underline font-bold">{extractBrandKeywords(combineModalProduct.name)}</strong>
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddAllSuggested(suggested)}
+                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] rounded-xl shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3" /> Combine All Suggested (سب فلیورز ایک کلک میں جوڑیں)
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                      {suggested.map(item => (
+                        <div 
+                          key={item.id}
+                          className="bg-white border border-amber-200/80 rounded-xl p-2 flex items-center justify-between hover:border-amber-400 transition-all shadow-xs"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <img
+                              src={getProductImageUrl(item.image)}
+                              alt={item.name}
+                              className="w-8 h-8 object-contain rounded-lg border border-slate-100 bg-slate-50 p-0.5 flex-shrink-0"
+                            />
+                            <div className="truncate">
+                              <span className="text-[11px] font-bold text-slate-800 block truncate" title={item.name}>{item.name}</span>
+                              <span className="text-[10px] text-emerald-600 font-mono font-bold">Rs. {item.price} • {item.weight || item.unit}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProductInCombine(item.id)}
+                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-extrabold transition-all flex-shrink-0 cursor-pointer"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* SECTION 3: Search & Manual Selection */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <Search className="w-3.5 h-3.5 text-slate-400" /> Search & Add Other Products
+                  </h5>
+                  <span className="text-[10px] text-slate-400 font-medium">Tick checkboxes to link</span>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchCombineQuery}
+                    onChange={(e) => setSearchCombineQuery(e.target.value)}
+                    placeholder="Search product title or barcode to combine..."
+                    className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white font-medium"
+                  />
+                </div>
+
+                <div className="border border-slate-200 rounded-2xl overflow-hidden max-h-52 overflow-y-auto divide-y divide-slate-100 bg-white">
+                  {products
+                    .filter(p => {
+                      if (p.id === combineModalProduct.id) return false;
+                      if (!searchCombineQuery.trim()) {
+                        return p.category === combineModalProduct.category || selectedProductIdsToCombine.includes(p.id);
+                      }
+                      return p.name.toLowerCase().includes(searchCombineQuery.toLowerCase()) ||
+                             p.barcode.toLowerCase().includes(searchCombineQuery.toLowerCase());
+                    })
+                    .slice(0, 50)
+                    .map(item => {
+                      const isChecked = selectedProductIdsToCombine.includes(item.id);
+                      return (
+                        <label 
+                          key={item.id} 
+                          className={`p-2.5 flex items-center justify-between gap-3 hover:bg-slate-50 cursor-pointer transition-colors ${
+                            isChecked ? 'bg-emerald-50/40' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleToggleProductInCombine(item.id)}
+                              className="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500"
+                            />
+                            <img
+                              src={getProductImageUrl(item.image)}
+                              alt={item.name}
+                              className="w-8 h-8 object-contain rounded-lg border border-slate-100 bg-slate-50 p-0.5 flex-shrink-0"
+                            />
+                            <div className="truncate">
+                              <span className="text-[11px] font-bold text-slate-800 block truncate">{item.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">Barcode: {item.barcode} • Rs. {item.price} • {item.weight || item.unit}</span>
+                            </div>
+                          </div>
+                          {isChecked ? (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
+                              <Check className="w-3 h-3" /> Linked
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-slate-400 flex-shrink-0">
+                              {getCategoryName(item.category)}
+                            </span>
+                          )}
+                        </label>
+                      );
+                    })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-[11px] text-slate-500 font-medium text-left">
+                Auto-Merge Rule: Save karte hi ye tamam items ek hi combined group ban jayenge.
+              </span>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => !savingGroup && setCombineModalProduct(null)}
+                  disabled={savingGroup}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 bg-white border border-slate-300 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCombineGroup}
+                  disabled={savingGroup}
+                  className="px-5 py-2 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md disabled:bg-slate-300 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {savingGroup ? (
+                    <span>Saving Combined Group...</span>
+                  ) : (
+                    <>
+                      <Link2 className="w-3.5 h-3.5" />
+                      <span>Save Combined Group (محفوظ کریں)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
