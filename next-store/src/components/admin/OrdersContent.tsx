@@ -17,8 +17,24 @@ import {
   Copy,
   Check,
   Package,
-  Receipt
+  Receipt,
+  Navigation,
+  ExternalLink,
+  Compass
 } from 'lucide-react';
+
+export const extractGpsLocation = (address?: string | null, notes?: string | null): { url: string; lat: string; lng: string } | null => {
+  const combined = `${address || ''} ${notes || ''}`;
+  const match = combined.match(/https:\/\/(?:www\.)?(?:google\.com\/maps\?q=|maps\.google\.com\/\?q=)(-?\d+\.\d+),(-?\d+\.\d+)/i);
+  if (match) {
+    return {
+      url: match[0],
+      lat: match[1],
+      lng: match[2]
+    };
+  }
+  return null;
+};
 
 interface OrderItem {
   id: number;
@@ -52,6 +68,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [copiedGpsLink, setCopiedGpsLink] = useState(false);
 
   // WhatsApp Alert Template
   const [whatsappTemplate, setWhatsappTemplate] = useState('');
@@ -172,10 +189,19 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
     }
   };
 
+  const copyGpsLinkToClipboard = (url: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setCopiedGpsLink(true);
+      setTimeout(() => setCopiedGpsLink(false), 2000);
+    }
+  };
+
   const printThermalSlip = (ord: Order) => {
     const ref = `#HRT-${String(ord.id).padStart(5, '0')}`;
     const pricing = getOrderPricing(ord);
     const formattedDate = formatDateTime(ord.created_at);
+    const gps = extractGpsLocation(ord.customer_address, ord.notes);
 
     // Reuse or create hidden iframe dedicated exclusively to printing single thermal receipt
     let printFrame = document.getElementById('thermal-print-iframe') as HTMLIFrameElement | null;
@@ -306,6 +332,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
             <div style="margin-top: 3px; padding: 4px; border: 1px dashed #000; font-size: 11px; line-height: 1.35;">
               <strong>Delivery Address:</strong><br/>
               ${ord.customer_address}
+              ${gps ? `<div style="margin-top: 4px; padding-top: 3px; border-top: 1px dotted #000; font-size: 10px;"><strong>📍 GPS Live:</strong> ${gps.lat}, ${gps.lng}<br/><span style="word-break: break-all; font-size: 9px; font-family: monospace;">${gps.url}</span></div>` : ''}
             </div>
             ${ord.notes ? `<div style="margin-top: 3px; font-size: 10px; font-style: italic;">Note: ${ord.notes}</div>` : ''}
           </div>
@@ -597,11 +624,30 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                   </div>
 
                   {/* Full Complete Shipping Address */}
-                  <div className="text-xs text-left">
+                  <div className="text-xs text-left space-y-1.5">
                     <span className="text-slate-400 block uppercase font-semibold text-[10px] mb-0.5">Complete Delivery Address</span>
                     <p className="text-slate-800 font-medium whitespace-normal break-words leading-relaxed bg-amber-50/40 p-2.5 rounded-xl border border-amber-200/50 select-text">
                       📍 {ord.customer_address}
                     </p>
+                    {(() => {
+                      const gps = extractGpsLocation(ord.customer_address, ord.notes);
+                      if (!gps) return null;
+                      return (
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <a
+                            href={gps.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-2xs transition-all"
+                            title="Open exact pin in Google Maps"
+                          >
+                            <Navigation className="w-3.5 h-3.5" />
+                            <span>📍 Open Live Location in Google Maps</span>
+                            <ExternalLink className="w-3 h-3 ml-0.5" />
+                          </a>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Purchased Items List */}
@@ -811,7 +857,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                   </div>
 
                   {/* Delivery Address Box */}
-                  <div className="pt-2 border-t border-slate-200">
+                  <div className="pt-2 border-t border-slate-200 space-y-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-slate-400 uppercase font-semibold text-[10px]">Full Delivery Address</span>
                       <button
@@ -834,6 +880,66 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                     <div className="bg-amber-50/60 p-3 rounded-lg border border-amber-200/70 text-xs font-medium text-slate-900 leading-relaxed select-text">
                       📍 {ord.customer_address}
                     </div>
+
+                    {(() => {
+                      const gps = extractGpsLocation(ord.customer_address, ord.notes);
+                      if (!gps) return null;
+                      return (
+                        <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 space-y-2.5 print:border-slate-300">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <Navigation className="w-4 h-4 text-emerald-600" />
+                              <span className="text-xs font-black text-emerald-900">
+                                Customer Live GPS Location (کسٹمر کی پن لوکیشن)
+                              </span>
+                              <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
+                                {gps.lat}, {gps.lng}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 print:hidden">
+                              <button
+                                onClick={() => copyGpsLinkToClipboard(gps.url)}
+                                className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                                title="Copy Google Maps link to send to delivery rider"
+                              >
+                                {copiedGpsLink ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    <span className="text-emerald-700 font-extrabold">Link Copied!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3 text-slate-500" />
+                                    <span>Copy Link for Rider</span>
+                                  </>
+                                )}
+                              </button>
+                              <a
+                                href={gps.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black rounded-lg transition-all flex items-center gap-1 shadow-2xs"
+                              >
+                                <span>🗺 Open in Google Maps</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </div>
+
+                          {/* Embedded Interactive Map Preview */}
+                          <div className="rounded-lg overflow-hidden border border-emerald-200 shadow-2xs print:hidden">
+                            <iframe
+                              title="Order Live Location"
+                              width="100%"
+                              height="160"
+                              loading="lazy"
+                              className="w-full border-0 block"
+                              src={`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(gps.lng) - 0.005}%2C${parseFloat(gps.lat) - 0.004}%2C${parseFloat(gps.lng) + 0.005}%2C${parseFloat(gps.lat) + 0.004}&layer=mapnik&marker=${gps.lat}%2C${gps.lng}`}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Customer Notes */}

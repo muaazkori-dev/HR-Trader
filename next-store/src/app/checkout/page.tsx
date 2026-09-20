@@ -18,7 +18,11 @@ import {
   Truck,
   ArrowLeft,
   CheckCircle2,
-  X
+  X,
+  Navigation,
+  ExternalLink,
+  RefreshCw,
+  Compass
 } from 'lucide-react';
 
 export default function Checkout() {
@@ -31,6 +35,12 @@ export default function Checkout() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
+
+  // GPS Live Location State
+  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number; url: string } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [detectedAddress, setDetectedAddress] = useState('');
 
   const [minOrder, setMinOrder] = useState(0);
   const [minOrderLimitEnabled, setMinOrderLimitEnabled] = useState(true);
@@ -184,6 +194,60 @@ export default function Checkout() {
     }
   };
 
+  const handleGetLiveLocation = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setLocationError('Your browser does not support GPS location.');
+      return;
+    }
+
+    setLocating(true);
+    setLocationError('');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        setGpsLocation({ lat, lng, url: mapUrl });
+        setLocating(false);
+
+        // Attempt reverse geocoding via Nominatim
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+            headers: { 'Accept-Language': 'en' }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.display_name) {
+              setDetectedAddress(data.display_name);
+              // If user has not typed address yet, automatically set it!
+              setAddress(prev => prev.trim() ? prev : data.display_name);
+            }
+          }
+        } catch (e) {
+          // Reverse geocoding failure is non-blocking
+        }
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError('Location permission was denied. Please enable location access in your browser settings.');
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setLocationError('GPS signal is unavailable. Please check your device location settings.');
+        } else {
+          setLocationError('Failed to retrieve location. Please check your internet or type your address manually.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  };
+
+  const handleClearLocation = () => {
+    setGpsLocation(null);
+    setDetectedAddress('');
+    setLocationError('');
+  };
+
   const processCheckout = async (method: 'COD' | 'WhatsApp') => {
     if (cart.length === 0) return;
 
@@ -228,6 +292,15 @@ export default function Checkout() {
 
       // 2. Create the order header
       const orderTotal = subtotal - couponDiscount + shippingFee;
+
+      const formattedAddress = gpsLocation
+        ? `${address.trim()}\n📍 Live GPS Location: ${gpsLocation.url} (GPS: ${gpsLocation.lat.toFixed(5)}, ${gpsLocation.lng.toFixed(5)})`
+        : address.trim();
+
+      const formattedNotes = gpsLocation
+        ? (notes.trim() ? `${notes.trim()} | [GPS: ${gpsLocation.url}]` : `[GPS: ${gpsLocation.url}]`)
+        : (notes.trim() || null);
+
       const { data: order, error: orderErr } = await supabase
         .from('orders')
         .insert([
@@ -235,11 +308,11 @@ export default function Checkout() {
             customer_id: user?.id || null,
             customer_name: name.trim(),
             customer_phone: phone.trim(),
-            customer_address: address.trim(),
+            customer_address: formattedAddress,
             total_amount: orderTotal,
             payment_method: method,
             status: 'pending',
-            notes: notes.trim() || null,
+            notes: formattedNotes,
             coupon_code: appliedCoupon ? appliedCoupon.code : null,
             discount_amount: couponDiscount,
           },
@@ -307,6 +380,7 @@ export default function Checkout() {
           `*Customer Name:* ${name.trim()}\n` +
           `*Phone:* ${phone.trim()}\n` +
           `*Delivery Address:* ${address.trim()}\n` +
+          (gpsLocation ? `*📍 Live GPS Location:* ${gpsLocation.url}\n` : '') +
           `*Notes:* ${notes.trim() || 'None'}\n\n` +
           `*Order Items:*\n${cartText}\n` +
           `*Subtotal:* Rs. ${subtotal.toFixed(0)}\n` +
@@ -461,6 +535,112 @@ export default function Checkout() {
                     />
                     <MapPin className="absolute left-3.5 top-4 w-4.5 h-4.5 text-slate-400" />
                   </div>
+                </div>
+
+                {/* Live GPS Location Feature */}
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3.5 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-2xs">
+                        <Navigation className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-black text-slate-800 block">
+                          Share Live GPS Location / لائیو لوکیشن شیئر کریں
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">
+                          Rider will pinpoint your exact doorstep via Google Maps
+                        </span>
+                      </div>
+                    </div>
+
+                    {!gpsLocation ? (
+                      <button
+                        type="button"
+                        onClick={handleGetLiveLocation}
+                        disabled={locating}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] font-black rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:bg-slate-300"
+                      >
+                        {locating ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Locating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Compass className="w-3.5 h-3.5" />
+                            <span>📍 Use My Live Location</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleGetLiveLocation}
+                          disabled={locating}
+                          className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                          title="Refresh current location"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${locating ? 'animate-spin' : ''}`} />
+                          <span>Re-locate</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleClearLocation}
+                          className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-bold rounded-lg transition-all flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {locationError && (
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-[11px] text-rose-700 font-semibold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{locationError}</span>
+                    </div>
+                  )}
+
+                  {gpsLocation && (
+                    <div className="space-y-2 pt-1 border-t border-emerald-200/60">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <span>GPS Locked: {gpsLocation.lat.toFixed(5)}, {gpsLocation.lng.toFixed(5)}</span>
+                        </div>
+                        <a
+                          href={gpsLocation.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 hover:text-emerald-800 bg-emerald-100/70 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition-colors"
+                        >
+                          <span>🗺 View on Google Maps</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+
+                      {detectedAddress && (
+                        <p className="text-[10px] text-slate-500 bg-white/80 p-2 rounded-lg border border-slate-200/70">
+                          <strong>Detected Area:</strong> {detectedAddress}
+                        </p>
+                      )}
+
+                      {/* Interactive Mini-map Preview */}
+                      <div className="rounded-xl overflow-hidden border border-emerald-200 shadow-2xs">
+                        <iframe
+                          title="Live Location Map Preview"
+                          width="100%"
+                          height="140"
+                          loading="lazy"
+                          className="w-full border-0 block"
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${gpsLocation.lng - 0.005}%2C${gpsLocation.lat - 0.004}%2C${gpsLocation.lng + 0.005}%2C${gpsLocation.lat + 0.004}&layer=mapnik&marker=${gpsLocation.lat}%2C${gpsLocation.lng}`}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes */}

@@ -180,6 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart_items)) {
         $customer_name = trim($_POST['customer_name'] ?? '');
         $customer_phone = trim($_POST['customer_phone'] ?? '');
         $customer_address = trim($_POST['customer_address'] ?? '');
+        $customer_gps_url = trim($_POST['customer_gps_url'] ?? '');
+
+        if (!empty($customer_gps_url)) {
+            $customer_address .= "\n📍 Live GPS Location: " . $customer_gps_url;
+        }
 
         if (empty($customer_name) || empty($customer_phone) || empty($customer_address)) {
             $checkout_error = "All shipping fields are required to process delivery.";
@@ -438,6 +443,25 @@ require_once __DIR__ . '/includes/header.php';
                                   class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-slate-50/50 text-sm text-slate-900"><?php echo sanitize($preset_address); ?></textarea>
                     </div>
 
+                    <!-- Live GPS Location Tool -->
+                    <div class="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 space-y-2 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                                <i class="fas fa-location-crosshairs text-emerald-600"></i> Share Live GPS Location
+                            </span>
+                            <button type="button" id="btn-get-gps" onclick="fetchBrowserLocation()" 
+                                    class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer">
+                                <i class="fas fa-location-arrow text-[10px]"></i> <span>Get My Location</span>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-tight">Rider can open your exact location pin in Google Maps to deliver straight to your door.</p>
+                        
+                        <div id="gps-status-box" class="hidden text-[11px] p-2 rounded-lg border bg-white">
+                            <span id="gps-status-text" class="text-slate-700"></span>
+                        </div>
+                        <input type="hidden" id="customer_gps_url" name="customer_gps_url" value="">
+                    </div>
+
                     <div class="bg-slate-100 p-4 border border-slate-200 rounded-xl space-y-2">
                         <span class="text-xs font-semibold text-slate-500 block uppercase tracking-wider">Payment Method</span>
                         <div class="flex items-center gap-2 text-emerald-600 font-bold text-sm">
@@ -628,5 +652,56 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php endif; ?>
+
+<script>
+function fetchBrowserLocation() {
+    const btn = document.getElementById('btn-get-gps');
+    const statusBox = document.getElementById('gps-status-box');
+    const statusText = document.getElementById('gps-status-text');
+    const hiddenUrl = document.getElementById('customer_gps_url');
+    const addrInput = document.getElementById('customer_address');
+
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i> Locating...';
+    statusBox.classList.remove('hidden');
+    statusBox.className = 'text-[11px] p-2 rounded-lg border bg-amber-50 border-amber-200 text-amber-800';
+    statusText.innerText = 'Detecting current GPS location...';
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-arrows-rotate text-[10px]"></i> Re-locate';
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const mapUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+            hiddenUrl.value = mapUrl;
+
+            statusBox.className = 'text-[11px] p-2.5 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-800 space-y-1';
+            statusText.innerHTML = '<div class="flex items-center justify-between font-bold"><span><i class="fas fa-check-circle text-emerald-600"></i> Location Locked (' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ')</span> <a href="' + mapUrl + '" target="_blank" class="underline text-emerald-700 font-black">Open Map</a></div>';
+
+            // Reverse geocode via Nominatim
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && data.display_name && (!addrInput.value || addrInput.value.trim() === '')) {
+                        addrInput.value = data.display_name;
+                    }
+                }).catch(function() {});
+        },
+        function(error) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-location-arrow text-[10px]"></i> Try Again';
+            statusBox.className = 'text-[11px] p-2 rounded-lg border bg-rose-50 border-rose-200 text-rose-700 font-semibold';
+            statusText.innerText = 'Location access denied or unavailable. Please type your address manually.';
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
