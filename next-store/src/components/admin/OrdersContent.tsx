@@ -290,10 +290,10 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-600 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600 pt-1">
                     <div>
                       <span className="text-slate-400 block uppercase font-semibold text-[10px]">Recipient</span>
-                      <strong className="text-slate-805 text-[13px]">{ord.customer_name}</strong>
+                      <strong className="text-slate-800 text-[13px]">{ord.customer_name}</strong>
                     </div>
                     <div>
                       <span className="text-slate-400 block uppercase font-semibold text-[10px]">Contact</span>
@@ -308,18 +308,20 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                         </button>
                       </div>
                     </div>
-                    <div className="col-span-1 sm:col-span-2 md:col-span-1">
-                      <span className="text-slate-400 block uppercase font-semibold text-[10px]">Address</span>
-                      <span className="truncate block max-w-xs text-slate-700" title={ord.customer_address}>
-                        {ord.customer_address}
-                      </span>
-                    </div>
                   </div>
 
-                  {/* Purchased Grid Preview */}
+                  {/* Full Complete Shipping Address */}
+                  <div className="text-xs text-left">
+                    <span className="text-slate-400 block uppercase font-semibold text-[10px] mb-0.5">Complete Delivery Address</span>
+                    <p className="text-slate-800 font-medium whitespace-normal break-words leading-relaxed bg-amber-50/40 p-2.5 rounded-xl border border-amber-200/50 select-text">
+                      📍 {ord.customer_address}
+                    </p>
+                  </div>
+
+                  {/* Purchased Items List */}
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2 text-xs text-slate-700 text-left">
-                    <span className="font-bold text-slate-500 block mb-1">Purchased Gird:</span>
-                    <span>{itemsString}</span>
+                    <span className="font-bold text-slate-500 block mb-1">Purchased Items:</span>
+                    <span className="font-medium text-slate-800 leading-relaxed">{itemsString}</span>
                   </div>
                 </div>
 

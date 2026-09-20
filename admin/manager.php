@@ -159,10 +159,10 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                             <span class="text-xs text-slate-400 font-medium"><?php echo date('d-M-Y h:i A', strtotime($ord['created_at'])); ?></span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-600 pt-1">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600 pt-1">
                             <div>
                                 <span class="text-slate-400 block uppercase font-semibold">Recipient</span>
-                                <strong class="text-slate-800"><?php echo sanitize($ord['customer_name']); ?></strong>
+                                <strong class="text-slate-800 text-[13px]"><?php echo sanitize($ord['customer_name']); ?></strong>
                             </div>
                              <div>
                                 <span class="text-slate-400 block uppercase font-semibold">Contact</span>
@@ -175,17 +175,19 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
                                     </button>
                                 </div>
                             </div>
-                            <div class="col-span-1 sm:col-span-2 md:col-span-1">
-                                <span class="text-slate-400 block uppercase font-semibold">Address</span>
-                                <span class="truncate block max-w-xs text-slate-700" title="<?php echo sanitize($ord['customer_address']); ?>">
-                                    <?php echo sanitize($ord['customer_address']); ?>
-                                </span>
-                            </div>
+                        </div>
+
+                        <!-- Full Complete Delivery Address -->
+                        <div class="text-xs text-left mt-2">
+                            <span class="text-slate-400 block uppercase font-semibold text-[10px] mb-0.5">Complete Delivery Address</span>
+                            <p class="text-slate-800 font-medium whitespace-normal break-words leading-relaxed bg-amber-50/40 p-2.5 rounded-xl border border-amber-200/50 select-text">
+                                📍 <?php echo sanitize($ord['customer_address']); ?>
+                            </p>
                         </div>
 
                         <!-- Mini Items listing preview -->
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2 text-xs text-slate-700">
-                            <span class="font-bold text-slate-500 block mb-1">Purchased Gird:</span>
+                            <span class="font-bold text-slate-500 block mb-1">Purchased Items:</span>
                             <?php
                             $stmt_items = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = :id");
                             $stmt_items->execute(['id' => $ord['id']]);
