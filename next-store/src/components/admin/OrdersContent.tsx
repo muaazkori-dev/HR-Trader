@@ -43,8 +43,8 @@ export const cleanAddressForPrint = (addr?: string | null): string => {
     .replace(/📍\s*Live\s*(?:GPS\s*)?Location:?\s*https?:\/\/\S+/gi, '')
     // Remove any standalone Google Maps or other URLs
     .replace(/https?:\/\/(?:www\.)?(?:google\.com\/maps[^\s,)]*|maps\.google\.com[^\s,)]*|\S+)/gi, '')
-    // Remove coordinates block like (GPS: 33.69380, 73.01340) or (GPS: ...)
-    .replace(/\(GPS:\s*[^)]+\)/gi, '')
+    // Remove coordinates block like (GPS: ...) or [GPS: ...]
+    .replace(/[\(\[]\s*GPS:\s*[^)\]]+[\)\]]/gi, '')
     // Remove any leftover "📍 Live GPS Location:" prefix without link
     .replace(/📍\s*Live\s*(?:GPS\s*)?Location:?/gi, '')
     // Split lines, strip commas/dots and empty lines
@@ -52,6 +52,18 @@ export const cleanAddressForPrint = (addr?: string | null): string => {
     .map(line => line.replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim())
     .filter(line => line.length > 0)
     .join('\n')
+    .trim();
+};
+
+export const cleanNotesForPrint = (notes?: string | null): string => {
+  if (!notes) return '';
+  return notes
+    .replace(/\[\s*GPS:\s*https?:\/\/[^\]]+\]/gi, '')
+    .replace(/\[\s*GPS:[^\]]+\]/gi, '')
+    .replace(/\(\s*GPS:\s*[^)]+\)/gi, '')
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/\|\s*$/g, '')
+    .replace(/^\s*\|/g, '')
     .trim();
 };
 
@@ -221,7 +233,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
     const pricing = getOrderPricing(ord);
     const formattedDate = formatDateTime(ord.created_at);
     const cleanAddress = cleanAddressForPrint(ord.customer_address) || ord.customer_address || 'Address not provided';
-    const cleanNotes = ord.notes ? cleanAddressForPrint(ord.notes) : '';
+    const cleanNotes = ord.notes ? cleanNotesForPrint(ord.notes) : '';
 
     // Reuse or create hidden iframe dedicated exclusively to printing single thermal receipt
     let printFrame = document.getElementById('thermal-print-iframe') as HTMLIFrameElement | null;

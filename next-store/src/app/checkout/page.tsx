@@ -297,9 +297,7 @@ export default function Checkout() {
         ? `${address.trim()}\n📍 Live GPS Location: ${gpsLocation.url} (GPS: ${gpsLocation.lat.toFixed(5)}, ${gpsLocation.lng.toFixed(5)})`
         : address.trim();
 
-      const formattedNotes = gpsLocation
-        ? (notes.trim() ? `${notes.trim()} | [GPS: ${gpsLocation.url}]` : `[GPS: ${gpsLocation.url}]`)
-        : (notes.trim() || null);
+      const formattedNotes = notes.trim() || null;
 
       const { data: order, error: orderErr } = await supabase
         .from('orders')

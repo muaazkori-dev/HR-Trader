@@ -461,6 +461,32 @@ $html_class = in_array($current_theme, $dark_themes) ? 'dark' : 'light';
 let currentModalAddress = "";
 let currentModalOrder = null;
 
+function cleanAddressForThermal(addr) {
+    if (!addr) return '';
+    return addr
+      .replace(/📍\s*Live\s*(?:GPS\s*)?Location:?\s*https?:\/\/\S+/gi, '')
+      .replace(/https?:\/\/(?:www\.)?(?:google\.com\/maps[^\s,)]*|maps\.google\.com[^\s,)]*|\S+)/gi, '')
+      .replace(/[\(\[]\s*GPS:\s*[^)\]]+[\)\]]/gi, '')
+      .replace(/📍\s*Live\s*(?:GPS\s*)?Location:?/gi, '')
+      .split('\n')
+      .map(line => line.replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim())
+      .filter(line => line.length > 0)
+      .join('\n')
+      .trim();
+}
+
+function cleanNotesForThermal(notes) {
+    if (!notes) return '';
+    return notes
+      .replace(/\[\s*GPS:\s*https?:\/\/[^\]]+\]/gi, '')
+      .replace(/\[\s*GPS:[^\]]+\]/gi, '')
+      .replace(/\(\s*GPS:\s*[^)]+\)/gi, '')
+      .replace(/https?:\/\/\S+/gi, '')
+      .replace(/\|\s*$/g, '')
+      .replace(/^\s*\|/g, '')
+      .trim();
+}
+
 function printThermalReceiptDirect(order) {
     let printFrame = document.getElementById('thermal-print-iframe-php');
     if (!printFrame) {
@@ -479,23 +505,26 @@ function printThermalReceiptDirect(order) {
     const doc = printFrame.contentWindow?.document || printFrame.contentDocument;
     if (!doc) return;
 
+    const cleanAddress = cleanAddressForThermal(order.customer_address) || order.customer_address || 'Address not provided';
+    const cleanNotes = cleanNotesForThermal(order.notes);
+
     let itemsHtml = '';
     if (order.items && order.items.length > 0) {
         order.items.forEach((it, idx) => {
             itemsHtml += `
                 <tr>
                     <td style="padding: 3px 0; vertical-align: top; word-break: break-word;">
-                        <div style="font-weight: bold; font-size: 11px;">${idx + 1}. ${it.name}</div>
-                        <div style="font-size: 10px; color: #333;">Rs. ${parseFloat(it.price).toFixed(0)} × ${it.quantity}</div>
+                        <div style="font-weight: bold; font-size: 11.5px; color: #000;">${idx + 1}. ${it.name}</div>
+                        <div style="font-size: 10.5px; color: #000;">Rs. ${parseFloat(it.price).toFixed(0)} × ${it.quantity}</div>
                     </td>
-                    <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; font-size: 11px; white-space: nowrap;">
+                    <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; font-size: 11.5px; white-space: nowrap; color: #000;">
                         Rs. ${parseFloat(it.total).toFixed(0)}
                     </td>
                 </tr>
             `;
         });
     } else {
-        itemsHtml = '<tr><td colspan="2" style="text-align: center; padding: 6px 0;">No items recorded</td></tr>';
+        itemsHtml = '<tr><td colspan="2" style="text-align: center; padding: 6px 0; color: #000;">No items recorded</td></tr>';
     }
 
     const delFeeText = order.delivery_charges > 0 ? `+ Rs. ${parseFloat(order.delivery_charges).toFixed(0)}` : 'FREE';
@@ -505,27 +534,30 @@ function printThermalReceiptDirect(order) {
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Slip ${order.ref}</title>
+          <title>Receipt ${order.ref}</title>
           <style>
-            @page { size: auto; margin: 0mm; }
+            @page { size: 80mm auto; margin: 0; }
             @media print {
               html, body {
-                width: 76mm !important;
-                max-width: 78mm !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 margin: 0 !important;
-                padding: 3mm 2mm !important;
+                padding: 1mm 2.5mm !important;
               }
             }
             * { box-sizing: border-box; margin: 0; padding: 0; }
             body {
-              width: 76mm;
-              max-width: 78mm;
+              width: 100%;
+              max-width: 80mm;
+              margin: 0 auto;
               background: #fff;
               color: #000;
-              font-family: 'Courier New', Courier, monospace;
-              font-size: 11px;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              font-size: 12px;
               line-height: 1.35;
-              padding: 4mm 3mm;
+              padding: 2mm 3mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .text-center { text-align: center; }
             .text-right { text-align: right; }
@@ -533,19 +565,19 @@ function printThermalReceiptDirect(order) {
             .bold { font-weight: bold; }
             .divider { border-top: 1px dashed #000; margin: 5px 0; }
             .double-divider { border-top: 2px solid #000; margin: 5px 0; }
-            table { width: 100%; border-collapse: collapse; font-size: 11px; }
-            .meta-table td { padding: 1.5px 0; }
+            table { width: 100%; border-collapse: collapse; font-size: 11.5px; color: #000; }
+            .meta-table td { padding: 1.5px 0; color: #000; }
           </style>
         </head>
         <body>
           <div class="text-center" style="margin-bottom: 4px;">
-            <h2 style="font-size: 16px; font-weight: 900;">HR TRADERS</h2>
-            <p style="font-size: 10px; margin-top: 1px;">ONLINE DELIVERY ORDER SLIP</p>
-            <p style="font-size: 10px;">Ph: +92 333 7155323</p>
+            <h2 style="font-size: 17px; font-weight: 900; letter-spacing: 0.5px;">HR TRADERS</h2>
+            <p style="font-size: 10.5px; font-weight: 600; margin-top: 1px;">ONLINE DELIVERY ORDER SLIP</p>
+            <p style="font-size: 10.5px;">Ph: +92 333 7155323</p>
           </div>
           <div class="double-divider"></div>
           <table class="meta-table">
-            <tr><td><strong>Order No:</strong></td><td class="text-right bold" style="font-size: 13px;">${order.ref}</td></tr>
+            <tr><td><strong>Order No:</strong></td><td class="text-right bold" style="font-size: 14px;">${order.ref}</td></tr>
             <tr><td><strong>Date:</strong></td><td class="text-right">${order.created_at}</td></tr>
             <tr><td><strong>Payment:</strong></td><td class="text-right bold">${order.payment_method || 'Cash on Delivery (COD)'}</td></tr>
             <tr><td><strong>Status:</strong></td><td class="text-right bold" style="text-transform: uppercase;">${order.status.replace(/_/g, ' ')}</td></tr>
@@ -553,13 +585,13 @@ function printThermalReceiptDirect(order) {
           <div class="divider"></div>
           <div style="margin: 4px 0;">
             <div style="font-size: 10px; font-weight: bold; text-transform: uppercase;">RIDER / DELIVERY DISPATCH:</div>
-            <div style="font-size: 12px; font-weight: bold; margin-top: 1px;">Customer: ${order.customer_name}</div>
-            <div style="font-size: 12px; font-weight: bold; font-family: monospace;">Phone: ${order.customer_phone}</div>
-            <div style="margin-top: 3px; padding: 4px; border: 1px dashed #000; font-size: 11px; line-height: 1.35;">
+            <div style="font-size: 12.5px; font-weight: bold; margin-top: 1px;">Customer: ${order.customer_name}</div>
+            <div style="font-size: 12.5px; font-weight: bold; font-family: monospace;">Phone: ${order.customer_phone}</div>
+            <div style="margin-top: 4px; padding: 4px; border: 1px dashed #000; font-size: 11.5px; line-height: 1.4;">
               <strong>Delivery Address:</strong><br/>
-              ${order.customer_address}
+              ${cleanAddress.replace(/\n/g, '<br/>')}
             </div>
-            ${order.notes ? `<div style="margin-top: 3px; font-size: 10px; font-style: italic;">Note: ${order.notes}</div>` : ''}
+            ${cleanNotes ? `<div style="margin-top: 3px; font-size: 10.5px; font-style: italic;">Note: ${cleanNotes.replace(/\n/g, '<br/>')}</div>` : ''}
           </div>
           <div class="divider"></div>
           <table style="margin: 4px 0;">
