@@ -36,6 +36,25 @@ export const extractGpsLocation = (address?: string | null, notes?: string | nul
   return null;
 };
 
+export const cleanAddressForPrint = (addr?: string | null): string => {
+  if (!addr) return '';
+  return addr
+    // Remove GPS label with URL and optional coordinates
+    .replace(/📍\s*Live\s*(?:GPS\s*)?Location:?\s*https?:\/\/\S+/gi, '')
+    // Remove any standalone Google Maps or other URLs
+    .replace(/https?:\/\/(?:www\.)?(?:google\.com\/maps[^\s,)]*|maps\.google\.com[^\s,)]*|\S+)/gi, '')
+    // Remove coordinates block like (GPS: 33.69380, 73.01340) or (GPS: ...)
+    .replace(/\(GPS:\s*[^)]+\)/gi, '')
+    // Remove any leftover "📍 Live GPS Location:" prefix without link
+    .replace(/📍\s*Live\s*(?:GPS\s*)?Location:?/gi, '')
+    // Split lines, strip commas/dots and empty lines
+    .split('\n')
+    .map(line => line.replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim())
+    .filter(line => line.length > 0)
+    .join('\n')
+    .trim();
+};
+
 interface OrderItem {
   id: number;
   product_name: string;
@@ -135,7 +154,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
       .replace(/{name}/g, ord.customer_name)
       .replace(/{ref}/g, formattedRef)
       .replace(/{total}/g, ord.total_amount.toFixed(0))
-      .replace(/{address}/g, ord.customer_address);
+      .replace(/{address}/g, cleanAddressForPrint(ord.customer_address) || ord.customer_address);
       
     let cleanPhone = ord.customer_phone.replace(/[^0-9]/g, '');
     if (cleanPhone.startsWith('0')) {
@@ -201,7 +220,8 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
     const ref = `#HRT-${String(ord.id).padStart(5, '0')}`;
     const pricing = getOrderPricing(ord);
     const formattedDate = formatDateTime(ord.created_at);
-    const gps = extractGpsLocation(ord.customer_address, ord.notes);
+    const cleanAddress = cleanAddressForPrint(ord.customer_address) || ord.customer_address || 'Address not provided';
+    const cleanNotes = ord.notes ? cleanAddressForPrint(ord.notes) : '';
 
     // Reuse or create hidden iframe dedicated exclusively to printing single thermal receipt
     let printFrame = document.getElementById('thermal-print-iframe') as HTMLIFrameElement | null;
@@ -228,34 +248,34 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
           return `
             <tr>
               <td style="padding: 3px 0; vertical-align: top; word-break: break-word;">
-                <div style="font-weight: bold; font-size: 11px;">${idx + 1}. ${it.product_name}</div>
-                <div style="font-size: 10px; color: #333;">Rs. ${Number(it.price || 0).toFixed(0)} × ${it.quantity}</div>
+                <div style="font-weight: bold; font-size: 11.5px; color: #000;">${idx + 1}. ${it.product_name}</div>
+                <div style="font-size: 10.5px; color: #000;">Rs. ${Number(it.price || 0).toFixed(0)} × ${it.quantity}</div>
               </td>
-              <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; font-size: 11px; white-space: nowrap;">
+              <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; font-size: 11.5px; white-space: nowrap; color: #000;">
                 Rs. ${lineTotal.toFixed(0)}
               </td>
             </tr>
           `;
         }).join('')
-      : '<tr><td colspan="2" style="text-align: center; padding: 6px 0;">No items recorded</td></tr>';
+      : '<tr><td colspan="2" style="text-align: center; padding: 6px 0; color: #000;">No items recorded</td></tr>';
 
     const thermalHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Slip ${ref}</title>
+          <title>Receipt ${ref}</title>
           <style>
             @page {
-              size: auto;
-              margin: 0mm;
+              size: 80mm auto;
+              margin: 0;
             }
             @media print {
               html, body {
-                width: 76mm !important;
-                max-width: 78mm !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 margin: 0 !important;
-                padding: 3mm 2mm !important;
+                padding: 1mm 2.5mm !important;
               }
             }
             * {
@@ -264,14 +284,17 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
               padding: 0;
             }
             body {
-              width: 76mm;
-              max-width: 78mm;
+              width: 100%;
+              max-width: 80mm;
+              margin: 0 auto;
               background: #fff;
               color: #000;
-              font-family: 'Courier New', Courier, monospace;
-              font-size: 11px;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              font-size: 12px;
               line-height: 1.35;
-              padding: 4mm 3mm;
+              padding: 2mm 3mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .text-center { text-align: center; }
             .text-right { text-align: right; }
@@ -288,18 +311,20 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
             table {
               width: 100%;
               border-collapse: collapse;
-              font-size: 11px;
+              font-size: 11.5px;
+              color: #000;
             }
             .meta-table td {
               padding: 1.5px 0;
+              color: #000;
             }
           </style>
         </head>
         <body>
           <div class="text-center" style="margin-bottom: 4px;">
-            <h2 style="font-size: 16px; font-weight: 900; letter-spacing: 0.5px;">HR TRADERS</h2>
-            <p style="font-size: 10px; margin-top: 1px;">ONLINE DELIVERY ORDER SLIP</p>
-            <p style="font-size: 10px;">Ph: +92 333 7155323</p>
+            <h2 style="font-size: 17px; font-weight: 900; letter-spacing: 0.5px;">HR TRADERS</h2>
+            <p style="font-size: 10.5px; font-weight: 600; margin-top: 1px;">ONLINE DELIVERY ORDER SLIP</p>
+            <p style="font-size: 10.5px;">Ph: +92 333 7155323</p>
           </div>
 
           <div class="double-divider"></div>
@@ -307,7 +332,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
           <table class="meta-table">
             <tr>
               <td><strong>Order No:</strong></td>
-              <td class="text-right bold" style="font-size: 13px;">${ref}</td>
+              <td class="text-right bold" style="font-size: 14px;">${ref}</td>
             </tr>
             <tr>
               <td><strong>Date:</strong></td>
@@ -327,14 +352,13 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
 
           <div style="margin: 4px 0;">
             <div style="font-size: 10px; font-weight: bold; text-transform: uppercase;">RIDER / DELIVERY DISPATCH:</div>
-            <div style="font-size: 12px; font-weight: bold; margin-top: 1px;">Customer: ${ord.customer_name}</div>
-            <div style="font-size: 12px; font-weight: bold; font-family: monospace;">Phone: ${ord.customer_phone}</div>
-            <div style="margin-top: 3px; padding: 4px; border: 1px dashed #000; font-size: 11px; line-height: 1.35;">
+            <div style="font-size: 12.5px; font-weight: bold; margin-top: 1px;">Customer: ${ord.customer_name}</div>
+            <div style="font-size: 12.5px; font-weight: bold; font-family: monospace;">Phone: ${ord.customer_phone}</div>
+            <div style="margin-top: 4px; padding: 4px; border: 1px dashed #000; font-size: 11.5px; line-height: 1.4;">
               <strong>Delivery Address:</strong><br/>
-              ${ord.customer_address}
-              ${gps ? `<div style="margin-top: 4px; padding-top: 3px; border-top: 1px dotted #000; font-size: 10px;"><strong>📍 GPS Live:</strong> ${gps.lat}, ${gps.lng}<br/><span style="word-break: break-all; font-size: 9px; font-family: monospace;">${gps.url}</span></div>` : ''}
+              ${cleanAddress.replace(/\n/g, '<br/>')}
             </div>
-            ${ord.notes ? `<div style="margin-top: 3px; font-size: 10px; font-style: italic;">Note: ${ord.notes}</div>` : ''}
+            ${cleanNotes ? `<div style="margin-top: 3px; font-size: 10.5px; font-style: italic;">Note: ${cleanNotes.replace(/\n/g, '<br/>')}</div>` : ''}
           </div>
 
           <div class="divider"></div>
@@ -342,8 +366,8 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
           <table style="margin: 4px 0;">
             <thead>
               <tr style="border-bottom: 1px solid #000;">
-                <th class="text-left" style="padding-bottom: 3px;">ITEM</th>
-                <th class="text-right" style="padding-bottom: 3px;">TOTAL</th>
+                <th class="text-left" style="padding-bottom: 3px; font-size: 11px;">ITEM</th>
+                <th class="text-right" style="padding-bottom: 3px; font-size: 11px;">TOTAL</th>
               </tr>
             </thead>
             <tbody>
@@ -373,13 +397,13 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
           <div class="double-divider"></div>
 
           <div style="margin: 4px 0;">
-            <table style="font-size: 14px;">
+            <table style="font-size: 14.5px;">
               <tr>
                 <td style="font-weight: 900;">TOTAL PAYABLE:</td>
-                <td class="text-right" style="font-weight: 900; font-size: 15px;">Rs. ${pricing.totalAmount.toFixed(0)}</td>
+                <td class="text-right" style="font-weight: 900; font-size: 15.5px;">Rs. ${pricing.totalAmount.toFixed(0)}</td>
               </tr>
             </table>
-            <div class="text-right" style="font-size: 9px; font-weight: bold; margin-top: 1px;">
+            <div class="text-right" style="font-size: 9.5px; font-weight: bold; margin-top: 1px;">
               (COLLECT CASH ON DELIVERY)
             </div>
           </div>
@@ -627,7 +651,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                   <div className="text-xs text-left space-y-1.5">
                     <span className="text-slate-400 block uppercase font-semibold text-[10px] mb-0.5">Complete Delivery Address</span>
                     <p className="text-slate-800 font-medium whitespace-normal break-words leading-relaxed bg-amber-50/40 p-2.5 rounded-xl border border-amber-200/50 select-text">
-                      📍 {ord.customer_address}
+                      📍 {cleanAddressForPrint(ord.customer_address) || ord.customer_address}
                     </p>
                     {(() => {
                       const gps = extractGpsLocation(ord.customer_address, ord.notes);
@@ -861,7 +885,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-slate-400 uppercase font-semibold text-[10px]">Full Delivery Address</span>
                       <button
-                        onClick={() => copyAddressToClipboard(ord.customer_address)}
+                        onClick={() => copyAddressToClipboard(cleanAddressForPrint(ord.customer_address) || ord.customer_address)}
                         className="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer transition-colors print:hidden"
                       >
                         {copiedAddress ? (
@@ -878,7 +902,7 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                       </button>
                     </div>
                     <div className="bg-amber-50/60 p-3 rounded-lg border border-amber-200/70 text-xs font-medium text-slate-900 leading-relaxed select-text">
-                      📍 {ord.customer_address}
+                      📍 {cleanAddressForPrint(ord.customer_address) || ord.customer_address}
                     </div>
 
                     {(() => {
