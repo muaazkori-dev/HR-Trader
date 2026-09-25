@@ -164,8 +164,7 @@ function ReceiptContent() {
       {/* Header Info */}
       <div style={{ textAlign: 'center', marginBottom: '10px', lineHeight: '1.4' }}>
         <h3 style={{ margin: '0', fontSize: '15px', fontWeight: 'bold', textTransform: 'uppercase' }}>HR TRADERS</h3>
-        <p style={{ margin: '2px 0', fontSize: '10px' }}>Main Bazaar, Lahore, Pakistan</p>
-        <p style={{ margin: '2px 0', fontSize: '10px' }}>Ph: +92 333 7155323 | WhatsApp: 03337155323</p>
+        <p style={{ margin: '2px 0', fontSize: '10px', fontWeight: '600' }}>www.thehrtraders.com</p>
       </div>
 
       <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }}></div>

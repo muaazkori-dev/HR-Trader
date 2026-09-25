@@ -573,7 +573,7 @@ function printThermalReceiptDirect(order) {
           <div class="text-center" style="margin-bottom: 4px;">
             <h2 style="font-size: 17px; font-weight: 900; letter-spacing: 0.5px;">HR TRADERS</h2>
             <p style="font-size: 10.5px; font-weight: 600; margin-top: 1px;">ONLINE DELIVERY ORDER SLIP</p>
-            <p style="font-size: 10.5px;">Ph: +92 333 7155323</p>
+            <p style="font-size: 10.5px; font-weight: 600;">www.thehrtraders.com</p>
           </div>
           <div class="double-divider"></div>
           <table class="meta-table">
