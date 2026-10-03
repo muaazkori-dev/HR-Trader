@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../models/category_model.dart';
 import '../models/product.dart';
 import '../models/order_model.dart';
+import '../models/banner_model.dart';
 
 class ApiService {
   static const String _base = AppConstants.baseUrl;
@@ -41,8 +42,42 @@ class ApiService {
     CategoryModel(slug: 'confectionary', name: 'SNACKS AND CHIPS', productCount: 0, imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/categories/confectionary_12b3v9m963fd.jpg'),
     CategoryModel(slug: 'bakery', name: 'DAIRY AND BREAK FAST', productCount: 0, imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/categories/bakery_g3ym51j0pww.jpg'),
     CategoryModel(slug: 'sauce', name: 'PASTA AND SAUCES', productCount: 0, imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/categories/sauce_tao2aop6wg.jpg'),
+    CategoryModel(slug: 'stationary', name: 'STATIONARY', productCount: 0, imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/categories/stationary_iueu7pwyvy.jpg'),
     CategoryModel(slug: 'household_and_laundry', name: 'HOUSEHOLD AND LAUNDRY', productCount: 0, imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/categories/household_and_laundry_acr91jde2fn.png'),
   ];
+
+  // Built-in fallback promotional banners
+  static final List<BannerModel> _defaultBanners = [
+    BannerModel(
+      id: '1',
+      tag: 'PREMIUM CHOICE',
+      title: 'Your Premium Grocery Partner',
+      desc: 'Fresh organic crops, groceries, and premium household brands delivered straight to your home.',
+      imageUrl: 'https://thehrtraders.com/assets/images/hero_grocery_banner.png',
+      link: '/shop',
+      theme: 'emerald',
+    ),
+    BannerModel(
+      id: '2',
+      tag: 'ICE CREAM SPECIAL',
+      title: '35% Discount Mega Sale',
+      desc: 'Beat the heat with premium ice creams and family packs delivered ice-cold.',
+      imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/banners/banner_1783965435397_5rkydmny4ze.jpg',
+      link: '/shop?category=ice_cream',
+      theme: 'cyan',
+    ),
+    BannerModel(
+      id: '3',
+      tag: 'BULDAK MEGA OFFER',
+      title: 'Korea Spicy Samyang Deal',
+      desc: 'Buy Buldak combo pack and get a chilled drink free!',
+      imageUrl: 'https://xarwwlbbaevclyljkvzt.supabase.co/storage/v1/object/public/product-images/banners/banner_1789278283433_ruegkout56.png',
+      link: '/shop?category=confectionary',
+      theme: 'amber',
+    ),
+  ];
+
+  static List<BannerModel> getBannersSync() => _defaultBanners;
 
   // 1. AUTH: Login
   static Future<Map<String, dynamic>> login(String identifier, String password, [String? fcmToken]) async {
@@ -154,13 +189,51 @@ class ApiService {
     return _defaultCategories;
   }
 
-  // 4. PRODUCTS: List with filters & pagination
+  // 4. BANNERS: Fetch promotional hero banners
+  static Future<List<BannerModel>> getBanners() async {
+    // Attempt 1: Next.js API route
+    try {
+      final res = await http.get(
+        Uri.parse('$_base/products?action=banners'),
+        headers: _headers(),
+      ).timeout(const Duration(seconds: 6));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['success'] == true && data['data'] is List && (data['data'] as List).isNotEmpty) {
+          return (data['data'] as List).map((b) => BannerModel.fromJson(b)).toList();
+        }
+      }
+    } catch (_) {}
+
+    // Attempt 2: Direct Supabase Settings
+    try {
+      final res = await http.get(
+        Uri.parse('$_supabaseUrl/settings?key_name=eq.store_hero_banners'),
+        headers: _supabaseHeaders(),
+      ).timeout(const Duration(seconds: 6));
+
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        if (list.isNotEmpty && list[0]['val_value'] != null) {
+          final parsed = jsonDecode(list[0]['val_value']) as List;
+          if (parsed.isNotEmpty) {
+            return parsed.map((b) => BannerModel.fromJson(b)).toList();
+          }
+        }
+      }
+    } catch (_) {}
+
+    return _defaultBanners;
+  }
+
+  // 5. PRODUCTS: List with filters & pagination
   static Future<Map<String, dynamic>> getProducts({
     String? category,
     String? search,
     String? sort,
     int page = 1,
-    int limit = 20,
+    int limit = 30,
   }) async {
     // Attempt 1: Next.js API route
     try {
@@ -221,7 +294,7 @@ class ApiService {
     return {'success': false, 'products': <Product>[]};
   }
 
-  // 5. PRODUCTS: Detail
+  // 6. PRODUCTS: Detail
   static Future<Product?> getProductDetail(int productId) async {
     // Attempt 1: Next.js API route
     try {
@@ -256,14 +329,14 @@ class ApiService {
     return null;
   }
 
-  // 6. PRODUCTS: Featured & Banners
-  static Future<Map<String, dynamic>> getFeatured() async {
+  // 7. PRODUCTS: Featured & Banners (loads 60 items by default)
+  static Future<Map<String, dynamic>> getFeatured({int limit = 60}) async {
     // Attempt 1: Next.js API route
     try {
       final res = await http.get(
         Uri.parse('$_base/products?action=featured'),
         headers: _headers(),
-      ).timeout(const Duration(seconds: 6));
+      ).timeout(const Duration(seconds: 8));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -272,7 +345,9 @@ class ApiService {
           var rawBanners = data['data']['banners'] as List? ?? [];
           return {
             'featured_products': rawProds.map((p) => Product.fromJson(p)).toList(),
-            'banners': rawBanners,
+            'banners': rawBanners.isNotEmpty 
+                ? rawBanners.map((b) => BannerModel.fromJson(b)).toList() 
+                : _defaultBanners,
           };
         }
       }
@@ -280,25 +355,27 @@ class ApiService {
 
     // Attempt 2: Direct Supabase query
     try {
-      final res = await http.get(
-        Uri.parse('$_supabaseUrl/products?select=*&order=id.desc&limit=10'),
+      final prodRes = await http.get(
+        Uri.parse('$_supabaseUrl/products?select=*&order=id.desc&limit=$limit'),
         headers: _supabaseHeaders(),
-      ).timeout(const Duration(seconds: 6));
+      ).timeout(const Duration(seconds: 8));
 
-      if (res.statusCode == 200) {
-        final list = jsonDecode(res.body) as List;
+      final banners = await getBanners();
+
+      if (prodRes.statusCode == 200) {
+        final list = jsonDecode(prodRes.body) as List;
         List<Product> products = list.map((p) => Product.fromJson(p)).toList();
         return {
           'featured_products': products,
-          'banners': [],
+          'banners': banners,
         };
       }
     } catch (_) {}
 
-    return {'featured_products': <Product>[], 'banners': []};
+    return {'featured_products': <Product>[], 'banners': _defaultBanners};
   }
 
-  // 7. ORDERS: Place Order
+  // 8. ORDERS: Place Order
   static Future<Map<String, dynamic>> createOrder({
     required String customerName,
     required String customerPhone,
@@ -395,7 +472,7 @@ class ApiService {
     return {'success': false, 'message': 'Network error. Please try again.'};
   }
 
-  // 8. ORDERS: List
+  // 9. ORDERS: List
   static Future<List<OrderSummary>> getOrders({String? token, String? phone}) async {
     // Attempt 1: Next.js API route
     try {
@@ -428,7 +505,7 @@ class ApiService {
     return [];
   }
 
-  // 9. ORDERS: Live Tracking
+  // 10. ORDERS: Live Tracking
   static Future<OrderDetail?> trackOrder(int orderId) async {
     // Attempt 1: Next.js API route
     try {

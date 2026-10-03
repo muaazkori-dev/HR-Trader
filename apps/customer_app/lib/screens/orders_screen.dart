@@ -180,7 +180,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(ord.createdAt, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                                        const Text('Track Live &rarr;', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppConstants.primaryColor)),
+                                        const Text('Track Live →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppConstants.primaryColor)),
                                       ],
                                     ),
                                   ],

@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     // 3. Featured Products & Banners
     if (action === 'featured') {
       const [prodRes, bannerRes] = await Promise.all([
-        supabase.from('products').select('*').order('id', { ascending: false }).limit(10),
+        supabase.from('products').select('*').order('id', { ascending: false }).limit(60),
         supabase.from('settings').select('val_value').eq('key_name', 'store_hero_banners').maybeSingle(),
       ]);
 

@@ -164,7 +164,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     (route) => false,
                   );
                 },
-                child: const Text('Continue Shopping &rarr;', style: TextStyle(color: AppConstants.textSecondary, fontWeight: FontWeight.bold)),
+                child: const Text('Continue Shopping →', style: TextStyle(color: AppConstants.textSecondary, fontWeight: FontWeight.bold)),
               ),
             ],
           ),

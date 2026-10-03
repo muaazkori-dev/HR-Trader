@@ -4,6 +4,8 @@ class Product {
   final String name;
   final String description;
   final double price;
+  final double? oldPrice;
+  final int? discountPercentage;
   final int stockQuantity;
   final String weight;
   final String unit;
@@ -17,6 +19,8 @@ class Product {
     required this.name,
     required this.description,
     required this.price,
+    this.oldPrice,
+    this.discountPercentage,
     required this.stockQuantity,
     required this.weight,
     required this.unit,
@@ -32,6 +36,8 @@ class Product {
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       price: json['price'] != null ? double.tryParse(json['price'].toString()) ?? 0.0 : 0.0,
+      oldPrice: json['old_price'] != null ? double.tryParse(json['old_price'].toString()) : null,
+      discountPercentage: json['discount_percentage'] != null ? int.tryParse(json['discount_percentage'].toString()) : null,
       stockQuantity: json['stock_quantity'] is int 
           ? json['stock_quantity'] 
           : int.tryParse(json['stock_quantity']?.toString() ?? '0') ?? 0,
@@ -50,6 +56,8 @@ class Product {
       'name': name,
       'description': description,
       'price': price,
+      'old_price': oldPrice,
+      'discount_percentage': discountPercentage,
       'stock_quantity': stockQuantity,
       'weight': weight,
       'unit': unit,

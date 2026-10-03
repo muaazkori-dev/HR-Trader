@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_constants.dart';
 import '../models/category_model.dart';
 import '../models/product.dart';
+import '../models/banner_model.dart';
 import '../providers/cart_provider.dart';
 import '../services/api_service.dart';
 import 'product_detail_screen.dart';
@@ -18,30 +20,118 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+  static const int _pageSize = 30;
+
   List<CategoryModel> _categories = [];
-  List<Product> _featuredProducts = [];
+  List<Product> _products = [];
+  List<BannerModel> _banners = [];
+
   final TextEditingController _searchCtrl = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final PageController _bannerPageController = PageController();
+  int _currentBannerIndex = 0;
+  Timer? _bannerTimer;
 
   @override
   void initState() {
     super.initState();
     _loadHomeData();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _bannerTimer?.cancel();
+    _bannerPageController.dispose();
+    _scrollController.dispose();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 350) {
+      if (!_isLoadingMore && _hasMore && !_isLoading) {
+        _loadMoreProducts();
+      }
+    }
   }
 
   Future<void> _loadHomeData() async {
-    setState(() => _isLoading = true);
-    final results = await Future.wait([
-      ApiService.getCategories(),
-      ApiService.getFeatured(),
-    ]);
+    setState(() {
+      _isLoading = true;
+      _currentPage = 1;
+      _hasMore = true;
+    });
 
-    if (mounted) {
-      setState(() {
-        _categories = results[0] as List<CategoryModel>;
+    try {
+      final results = await Future.wait([
+        ApiService.getCategories(),
+        ApiService.getFeatured(limit: 60),
+      ]);
+
+      if (mounted) {
+        final catList = results[0] as List<CategoryModel>;
         final featuredMap = results[1] as Map<String, dynamic>;
-        _featuredProducts = featuredMap['featured_products'] as List<Product>? ?? [];
-        _isLoading = false;
-      });
+        final prods = featuredMap['featured_products'] as List<Product>? ?? [];
+        final banners = featuredMap['banners'] as List<BannerModel>? ?? [];
+
+        setState(() {
+          _categories = catList;
+          _products = prods;
+          _banners = banners.isNotEmpty ? banners : ApiService.getBannersSync();
+          _isLoading = false;
+          if (prods.length < 30) {
+            _hasMore = false;
+          }
+        });
+
+        _startBannerAutoSlide();
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _startBannerAutoSlide() {
+    _bannerTimer?.cancel();
+    if (_banners.length <= 1) return;
+
+    _bannerTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_bannerPageController.hasClients) {
+        final nextIndex = (_currentBannerIndex + 1) % _banners.length;
+        _bannerPageController.animateToPage(
+          nextIndex,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _loadMoreProducts() async {
+    setState(() => _isLoadingMore = true);
+    final nextPage = _currentPage + 1;
+
+    try {
+      final result = await ApiService.getProducts(page: nextPage, limit: _pageSize);
+      if (mounted) {
+        final newItems = result['products'] as List<Product>? ?? [];
+        setState(() {
+          _currentPage = nextPage;
+          if (newItems.isNotEmpty) {
+            _products.addAll(newItems);
+          }
+          if (newItems.length < _pageSize) {
+            _hasMore = false;
+          }
+          _isLoadingMore = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingMore = false);
     }
   }
 
@@ -78,41 +168,74 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppConstants.primaryColor,
               onRefresh: _loadHomeData,
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Search Bar
+                    // 1. Top Search Bar
                     _buildSearchBar(),
 
-                    // Hero Banner
+                    // 2. Full-Width Edge-to-Edge Hero Banner Carousel
                     _buildHeroBanner(),
 
-                    // Categories Strip
+                    const SizedBox(height: 12),
+
+                    // 3. Categories Strip
                     _buildCategoriesHeader(),
                     _buildCategoriesList(),
 
                     const SizedBox(height: 16),
 
-                    // Featured Products Grid
+                    // 4. Products Section Header
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Featured Groceries',
+                            'All Groceries & Products',
                             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppConstants.textPrimary),
                           ),
-                          Text(
-                            '${_featuredProducts.length} items',
-                            style: const TextStyle(fontSize: 12, color: AppConstants.textSecondary),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppConstants.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_products.length} items',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppConstants.primaryColor),
+                            ),
                           ),
                         ],
                       ),
                     ),
+
+                    // 5. Products Grid
                     _buildProductsGrid(),
-                    const SizedBox(height: 24),
+
+                    // 6. Loading More Spinner
+                    if (_isLoadingMore)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppConstants.primaryColor),
+                              ),
+                              SizedBox(width: 10),
+                              Text('Loading more groceries...', style: TextStyle(fontSize: 12, color: AppConstants.textSecondary)),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -120,6 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Search Bar
   Widget _buildSearchBar() {
     return Container(
       color: AppConstants.primaryColor,
@@ -150,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           },
           decoration: const InputDecoration(
-            hintText: 'Search daal, rice, oil, soap...',
+            hintText: 'Search daal, rice, oil, soap, snacks...',
             hintStyle: TextStyle(fontSize: 13, color: AppConstants.textSecondary),
             prefixIcon: Icon(Icons.search, color: AppConstants.primaryColor, size: 20),
             border: InputBorder.none,
@@ -161,67 +285,178 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Full-Width Hero Banner Carousel (Edge-to-Edge Pure Page)
   Widget _buildHeroBanner() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      height: 135,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF047857), Color(0xFF065F46)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppConstants.primaryColor.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
+    final slides = _banners.isNotEmpty ? _banners : ApiService.getBannersSync();
+
+    return SizedBox(
+      width: double.infinity,
+      height: 185,
       child: Stack(
         children: [
-          Positioned(
-            right: -10,
-            bottom: -15,
-            child: Icon(Icons.shopping_basket, size: 130, color: Colors.white.withOpacity(0.08)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          PageView.builder(
+            controller: _bannerPageController,
+            onPageChanged: (idx) {
+              setState(() => _currentBannerIndex = idx);
+            },
+            itemCount: slides.length,
+            itemBuilder: (context, index) {
+              final banner = slides[index];
+              final hasImage = banner.imageUrl.isNotEmpty && !banner.imageUrl.contains('placeholder');
+
+              return GestureDetector(
+                onTap: () {
+                  if (banner.link.contains('category=')) {
+                    final cat = banner.link.split('category=').last;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => CategoryProductsScreen(categorySlug: cat)),
+                    );
+                  } else {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                    );
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 185,
                   decoration: BoxDecoration(
-                    color: Colors.amber,
-                    borderRadius: BorderRadius.circular(6),
+                    gradient: LinearGradient(
+                      colors: banner.theme == 'cyan'
+                          ? [const Color(0xFF0E7490), const Color(0xFF155E75)]
+                          : banner.theme == 'amber'
+                              ? [const Color(0xFFB45309), const Color(0xFF78350F)]
+                              : [const Color(0xFF047857), const Color(0xFF064E3B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
-                  child: const Text(
-                    'HR TRADERS OFFICIAL',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.black87),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Background Image (if available)
+                      if (hasImage)
+                        CachedNetworkImage(
+                          imageUrl: banner.imageUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 185,
+                          placeholder: (_, __) => Container(color: const Color(0xFF064E3B)),
+                          errorWidget: (_, __, ___) => const SizedBox(),
+                        ),
+
+                      // Gradient Overlay for text contrast
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black.withOpacity(0.75),
+                              Colors.black.withOpacity(0.35),
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                        ),
+                      ),
+
+                      // Banner Content
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: banner.theme == 'amber' ? Colors.white : Colors.amber,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                banner.tag.toUpperCase(),
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.black87),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              banner.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 1.2,
+                                shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 1))],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              banner.desc,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.white70,
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppConstants.primaryColor,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Shop Now',
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.arrow_forward, size: 10, color: Colors.white),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Fresh Groceries & Grains',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Free Delivery on orders above Rs. 2,500',
-                  style: TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-              ],
-            ),
+              );
+            },
           ),
+
+          // Dots Indicator
+          if (slides.length > 1)
+            Positioned(
+              bottom: 8,
+              right: 20,
+              child: Row(
+                children: List.generate(
+                  slides.length,
+                  (i) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: i == _currentBannerIndex ? 16 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: i == _currentBannerIndex ? Colors.white : Colors.white38,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
+  // Categories Header (Fixed arrow)
   Widget _buildCategoriesHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -238,9 +473,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(builder: (_) => const CategoriesScreen()),
               );
             },
-            child: const Text(
-              'See All &rarr;',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppConstants.primaryColor),
+            child: const Row(
+              children: [
+                Text(
+                  'See All',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppConstants.primaryColor),
+                ),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_forward_ios, size: 11, color: AppConstants.primaryColor),
+              ],
             ),
           ),
         ],
@@ -248,9 +489,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Categories Horizontal List
   Widget _buildCategoriesList() {
     return Container(
-      height: 95,
+      height: 98,
       margin: const EdgeInsets.only(top: 10),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -265,8 +507,8 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             child: Container(
-              width: 80,
-              margin: const EdgeInsets.symmetric(horizontal: 5),
+              width: 82,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
               child: Column(
                 children: [
                   Container(
@@ -276,22 +518,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: AppConstants.borderSubtle),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        )
+                      ],
                     ),
                     padding: const EdgeInsets.all(6),
                     child: CachedNetworkImage(
                       imageUrl: cat.imageUrl,
                       fit: BoxFit.contain,
-                      placeholder: (_, __) => const Icon(Icons.fastfood, color: Colors.grey, size: 24),
-                      errorWidget: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, color: AppConstants.primaryColor),
+                      placeholder: (_, __) => const Center(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5))),
+                      errorWidget: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, color: AppConstants.primaryColor, size: 24),
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     cat.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppConstants.textPrimary),
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppConstants.textPrimary, height: 1.1),
                   ),
                 ],
               ),
@@ -302,6 +551,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Products Grid
   Widget _buildProductsGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -314,16 +564,20 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisSpacing: 12,
           childAspectRatio: 0.68,
         ),
-        itemCount: _featuredProducts.length,
+        itemCount: _products.length,
         itemBuilder: (context, index) {
-          final prod = _featuredProducts[index];
+          final prod = _products[index];
           return _buildProductCard(prod);
         },
       ),
     );
   }
 
+  // Single Product Card with discount tag & old price
   Widget _buildProductCard(Product prod) {
+    final hasDiscount = prod.discountPercentage != null && prod.discountPercentage! > 0;
+    final hasOldPrice = prod.oldPrice != null && prod.oldPrice! > prod.price;
+
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -346,7 +600,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image with Badges
             Expanded(
               child: Stack(
                 children: [
@@ -361,7 +615,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  if (prod.weight.isNotEmpty)
+
+                  // Discount Badge
+                  if (hasDiscount)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDC2626), // Red 600
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '-${prod.discountPercentage}% OFF',
+                          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white),
+                        ),
+                      ),
+                    )
+                  else if (prod.weight.isNotEmpty && prod.weight != '1')
                     Positioned(
                       top: 8,
                       left: 8,
@@ -372,7 +644,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          prod.weight,
+                          '${prod.weight} ${prod.unit}',
                           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87),
                         ),
                       ),
@@ -380,7 +652,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            // Info
+
+            // Product Details
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -393,18 +666,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppConstants.textPrimary),
                   ),
                   const SizedBox(height: 6),
+
+                  // Price Row with Old Price
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Rs. ${prod.price.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: AppConstants.primaryColor,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Rs. ${prod.price.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: AppConstants.primaryColor,
+                            ),
+                          ),
+                          if (hasOldPrice)
+                            Text(
+                              'Rs. ${prod.oldPrice!.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppConstants.textSecondary,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                        ],
                       ),
-                      // Quick Add button
+
+                      // Quick Add to Cart button
                       Consumer<CartProvider>(
                         builder: (context, cart, _) {
                           return InkWell(
