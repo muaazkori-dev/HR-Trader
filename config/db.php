@@ -73,7 +73,7 @@ $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
 // Remove port if present (e.g. localhost:8080)
 $host_ip = preg_replace('/:.*$/', '', $host);
 
-if ($host_ip === 'localhost' || $host_ip === '127.0.0.1' || $host_ip === '::1') {
+if (php_sapi_name() === 'cli' || $host_ip === 'localhost' || $host_ip === '127.0.0.1' || $host_ip === '::1') {
     $is_local = true;
 } elseif (filter_var($host_ip, FILTER_VALIDATE_IP)) {
     // Check if host_ip is a private (local) IP address requested in the browser
