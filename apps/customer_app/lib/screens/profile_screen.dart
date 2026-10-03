@@ -144,7 +144,7 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('Privacy Policy', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                     subtitle: const Text('Google Play Store compliance', style: TextStyle(fontSize: 11, color: AppConstants.textSecondary)),
                     trailing: const Icon(Icons.open_in_new, size: 18),
-                    onTap: () => _openUrl('https://thehrtraders.com/privacy_policy.php'),
+                    onTap: () => _openUrl('https://thehrtraders.com/privacy-policy'),
                   ),
                   const Divider(height: 1, indent: 55),
                   ListTile(
