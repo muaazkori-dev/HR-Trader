@@ -48,8 +48,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-apk
-          name: "HR Traders Customer App v1.0.0 (Release APK)"
+          tag_name: v1.0.${{ github.run_number }}
+          name: "HR Traders Customer App v1.0.${{ github.run_number }} (Release APK)"
           body: |
             ### 🛒 HR Traders - Online Grocery Customer Mobile App
             Official Release APK build for Android devices.
