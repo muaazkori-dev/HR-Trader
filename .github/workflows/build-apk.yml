@@ -1,4 +1,4 @@
-name: Build Mobile Apps (Customer & Rider)
+name: Build Mobile Apps (Customer, Rider & Admin)
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-apks:
-    name: Compile Customer & Rider Release APKs
+    name: Compile Ecosystem Release APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -48,12 +48,22 @@ jobs:
         working-directory: apps/rider_app
         run: flutter build apk --release --no-tree-shake-icons
 
-      # 3. PREPARE RELEASE ARTIFACTS
+      # 3. BUILD STORE OWNER / ADMIN APP
+      - name: Install Admin App Dependencies
+        working-directory: apps/admin_app
+        run: flutter pub get
+
+      - name: Build Admin App Release APK
+        working-directory: apps/admin_app
+        run: flutter build apk --release --no-tree-shake-icons
+
+      # 4. PREPARE RELEASE ARTIFACTS
       - name: Package Release Files
         run: |
           cp apps/customer_app/build/app/outputs/flutter-apk/app-release.apk hr-traders-customer.apk
           cp apps/customer_app/build/app/outputs/flutter-apk/app-release.apk app-release.apk
           cp apps/rider_app/build/app/outputs/flutter-apk/app-release.apk hr-traders-rider.apk
+          cp apps/admin_app/build/app/outputs/flutter-apk/app-release.apk hr-traders-admin.apk
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -62,26 +72,32 @@ jobs:
           path: |
             hr-traders-customer.apk
             hr-traders-rider.apk
+            hr-traders-admin.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "HR Traders Apps v1.0.${{ github.run_number }} (Customer & Rider APKs)"
+          name: "HR Traders Apps v1.0.${{ github.run_number }} (Customer, Rider & Admin APKs)"
           body: |
-            ### 🚀 HR Traders Mobile Apps Release
+            ### 🚀 HR Traders 3-App Mobile Ecosystem Release
             Official Release APK builds for Android devices.
 
             #### 🛒 1. Customer Mobile App
-            - File: `hr-traders-customer.apk` (and `app-release.apk`)
-            - Real-time catalog, instant CDN images, live GPS drop-pin, order tracking.
+            - File: `hr-traders-customer.apk`
+            - Online groceries catalog, dynamic CDN resizing, live GPS location pinning, order tracking.
 
             #### 🛵 2. Rider Delivery App
             - File: `hr-traders-rider.apk`
-            - Live delivery orders feed, 1-tap Google Maps bike navigation, 1-tap customer call/WhatsApp, cash on delivery (COD) ledger.
+            - Live deliveries feed, 1-tap Google Maps bike navigation, 1-tap customer call/WhatsApp, cash collection ledger.
+
+            #### 🏪 3. Store Owner / Admin App
+            - File: `hr-traders-admin.apk`
+            - Gross sales & revenue metrics, live orders desk with audible chime alerts, walk-in counter POS billing desk, 381+ product inventory manager with 1-tap stock switch, customer demands desk & store settings.
           files: |
             hr-traders-customer.apk
             hr-traders-rider.apk
+            hr-traders-admin.apk
             app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
