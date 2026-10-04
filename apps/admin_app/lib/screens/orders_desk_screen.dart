@@ -345,12 +345,12 @@ class _OrdersDeskScreenState extends State<OrdersDeskScreen> {
           '👤 *Customer:* ${order.customerName}\n'
           '📞 *Customer Phone:* ${order.customerPhone}\n'
           '📍 *Delivery Address:*\n${order.cleanAddress}\n'
-          '${order.mapUrl.isNotEmpty ? '🗺 *Live GPS Location:* ${order.mapUrl}\n' : ''}'
+          '${(order.mapUrl ?? "").isNotEmpty ? '🗺 *Live GPS Location:* ${order.mapUrl}\n' : ''}'
           '━━━━━━━━━━━━━━━━━━━━━\n'
           '💵 *CASH TO COLLECT (COD):* Rs. ${order.totalAmount.toStringAsFixed(0)}\n'
           '━━━━━━━━━━━━━━━━━━━━━\n'
           '🛍 *Items Breakdown:*\n$itemsStr\n'
-          '${order.notes.isNotEmpty ? '📝 *Customer Note:* ${order.notes}\n' : ''}'
+          '${(order.notes ?? "").isNotEmpty ? '📝 *Customer Note:* ${order.notes}\n' : ''}'
           '━━━━━━━━━━━━━━━━━━━━━\n'
           '_Please deliver promptly and collect exact COD cash._';
     }

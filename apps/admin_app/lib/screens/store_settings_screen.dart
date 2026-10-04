@@ -167,6 +167,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                 ),
               ],
             ),
+          ),
           const SizedBox(height: 16),
 
           // Rider Dispatch Configuration
