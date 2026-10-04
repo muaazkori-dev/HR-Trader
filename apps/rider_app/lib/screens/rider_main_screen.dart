@@ -69,7 +69,7 @@ class _RiderMainScreenState extends State<RiderMainScreen> {
               margin: const EdgeInsets.only(right: 12, top: 10, bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: auth.isOnline ? const Color(0xFF10B981) : Colors.slate.shade700,
+                color: auth.isOnline ? const Color(0xFF10B981) : Colors.grey.shade700,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(

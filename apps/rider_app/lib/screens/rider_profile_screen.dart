@@ -96,12 +96,12 @@ class RiderProfileScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: (auth.isOnline ? const Color(0xFF10B981) : Colors.slate).withOpacity(0.1),
+                        color: (auth.isOnline ? const Color(0xFF10B981) : Colors.grey).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         auth.isOnline ? Icons.check_circle : Icons.pause_circle_outline,
-                        color: auth.isOnline ? const Color(0xFF10B981) : Colors.slate,
+                        color: auth.isOnline ? const Color(0xFF10B981) : Colors.grey,
                         size: 20,
                       ),
                     ),
