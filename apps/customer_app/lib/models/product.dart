@@ -1,3 +1,5 @@
+import '../utils/image_utils.dart';
+
 class Product {
   final int id;
   final String barcode;
@@ -44,7 +46,7 @@ class Product {
       weight: json['weight']?.toString() ?? '',
       unit: json['unit']?.toString() ?? 'pcs',
       category: json['category']?.toString() ?? '',
-      imageUrl: json['image_url']?.toString() ?? (json['image']?.toString() ?? ''),
+      imageUrl: ImageUtils.getOptimizedUrl(json['image_url']?.toString() ?? (json['image']?.toString() ?? ''), width: 300, quality: 75),
       inStock: json['in_stock'] == true || (json['stock_quantity'] != null && int.tryParse(json['stock_quantity'].toString())! > 0),
     );
   }

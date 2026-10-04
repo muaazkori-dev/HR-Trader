@@ -1,3 +1,5 @@
+import '../utils/image_utils.dart';
+
 class CategoryModel {
   final String slug;
   final String name;
@@ -12,13 +14,14 @@ class CategoryModel {
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    final rawImg = (json['image'] ?? json['image_url'] ?? '').toString();
     return CategoryModel(
       slug: (json['slug'] ?? json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       productCount: json['product_count'] is int 
           ? json['product_count'] 
           : int.tryParse(json['product_count']?.toString() ?? '0') ?? 0,
-      imageUrl: (json['image'] ?? json['image_url'] ?? '').toString(),
+      imageUrl: ImageUtils.getOptimizedUrl(rawImg, width: 140, quality: 75),
     );
   }
 }

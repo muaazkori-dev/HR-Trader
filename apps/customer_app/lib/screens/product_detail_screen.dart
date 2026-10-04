@@ -75,7 +75,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: CachedNetworkImage(
                   imageUrl: p.imageUrl,
                   fit: BoxFit.contain,
-                  placeholder: (_, __) => const CircularProgressIndicator(strokeWidth: 2),
+                  memCacheWidth: 600,
+                  maxWidthDiskCache: 800,
+                  fadeInDuration: const Duration(milliseconds: 200),
+                  placeholder: (_, __) => Container(
+                    color: const Color(0xFFF8FAFC),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFCBD5E1)),
+                      ),
+                    ),
+                  ),
                   errorWidget: (_, __, ___) => const Icon(Icons.image_not_supported, size: 80, color: Colors.grey),
                 ),
               ),

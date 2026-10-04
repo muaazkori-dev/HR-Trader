@@ -89,6 +89,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             child: CachedNetworkImage(
                               imageUrl: cat.imageUrl,
                               fit: BoxFit.contain,
+                              memCacheWidth: 200,
+                              maxWidthDiskCache: 300,
+                              fadeInDuration: const Duration(milliseconds: 150),
                               placeholder: (_, __) => const Icon(Icons.category, color: Colors.grey),
                               errorWidget: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, color: AppConstants.primaryColor, size: 40),
                             ),
@@ -291,7 +294,19 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   child: CachedNetworkImage(
                     imageUrl: prod.imageUrl,
                     fit: BoxFit.contain,
-                    placeholder: (_, __) => const CircularProgressIndicator(strokeWidth: 2),
+                    memCacheWidth: 280,
+                    maxWidthDiskCache: 400,
+                    fadeInDuration: const Duration(milliseconds: 200),
+                    placeholder: (_, __) => Container(
+                      color: const Color(0xFFF8FAFC),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFCBD5E1)),
+                        ),
+                      ),
+                    ),
                     errorWidget: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey),
                   ),
                 ),

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getProductImageUrl } from '@/lib/utils';
 
 // Helper for CORS headers
 const corsHeaders = {
@@ -47,7 +48,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404, headers: corsHeaders });
       }
 
-      return NextResponse.json({ success: true, data: product }, { headers: corsHeaders });
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...product,
+          image: getProductImageUrl(product.image, { width: 600, quality: 85 }),
+        },
+      }, { headers: corsHeaders });
     }
 
     // 2. Categories
@@ -106,10 +113,15 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      const optimizedProds = (prodRes.data || []).map((p: any) => ({
+        ...p,
+        image: getProductImageUrl(p.image, { width: 300, quality: 75 }),
+      }));
+
       return NextResponse.json({
         success: true,
         data: {
-          featured_products: prodRes.data || [],
+          featured_products: optimizedProds,
           banners: banners,
         },
       }, { headers: corsHeaders });
@@ -173,10 +185,15 @@ export async function GET(request: NextRequest) {
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
 
+    const optimizedProducts = (products || []).map((p: any) => ({
+      ...p,
+      image: getProductImageUrl(p.image, { width: 300, quality: 75 }),
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        products: products || [],
+        products: optimizedProducts,
         pagination: {
           total,
           page,

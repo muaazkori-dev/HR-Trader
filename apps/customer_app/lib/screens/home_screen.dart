@@ -89,6 +89,17 @@ class _HomeScreenState extends State<HomeScreen> {
         });
 
         _startBannerAutoSlide();
+
+        // Background pre-cache first batch of product images for zero load delay
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            for (var i = 0; i < prods.length && i < 15; i++) {
+              if (prods[i].imageUrl.isNotEmpty) {
+                precacheImage(CachedNetworkImageProvider(prods[i].imageUrl), context);
+              }
+            }
+          }
+        });
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -341,6 +352,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: 185,
+                          memCacheWidth: 750,
+                          maxWidthDiskCache: 800,
+                          fadeInDuration: const Duration(milliseconds: 200),
                           placeholder: (_, __) => Container(color: const Color(0xFF064E3B)),
                           errorWidget: (_, __, ___) => const SizedBox(),
                         ),
@@ -530,7 +544,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CachedNetworkImage(
                       imageUrl: cat.imageUrl,
                       fit: BoxFit.contain,
-                      placeholder: (_, __) => const Center(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5))),
+                      memCacheWidth: 140,
+                      maxWidthDiskCache: 200,
+                      fadeInDuration: const Duration(milliseconds: 150),
+                      placeholder: (_, __) => const Center(child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFCBD5E1)))),
                       errorWidget: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, color: AppConstants.primaryColor, size: 24),
                     ),
                   ),
@@ -610,7 +627,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: CachedNetworkImage(
                         imageUrl: prod.imageUrl,
                         fit: BoxFit.contain,
-                        placeholder: (_, __) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        memCacheWidth: 280,
+                        maxWidthDiskCache: 400,
+                        fadeInDuration: const Duration(milliseconds: 200),
+                        placeholder: (_, __) => Container(
+                          color: const Color(0xFFF8FAFC),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFCBD5E1)),
+                            ),
+                          ),
+                        ),
                         errorWidget: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.grey),
                       ),
                     ),
