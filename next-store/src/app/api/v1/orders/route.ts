@@ -105,12 +105,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate subtotal
+    // 1. Fetch missing product details (prices & names) from DB if not provided
+    const productIds = items
+      .map((it: any) => it.product_id || it.id)
+      .filter(Boolean);
+
+    const dbProductMap = new Map<number, any>();
+    if (productIds.length > 0) {
+      const { data: dbProducts } = await supabase
+        .from('products')
+        .select('id, name, price')
+        .in('id', productIds);
+
+      if (dbProducts) {
+        dbProducts.forEach((p: any) => dbProductMap.set(p.id, p));
+      }
+    }
+
+    // 2. Calculate subtotal and build enriched order items
     let subtotal = 0;
+    const orderItemsToInsert: any[] = [];
+
     for (const it of items) {
-      const p = parseFloat(it.price) || 0;
+      const pId = it.product_id || it.id;
+      const dbProd = pId ? dbProductMap.get(pId) : null;
+
+      const p = parseFloat(it.price) || (dbProd ? parseFloat(dbProd.price) : 0);
       const q = parseInt(it.quantity) || 1;
+      const name = it.product_name || it.name || dbProd?.name || 'Product';
+
       subtotal += p * q;
+      orderItemsToInsert.push({
+        product_id: pId,
+        price: p,
+        quantity: q,
+        product_name: name,
+      });
     }
 
     // Shipping fee calculation (Free above 2500, else default 180)
@@ -152,12 +182,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert Order Items
-    const orderItems = items.map((it: any) => ({
+    const orderItems = orderItemsToInsert.map((it) => ({
       order_id: order.id,
-      product_id: it.product_id || it.id,
-      price: parseFloat(it.price) || 0,
-      quantity: parseInt(it.quantity) || 1,
-      product_name: it.product_name || it.name || 'Product',
+      ...it,
     }));
 
     const { error: itemsErr } = await supabase.from('order_items').insert(orderItems);
@@ -166,11 +193,14 @@ export async function POST(request: NextRequest) {
       console.error('Failed to insert order items:', itemsErr);
     }
 
+    const formattedOrderRef = `#HRT-${String(order.id).padStart(5, '0')}`;
+
     return NextResponse.json({
       success: true,
       message: 'Order placed successfully!',
       data: {
         order_id: order.id,
+        order_ref: formattedOrderRef,
         total_amount: totalAmount,
         status: 'pending',
       },

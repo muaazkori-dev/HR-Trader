@@ -15,6 +15,9 @@ class CartItem {
     return {
       'product_id': product.id,
       'quantity': quantity,
+      'price': product.price,
+      'name': product.name,
+      'product_name': product.name,
     };
   }
 }

@@ -148,8 +148,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => OrderSuccessScreen(
-              orderId: orderData['order_id'],
-              orderRef: orderData['order_ref'],
+              orderId: orderData['order_id'] is int ? orderData['order_id'] : int.tryParse(orderData['order_id'].toString()) ?? 0,
+              orderRef: orderData['order_ref']?.toString() ?? '#HRT-${orderData['order_id']}',
               totalAmount: double.tryParse(orderData['total_amount'].toString()) ?? 0.0,
               customerName: _nameCtrl.text.trim(),
               customerPhone: _phoneCtrl.text.trim(),
