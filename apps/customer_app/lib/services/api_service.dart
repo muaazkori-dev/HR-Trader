@@ -416,7 +416,10 @@ class ApiService {
       for (var it in items) {
         subtotal += (double.tryParse(it['price'].toString()) ?? 0) * (int.tryParse(it['quantity'].toString()) ?? 1);
       }
-      final total = subtotal + (subtotal >= 2500 ? 0 : 180);
+      final storeSet = await getStoreSettings();
+      final shipRate = double.tryParse(storeSet['shipping_fee']?.toString() ?? '100') ?? 100.0;
+      final freeThresh = double.tryParse(storeSet['free_shipping_threshold']?.toString() ?? '2500') ?? 2500.0;
+      final total = subtotal + (subtotal >= freeThresh ? 0 : shipRate);
 
       String formattedAddress = customerAddress;
       if (latitude != null && longitude != null) {
@@ -546,5 +549,56 @@ class ApiService {
     } catch (_) {}
 
     return null;
+  }
+
+  // 11. SETTINGS: Dynamic store settings (shipping fee, free threshold, shop status)
+  static Future<Map<String, dynamic>> getStoreSettings() async {
+    // Attempt 1: Next.js API
+    try {
+      final res = await http.get(
+        Uri.parse('$_base/settings'),
+        headers: _headers(),
+      ).timeout(const Duration(seconds: 6));
+
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['success'] == true && body['data'] != null) {
+          return Map<String, dynamic>.from(body['data']);
+        }
+      }
+    } catch (_) {}
+
+    // Attempt 2: Direct Supabase fetch
+    try {
+      final res = await http.get(
+        Uri.parse('$_supabaseUrl/settings?select=key_name,val_value'),
+        headers: _supabaseHeaders(),
+      ).timeout(const Duration(seconds: 6));
+
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        final map = <String, dynamic>{};
+        for (var s in list) {
+          map[s['key_name']?.toString() ?? ''] = s['val_value'];
+        }
+        final fee = double.tryParse(map['shipping_fee']?.toString() ?? '100') ?? 100.0;
+        final thresh = double.tryParse(map['free_shipping_threshold']?.toString() ?? '2500') ?? 2500.0;
+        final minVal = double.tryParse(map['min_order_value']?.toString() ?? '0') ?? 0.0;
+        return {
+          'shipping_fee': fee,
+          'free_shipping_threshold': thresh,
+          'min_order_value': minVal,
+          'shop_status': map['shop_status'] ?? 'open',
+          'store_phone': map['store_phone'] ?? '+92 303 3943814',
+        };
+      }
+    } catch (_) {}
+
+    return {
+      'shipping_fee': 100.0,
+      'free_shipping_threshold': 2500.0,
+      'min_order_value': 0.0,
+      'shop_status': 'open',
+    };
   }
 }

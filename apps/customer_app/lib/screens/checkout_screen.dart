@@ -115,6 +115,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final cart = context.read<CartProvider>();
+    if (!cart.isShopOpen) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Store is currently closed. We are not accepting orders at this time.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (cart.dynamicMinOrderValue > 0 && cart.subtotal < cart.dynamicMinOrderValue) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Minimum order amount is Rs. ${cart.dynamicMinOrderValue.toStringAsFixed(0)}.'),
+          backgroundColor: Colors.amber.shade900,
+        ),
+      );
+      return;
+    }
+
     if (cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Your cart is empty.')),

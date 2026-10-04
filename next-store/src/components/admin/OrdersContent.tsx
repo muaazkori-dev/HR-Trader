@@ -104,6 +104,12 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
   // WhatsApp Alert Template
   const [whatsappTemplate, setWhatsappTemplate] = useState('');
 
+  // Rider Dispatch State
+  const [riderDispatchOrder, setRiderDispatchOrder] = useState<Order | null>(null);
+  const [riderPhoneInput, setRiderPhoneInput] = useState<string>('');
+  const [riderNameInput, setRiderNameInput] = useState<string>('');
+  const [copiedRiderText, setCopiedRiderText] = useState(false);
+
   const fetchFreshOrders = async () => {
     try {
       const { data, error } = await supabase
@@ -120,22 +126,39 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
   };
 
   useEffect(() => {
-    const fetchTemplate = async () => {
+    // Load local storage rider defaults if available
+    if (typeof window !== 'undefined') {
+      const savedPhone = localStorage.getItem('hrt_rider_phone');
+      const savedName = localStorage.getItem('hrt_rider_name');
+      if (savedPhone) setRiderPhoneInput(savedPhone);
+      if (savedName) setRiderNameInput(savedName);
+    }
+
+    const fetchTemplateAndRiderSettings = async () => {
       try {
         const { data } = await supabase
           .from('settings')
-          .select('val_value')
-          .eq('key_name', 'whatsapp_dispatch_template')
-          .maybeSingle();
-        if (data?.val_value) {
-          setWhatsappTemplate(data.val_value);
+          .select('key_name, val_value')
+          .in('key_name', ['whatsapp_dispatch_template', 'default_rider_phone', 'default_rider_name']);
+        if (data) {
+          data.forEach(item => {
+            if (item.key_name === 'whatsapp_dispatch_template' && item.val_value) {
+              setWhatsappTemplate(item.val_value);
+            }
+            if (item.key_name === 'default_rider_phone' && item.val_value) {
+              setRiderPhoneInput(prev => prev || item.val_value);
+            }
+            if (item.key_name === 'default_rider_name' && item.val_value) {
+              setRiderNameInput(prev => prev || item.val_value);
+            }
+          });
         }
       } catch (err) {
         console.error(err);
       }
     };
 
-    fetchTemplate();
+    fetchTemplateAndRiderSettings();
     fetchFreshOrders();
 
     // Live sync channel to automatically load newly placed/updated orders in the list
@@ -177,6 +200,68 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
     
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
+  };
+
+  const buildRiderDispatchMessage = (ord: Order, riderName?: string) => {
+    const formattedRef = String(ord.id).padStart(5, '0');
+    const cleanAddr = cleanAddressForPrint(ord.customer_address) || ord.customer_address;
+    const gps = extractGpsLocation(ord.customer_address, ord.notes);
+    const cleanNote = ord.notes ? cleanNotesForPrint(ord.notes) : '';
+    const items = (ord.order_items || []).map((it, idx) => `  ${idx + 1}. ${it.product_name} (x${it.quantity}) - Rs. ${(Number(it.price || 0) * Number(it.quantity || 1)).toFixed(0)}`).join('\n');
+
+    let msg = `🛵 *HR TRADERS - RIDER DELIVERY TASK*\n`;
+    if (riderName?.trim()) {
+      msg += `👤 *Assigned Rider:* ${riderName.trim()}\n`;
+    }
+    msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `📦 *Order:* #HRT-${formattedRef}\n`;
+    msg += `👤 *Customer:* ${ord.customer_name}\n`;
+    msg += `📞 *Customer Phone:* ${ord.customer_phone}\n`;
+    msg += `📍 *Delivery Address:*\n${cleanAddr}\n`;
+    if (gps?.url) {
+      msg += `🗺 *Live GPS Location:* ${gps.url}\n`;
+    }
+    msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `💵 *CASH TO COLLECT (COD):* Rs. ${ord.total_amount.toFixed(0)}\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    if (items) {
+      msg += `🛍 *Items Breakdown:*\n${items}\n`;
+    }
+    if (cleanNote) {
+      msg += `📝 *Customer Note:* ${cleanNote}\n`;
+    }
+    msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `_Please deliver promptly and collect exact COD cash._`;
+    return msg;
+  };
+
+  const handleDispatchToRider = (ord: Order, phone: string, name?: string) => {
+    let cleanPhone = phone.replace(/[^0-9]/g, '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '92' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('92') && cleanPhone.length === 10) {
+      cleanPhone = '92' + cleanPhone;
+    }
+
+    if (!cleanPhone || cleanPhone.length < 10) {
+      alert('Please enter a valid Rider WhatsApp phone number (e.g. 03001234567 or 923001234567)');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hrt_rider_phone', phone);
+      if (name) localStorage.setItem('hrt_rider_name', name);
+    }
+
+    const msg = buildRiderDispatchMessage(ord, name);
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
+
+    // If order was pending or packaging, advance to out_for_delivery
+    if (ord.status === 'pending' || ord.status === 'packaging') {
+      handleStatusChange(ord.id, 'out_for_delivery');
+    }
+    setRiderDispatchOrder(null);
   };
 
   const getOrderPricing = (ord: Order) => {
@@ -651,9 +736,19 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                         <button 
                           onClick={() => sendWhatsAppAlert(ord)}
                           className="px-1.5 py-0.5 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 border border-emerald-250 text-[9px] font-bold rounded flex items-center gap-0.5 transition-all cursor-pointer"
-                          title="Send WhatsApp dispatch notification"
+                          title="Send WhatsApp notification to customer"
                         >
                           Alert
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRiderDispatchOrder(ord);
+                          }}
+                          className="px-1.5 py-0.5 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700 border border-purple-200 text-[9px] font-bold rounded flex items-center gap-0.5 transition-all cursor-pointer shadow-2xs"
+                          title="Dispatch and notify delivery rider on WhatsApp"
+                        >
+                          🛵 Rider
                         </button>
                       </div>
                     </div>
@@ -877,6 +972,13 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                           className="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer active:scale-95 print:hidden"
                         >
                           WhatsApp Alert
+                        </button>
+                        <button
+                          onClick={() => setRiderDispatchOrder(ord)}
+                          className="px-2.5 py-0.5 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold rounded-md flex items-center gap-1 transition-all cursor-pointer active:scale-95 print:hidden shadow-2xs"
+                          title="Notify delivery rider on WhatsApp"
+                        >
+                          🛵 Notify Rider
                         </button>
                       </div>
                     </div>
@@ -1140,6 +1242,13 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
 
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <button
+                    onClick={() => setRiderDispatchOrder(ord)}
+                    className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                    title="Dispatch order details directly to delivery rider on WhatsApp"
+                  >
+                    <span>🛵 Dispatch Rider</span>
+                  </button>
+                  <button
                     onClick={() => printThermalSlip(ord)}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
                     title="Print on Cashier Thermal Printer (80mm/58mm)"
@@ -1154,6 +1263,154 @@ export const OrdersContent: React.FC<OrdersContentProps> = ({ initialOrders }) =
                     Close
                   </button>
                 </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Rider Dispatch WhatsApp Modal */}
+      {riderDispatchOrder && (() => {
+        const ord = riderDispatchOrder;
+        const ref = `#HRT-${String(ord.id).padStart(5, '0')}`;
+        const previewMsg = buildRiderDispatchMessage(ord, riderNameInput);
+        const gps = extractGpsLocation(ord.customer_address, ord.notes);
+
+        return (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setRiderDispatchOrder(null);
+            }}
+          >
+            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-150">
+              
+              {/* Modal Header */}
+              <div className="px-5 py-4 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white flex items-center justify-between gap-3 border-b border-purple-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-purple-500/20 text-purple-300 rounded-xl border border-purple-500/30 text-lg">
+                    🛵
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black tracking-tight">Dispatch Order to Rider</h3>
+                    <p className="text-xs text-purple-200">{ref} • COD Amount: Rs. {ord.total_amount.toFixed(0)}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setRiderDispatchOrder(null)}
+                  className="p-1.5 hover:bg-white/10 text-white/70 hover:text-white rounded-lg transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700">
+                {/* Rider Contact Form */}
+                <div className="bg-purple-50/60 border border-purple-200/80 rounded-xl p-3.5 space-y-3">
+                  <div className="font-bold text-purple-950 text-xs flex items-center gap-1.5">
+                    <span>🛵 Delivery Rider Details</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] uppercase font-bold text-slate-500">Rider WhatsApp Phone</label>
+                      <input 
+                        type="text"
+                        value={riderPhoneInput}
+                        onChange={(e) => setRiderPhoneInput(e.target.value)}
+                        placeholder="03031234567"
+                        className="w-full px-3 py-2 bg-white border border-purple-300 rounded-lg text-xs font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] uppercase font-bold text-slate-500">Rider Name (Optional)</label>
+                      <input 
+                        type="text"
+                        value={riderNameInput}
+                        onChange={(e) => setRiderNameInput(e.target.value)}
+                        placeholder="e.g. Ali (Rider)"
+                        className="w-full px-3 py-2 bg-white border border-purple-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Customer & Delivery Brief */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-semibold">Customer:</span>
+                    <strong className="text-slate-800">{ord.customer_name} ({ord.customer_phone})</strong>
+                  </div>
+                  <div className="flex justify-between items-start text-xs">
+                    <span className="text-slate-400 font-semibold">Address:</span>
+                    <span className="text-slate-700 font-medium text-right max-w-[260px] truncate">{cleanAddressForPrint(ord.customer_address) || ord.customer_address}</span>
+                  </div>
+                  {gps?.url && (
+                    <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-200">
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">📍 Live GPS Attached</span>
+                      <a href={gps.url} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline font-bold text-[11px] flex items-center gap-0.5">
+                        Test Pin <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-200">
+                    <span className="font-bold text-slate-800">COD Cash to Collect:</span>
+                    <span className="text-base font-black text-emerald-600 font-mono">Rs. {ord.total_amount.toFixed(0)}</span>
+                  </div>
+                </div>
+
+                {/* Message Preview */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[10px] uppercase font-bold text-slate-500">WhatsApp Message Preview</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.clipboard) {
+                          navigator.clipboard.writeText(previewMsg);
+                          setCopiedRiderText(true);
+                          setTimeout(() => setCopiedRiderText(false), 2000);
+                        }
+                      }}
+                      className="text-[10px] text-purple-700 hover:text-purple-900 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedRiderText ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-600">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Message Text</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="p-3 bg-slate-900 text-slate-100 rounded-xl font-mono text-[10.5px] leading-relaxed whitespace-pre-wrap max-h-44 overflow-y-auto border border-slate-800">
+                    {previewMsg}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setRiderDispatchOrder(null)}
+                  className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDispatchToRider(ord, riderPhoneInput, riderNameInput)}
+                  className="px-5 py-2 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-md shadow-purple-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span>🛵 Send to Rider on WhatsApp</span>
+                </button>
               </div>
 
             </div>

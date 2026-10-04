@@ -65,7 +65,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
   const [instagramUrl, setInstagramUrl] = useState(getValue('instagram_url', ''));
   const [tiktokUrl, setTiktokUrl] = useState(getValue('tiktok_url', ''));
   const [minOrderValue, setMinOrderValue] = useState(getValue('min_order_value', '0'));
-  const [shippingFee, setShippingFee] = useState(getValue('shipping_fee', '0'));
+  const [shippingFee, setShippingFee] = useState(getValue('shipping_fee', '100'));
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(getValue('free_shipping_threshold', '2500'));
+  const [defaultRiderPhone, setDefaultRiderPhone] = useState(getValue('default_rider_phone', '03033943814'));
+  const [defaultRiderName, setDefaultRiderName] = useState(getValue('default_rider_name', 'Store Rider'));
   const [storeCurrency, setStoreCurrency] = useState(getValue('store_currency', 'Rs.'));
   const [minOrderLimitEnabled, setMinOrderLimitEnabled] = useState(getValue('min_order_limit_enabled', 'true'));
   const [firstOrderFreeDelivery, setFirstOrderFreeDelivery] = useState(getValue('first_order_free_delivery', 'true'));
@@ -143,6 +146,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
         { key_name: 'tiktok_url', val_value: tiktokUrl },
         { key_name: 'min_order_value', val_value: minOrderValue },
         { key_name: 'shipping_fee', val_value: shippingFee },
+        { key_name: 'free_shipping_threshold', val_value: freeShippingThreshold },
+        { key_name: 'default_rider_phone', val_value: defaultRiderPhone },
+        { key_name: 'default_rider_name', val_value: defaultRiderName },
         { key_name: 'store_currency', val_value: storeCurrency },
         { key_name: 'min_order_limit_enabled', val_value: minOrderLimitEnabled },
         { key_name: 'first_order_free_delivery', val_value: firstOrderFreeDelivery },
@@ -503,12 +509,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
               </div>
             </div>
 
-            {/* Checkout Config */}
+            {/* Checkout & Delivery Config */}
             <div className="border-t border-slate-100 pt-6 space-y-4">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Checkout Configurations</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none text-left">Checkout & Delivery Configurations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">WhatsApp Contact</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Customer WhatsApp Contact</label>
                   <input
                     type="text"
                     value={whatsappNumber}
@@ -519,17 +525,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Min Order Value (Rs.)</label>
-                  <input
-                    type="number"
-                    value={minOrderValue}
-                    onChange={(e) => setMinOrderValue(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Standard Shipping (Rs.)</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Standard Delivery Fee (Rs.)</label>
                   <input
                     type="number"
                     value={shippingFee}
@@ -538,10 +534,30 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                     className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Free Delivery Above (Rs.)</label>
+                  <input
+                    type="number"
+                    value={freeShippingThreshold}
+                    onChange={(e) => setFreeShippingThreshold(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Min Order Limit (Rs.)</label>
+                  <input
+                    type="number"
+                    value={minOrderValue}
+                    onChange={(e) => setMinOrderValue(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Minimum Order Limit</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Minimum Order Limit Enforcement</label>
                   <select
                     value={minOrderLimitEnabled}
                     onChange={(e) => setMinOrderLimitEnabled(e.target.value)}
@@ -561,6 +577,36 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ initialSetting
                     <option value="true">Enabled (First Order Free)</option>
                     <option value="false">Disabled (Always Charge Delivery)</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Delivery Rider & Dispatch Configuration */}
+            <div className="border-t border-slate-100 pt-6 space-y-4">
+              <h3 className="text-xs font-bold text-purple-900 uppercase tracking-wider select-none text-left flex items-center gap-1.5">
+                <span>🛵 Delivery Rider & Fleet Dispatch</span>
+              </h3>
+              <p className="text-[10px] text-slate-400">Default rider credentials automatically populated when 1-tap dispatching orders via WhatsApp.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Default Rider WhatsApp Number</label>
+                  <input
+                    type="text"
+                    value={defaultRiderPhone}
+                    onChange={(e) => setDefaultRiderPhone(e.target.value)}
+                    placeholder="e.g. 03033943814"
+                    className="w-full px-4 py-2 bg-slate-50 border border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 focus:bg-white text-xs text-slate-805 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left">Default Rider Name</label>
+                  <input
+                    type="text"
+                    value={defaultRiderName}
+                    onChange={(e) => setDefaultRiderName(e.target.value)}
+                    placeholder="e.g. Ali (Rider)"
+                    className="w-full px-4 py-2 bg-slate-50 border border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 focus:bg-white text-xs text-slate-805 font-semibold"
+                  />
                 </div>
               </div>
             </div>

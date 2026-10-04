@@ -143,8 +143,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Shipping fee calculation (Free above 2500, else default 180)
-    const shippingFee = subtotal >= 2500 ? 0 : 180;
+    // 3. Fetch dynamic store delivery settings from database
+    const { data: dbSettings } = await supabase
+      .from('settings')
+      .select('key_name, val_value')
+      .in('key_name', ['shipping_fee', 'free_shipping_threshold', 'min_order_value', 'shop_status']);
+
+    const settingsMap = new Map((dbSettings || []).map((s) => [s.key_name, s.val_value]));
+
+    // Check store open status
+    const shopStatus = settingsMap.get('shop_status') || 'open';
+    if (shopStatus === 'closed') {
+      return NextResponse.json(
+        { success: false, message: 'Store is currently closed. We are not accepting orders at this time.' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const defaultShippingFee = parseFloat(settingsMap.get('shipping_fee') || '100');
+    const freeShippingThreshold = parseFloat(settingsMap.get('free_shipping_threshold') || '2500');
+
+    // Dynamic shipping fee calculation
+    const shippingFee = subtotal >= freeShippingThreshold ? 0 : defaultShippingFee;
     const finalDiscount = parseFloat(discount_amount) || 0;
     const totalAmount = Math.max(0, subtotal - finalDiscount + shippingFee);
 

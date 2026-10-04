@@ -25,7 +25,7 @@ class AppConstants {
   static const Color textSecondary = Color(0xFF64748B);// Slate 500
   static const Color borderSubtle = Color(0xFFE2E8F0); // Slate 200
 
-  // Delivery Configuration
-  static const double defaultShippingFee = 180.0;
+  // Delivery Configuration (Fallbacks if offline; otherwise loaded live from Admin Settings)
+  static const double defaultShippingFee = 100.0;
   static const double freeShippingThreshold = 2500.0;
 }

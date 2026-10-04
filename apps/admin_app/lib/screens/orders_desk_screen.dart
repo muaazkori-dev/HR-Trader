@@ -270,6 +270,23 @@ class _OrdersDeskScreenState extends State<OrdersDeskScreen> {
           ),
           const SizedBox(height: 10),
 
+          // Rider WhatsApp Dispatch Shortcut
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.two_wheeler, size: 16),
+              label: const Text('🛵 Notify / Dispatch Rider (WhatsApp)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => _showRiderDispatchDialog(context, order, prov),
+            ),
+          ),
+          const SizedBox(height: 10),
+
           // Change Status Dropdown Selector
           Row(
             children: [
@@ -307,6 +324,156 @@ class _OrdersDeskScreenState extends State<OrdersDeskScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showRiderDispatchDialog(BuildContext context, AdminOrder order, AdminProvider prov) {
+    final defaultPhone = prov.settings['default_rider_phone'] ?? '03033943814';
+    final defaultName = prov.settings['default_rider_name'] ?? 'Store Rider';
+    final phoneCtrl = TextEditingController(text: defaultPhone);
+    final nameCtrl = TextEditingController(text: defaultName);
+
+    String buildMessage(String riderName) {
+      final itemsStr = order.items.isNotEmpty
+          ? order.items.map((it) => '  • ${it.quantity}x ${it.productName} (Rs. ${(it.price * it.quantity).toStringAsFixed(0)})').join('\n')
+          : '  • Standard Groceries Pack';
+
+      return '🛵 *HR TRADERS - RIDER DELIVERY TASK*\n'
+          '${riderName.trim().isNotEmpty ? '👤 *Assigned Rider:* ${riderName.trim()}\n' : ''}'
+          '━━━━━━━━━━━━━━━━━━━━━\n'
+          '📦 *Order:* ${order.orderRef}\n'
+          '👤 *Customer:* ${order.customerName}\n'
+          '📞 *Customer Phone:* ${order.customerPhone}\n'
+          '📍 *Delivery Address:*\n${order.cleanAddress}\n'
+          '${order.mapUrl.isNotEmpty ? '🗺 *Live GPS Location:* ${order.mapUrl}\n' : ''}'
+          '━━━━━━━━━━━━━━━━━━━━━\n'
+          '💵 *CASH TO COLLECT (COD):* Rs. ${order.totalAmount.toStringAsFixed(0)}\n'
+          '━━━━━━━━━━━━━━━━━━━━━\n'
+          '🛍 *Items Breakdown:*\n$itemsStr\n'
+          '${order.notes.isNotEmpty ? '📝 *Customer Note:* ${order.notes}\n' : ''}'
+          '━━━━━━━━━━━━━━━━━━━━━\n'
+          '_Please deliver promptly and collect exact COD cash._';
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            final preview = buildMessage(nameCtrl.text);
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF7C3AED).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.two_wheeler, color: Color(0xFF7C3AED), size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Dispatch ${order.orderRef}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        Text('COD: Rs. ${order.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, color: Color(0xFF16A34A), fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Rider WhatsApp Number',
+                        hintText: 'e.g. 03031234567',
+                        prefixIcon: Icon(Icons.phone_android, size: 18),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: nameCtrl,
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: const InputDecoration(
+                        labelText: 'Rider Name (Optional)',
+                        hintText: 'e.g. Ali (Rider)',
+                        prefixIcon: Icon(Icons.person_outline, size: 18),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('WhatsApp Message Preview:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AdminConstants.textSecondary)),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        preview,
+                        style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.white, height: 1.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('Cancel', style: TextStyle(color: AdminConstants.textSecondary)),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.send, size: 14),
+                  label: const Text('Send WhatsApp 🛵', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7C3AED),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    final phone = phoneCtrl.text.trim();
+                    if (phone.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a valid Rider phone number')),
+                      );
+                      return;
+                    }
+                    Navigator.of(dialogCtx).pop();
+
+                    // Open WhatsApp
+                    AdminApiService.sendWhatsApp(phone: phone, message: preview);
+
+                    // If order status is pending or packaging, advance to out_for_delivery
+                    if (order.status == 'pending' || order.status == 'packaging') {
+                      prov.updateOrderStatus(order.id, 'out_for_delivery');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Order ${order.orderRef} marked Out for Delivery! 🛵')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

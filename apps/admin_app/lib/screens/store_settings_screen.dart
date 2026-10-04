@@ -14,6 +14,8 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
   final TextEditingController _shippingFeeCtrl = TextEditingController();
   final TextEditingController _minOrderCtrl = TextEditingController();
   final TextEditingController _freeThresholdCtrl = TextEditingController();
+  final TextEditingController _riderPhoneCtrl = TextEditingController();
+  final TextEditingController _riderNameCtrl = TextEditingController();
   bool _initialized = false;
 
   @override
@@ -22,9 +24,11 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
     final settings = prov.settings;
 
     if (!_initialized && settings.isNotEmpty) {
-      _shippingFeeCtrl.text = settings['shipping_fee'] ?? '180';
-      _minOrderCtrl.text = settings['min_order_value'] ?? '500';
+      _shippingFeeCtrl.text = settings['shipping_fee'] ?? '100';
+      _minOrderCtrl.text = settings['min_order_value'] ?? '0';
       _freeThresholdCtrl.text = settings['free_shipping_threshold'] ?? '2500';
+      _riderPhoneCtrl.text = settings['default_rider_phone'] ?? '03033943814';
+      _riderNameCtrl.text = settings['default_rider_name'] ?? 'Store Rider';
       _initialized = true;
     }
 
@@ -159,6 +163,79 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
                       }
                     },
                     child: const Text('Save Delivery Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+
+          // Rider Dispatch Configuration
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AdminConstants.borderSubtle),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.two_wheeler, color: Color(0xFF7C3AED), size: 20),
+                    SizedBox(width: 8),
+                    Text('Delivery Rider Dispatch Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Default rider phone & name for 1-tap WhatsApp delivery task assignment:',
+                  style: TextStyle(fontSize: 11, color: AdminConstants.textSecondary),
+                ),
+                const SizedBox(height: 14),
+
+                TextField(
+                  controller: _riderPhoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Default Rider WhatsApp Number',
+                    hintText: 'e.g. 03033943814',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: _riderNameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Default Rider Name',
+                    hintText: 'e.g. Ali (Rider)',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () async {
+                      await prov.updateSetting('default_rider_phone', _riderPhoneCtrl.text.trim());
+                      await prov.updateSetting('default_rider_name', _riderNameCtrl.text.trim());
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Rider dispatch credentials updated!'), backgroundColor: Color(0xFF7C3AED)),
+                        );
+                      }
+                    },
+                    child: const Text('Save Rider Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   ),
                 ),
               ],
